@@ -99,6 +99,7 @@ let getPortNumbers (sc: SimulationComponent) =
         | Demux8 ->
             2,8
         | Not | And | Or | Xor | Nand | Nor | Xnor -> 2,1
+        | Resistor | CurrentSource -> 1,1
         | Custom _ -> failwithf "Custom components should not occur in fast simulation"
         | AsyncROM _ | RAM _ | ROM _ -> failwithf "legacy component type is not supported"
 
@@ -153,6 +154,8 @@ let getOutputWidths (sc: SimulationComponent) (wa: int option array) =
     | Mux2
     | Mux4
     | Mux8
+    | Resistor
+    | CurrentSource
     | IOLabel
     | MergeWires -> ()
 

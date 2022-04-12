@@ -138,6 +138,8 @@ let getPrefix compType =
     | Demux2 -> "DM"
     | Demux4 -> "DM-4."
     | Demux8 -> "DM-8."
+    | Resistor -> "R"
+    | CurrentSource -> "CurrentSource"
     | NbitsAdder _ -> "A"
     | NbitsXor _ -> "XOR"
     | DFF | DFFE -> "FF"
@@ -193,6 +195,7 @@ let portNames (componentType:ComponentType)  = //(input port names, output port 
     | Demux2 -> (["IN" ; "SEL"]@["0"; "1"])
     | Demux4 -> (["IN"; "SEL"]@["0"; "1";"2"; "3";])
     | Demux8 -> (["IN"; "SEL"]@["0"; "1"; "2" ; "3" ; "4" ; "5" ; "6" ; "7"])
+    | Resistor | CurrentSource -> ([]@[])
     | NbitsXor _ -> (["P"; "Q"]@ ["Out"])
     | Custom x -> (List.map fst x.InputLabels)@ (List.map fst x.OutputLabels)
     | _ -> ([]@[])
@@ -421,6 +424,8 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         | Demux2 ->( 2  , 2, 3*gS ,  2*gS) 
         | Demux4 -> ( 2  , 4, 150 ,  50) 
         | Demux8 -> ( 2  , 8, 200 ,  50) 
+        | Resistor -> (1 , 1 , 2*gS , 3*gS)
+        | CurrentSource -> (1 , 1 , 2*gS , 2*gS)
         | BusSelection (a, b) -> (  1 , 1, gS,  2*gS) 
         | BusCompare (a, b) -> ( 1 , 1, gS ,  2*gS) 
         | DFF -> (  1 , 1, 3*gS  , 3*gS) 
@@ -738,6 +743,10 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
                 [|{X=0;Y=H/5.};{X=0;Y=H*0.8};{X=W;Y=H};{X=W;Y=0}|]
             | Mux2 | Mux4 | Mux8 -> 
                 [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=H*0.8};{X=W;Y=H/5.}|]
+            | Resistor ->
+                [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=H};{X=W;Y=0}|]
+            | CurrentSource ->
+                [|{X=W*0.2;Y=H*0.5};{X=W;Y=H*0.5};{X=W*0.7;Y=H*0.4};{X=W;Y=H*0.5};{X=W*0.7;Y=H*0.6};{X=W;Y=H*0.5};{X=W;Y=H};{X=0;Y=H};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H*0.5}|]
             | BusSelection _ |BusCompare _ -> 
                 [|{X=0;Y=0};{X=0;Y=H};{X=W*0.6;Y=H};{X=W*0.8;Y=H*0.7};{X=W;Y=H*0.7};{X=W;Y =H*0.3};{X=W*0.8;Y=H*0.3};{X=W*0.6;Y=0}|]
             | Not | Nand | Nor | Xnor -> 

@@ -601,6 +601,11 @@ let fastReduce (maxArraySize: int) (numStep: int) (isClockedReduction: bool) (co
             let data = readMemory mem address
             //printfn $"reading {data} from addr={address} with state = {RamState mem}"
             put0 data
+    | _ ->
+        let bits = ins 0
+        //let bits = comp.InputLinks[0][simStep]
+        //printfn "Reducing IOLabel %A" comp.SimComponent.Label
+        put0 bits
 
 
 

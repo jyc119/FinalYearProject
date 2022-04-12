@@ -428,6 +428,12 @@ let private calculateOutputPortsWidth
             makeWidthInferErrorEqual 1 write [getConnectionIdForPort 2]
         | [_; _; _] -> Ok <| Map.empty.Add (getOutputPortId comp 0, mem.WordWidth)
         | _ -> failwithf "what? Impossible case in calculateOutputPortsWidth for: %A" comp.Type
+    | _ ->
+        assertInputsSize inputConnectionsWidth 1 comp
+        match getWidthsForPorts inputConnectionsWidth [InputPortNumber 0] with
+        | [None] | [Some 1] -> Ok <| Map.empty.Add (getOutputPortId comp 0, 1)
+        | [Some n] -> makeWidthInferErrorEqual 1 n [getConnectionIdForPort 0]
+        | _ -> failwithf "what? Impossible case in calculateOutputPortsWidth for: %A" comp.Type
 
 /// Find the connection connected to an input port. Return None if no such
 /// connection exists.
