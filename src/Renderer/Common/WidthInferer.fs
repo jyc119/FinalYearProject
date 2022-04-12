@@ -159,8 +159,6 @@ let private calculateOutputPortsWidth
     let getConnectionIdForPort =
         InputPortNumber >> (getConnectionIdForPort inputConnectionsWidth)
     match comp.Type with
-    | ROM _ | RAM _ | AsyncROM _ -> 
-        failwithf "What? Legacy RAM component types should never occur"
     | Input width | Constant1(width,_,_) | Constant(width,_)->
         // Expects no inputs, and has an outgoing wire of the given width.
         assertInputsSize inputConnectionsWidth 0 comp
@@ -247,30 +245,6 @@ let private calculateOutputPortsWidth
             let out = out.Add (getOutputPortId comp 1, n - topWireWidth)
             Ok out
         | _ -> failwithf "what? Impossible case in calculateOutputPortsWidth for: %A" comp.Type    
-    | AsyncROM1 mem | ROM1 mem ->
-        assertInputsSize inputConnectionsWidth 1 comp
-        match getWidthsForPorts inputConnectionsWidth [InputPortNumber 0] with
-        | [None] -> Ok <| Map.empty.Add (getOutputPortId comp 0, mem.WordWidth)
-        | [Some aw] when aw = mem.AddressWidth ->
-            Ok <| Map.empty.Add (getOutputPortId comp 0, mem.WordWidth)
-        | [Some aw]  when aw <> mem.AddressWidth ->
-            makeWidthInferErrorEqual mem.AddressWidth aw [getConnectionIdForPort 0]
-        | _ -> failwithf "what? Impossible case in calculateOutputPortsWidth for: %A" comp.Type
-    | RAM1 mem | AsyncRAM1 mem->
-        assertInputsSize inputConnectionsWidth 3 comp
-        match getWidthsForPorts inputConnectionsWidth [InputPortNumber 0; InputPortNumber 1; InputPortNumber 2] with
-        | [Some addr; Some datain; Some write] when addr = mem.AddressWidth &&
-                                                    datain = mem.WordWidth &&
-                                                    write = 1 ->
-            Ok <| Map.empty.Add (getOutputPortId comp 0, mem.WordWidth)
-        | [Some addr; _; _] when addr <> mem.AddressWidth ->
-            makeWidthInferErrorEqual mem.AddressWidth addr [getConnectionIdForPort 0]
-        | [_; Some datain; _] when datain <> mem.WordWidth ->
-            makeWidthInferErrorEqual mem.WordWidth datain [getConnectionIdForPort 1]
-        | [_; _; Some write;] when write <> 1 ->
-            makeWidthInferErrorEqual 1 write [getConnectionIdForPort 2]
-        | [_; _; _] -> Ok <| Map.empty.Add (getOutputPortId comp 0, mem.WordWidth)
-        | _ -> failwithf "what? Impossible case in calculateOutputPortsWidth for: %A" comp.Type
     | _ ->
         assertInputsSize inputConnectionsWidth 1 comp
         match getWidthsForPorts inputConnectionsWidth [InputPortNumber 0] with

@@ -65,21 +65,15 @@ let getPortNumbers (sc: SimulationComponent) =
         | Viewer _ 
         | BusSelection _
         | BusCompare _
-        | IOLabel  
-        | ROM1 _ 
-        | AsyncROM1 _->
+        | IOLabel  ->
             1,1
         | MergeWires
         | SplitWire _ -> 
             1,2
-        | AsyncRAM1 _
-        | RAM1 _ -> 
-            2,1
         | Decode4 -> 
             2,4
         | Resistor | CurrentSource -> 1,1
         | Custom _ -> failwithf "Custom components should not occur in fast simulation"
-        | AsyncROM _ | RAM _ | ROM _ -> failwithf "legacy component type is not supported"
 
     ins, outs
 
@@ -91,8 +85,6 @@ let getOutputWidths (sc: SimulationComponent) (wa: int option array) =
    let putW3 w = wa[3] <- Some w
 
    match sc.Type with
-   | ROM _ | RAM _ | AsyncROM _ -> 
-       failwithf "What? Legacy RAM component types should never occur"
    | Input w
    | Output w
    | Viewer w
@@ -101,10 +93,6 @@ let getOutputWidths (sc: SimulationComponent) (wa: int option array) =
    | Constant1 (w, _,_)
    | Constant (w,_) -> putW0 w
    | BusCompare _ -> putW0 1
-   | AsyncROM1 mem
-   | ROM1 mem
-   | RAM1 mem
-   | AsyncRAM1 mem -> putW0 mem.WordWidth
    | Custom _ -> ()
    | Decode4 ->
        putW0 1

@@ -53,8 +53,6 @@ let private getRamStateMemory numSteps step (state: StepArray<SimulationComponen
 
 let getRomStateMemory comp =
     match comp.FType with
-    | ROM memory
-    | AsyncROM memory -> memory
     | _ -> failwithf "What? getRomStateMemory called with invalid state"
 
 
@@ -197,8 +195,6 @@ let fastReduce (maxArraySize: int) (numStep: int) (isClockedReduction: bool) (co
 
     // reduce the component in this match
     match componentType with
-    | ROM _ | RAM _ | AsyncROM _ -> 
-        failwithf "What? Legacy RAM component types should never occur"
     | Input width ->
         if comp.Active then
             let bits = ins 0
@@ -308,93 +304,6 @@ let fastReduce (maxArraySize: int) (numStep: int) (isClockedReduction: bool) (co
         put0 bits0
         put1 bits1
         putW 1 bits1.Width
-    | AsyncROM1 mem -> // Asynchronous ROM.
-        let addr = ins 0
-#if ASSERTS
-        assertThat (addr.Width = mem.AddressWidth)
-        <| sprintf "ROM received address with wrong width: expected %d but got %A" mem.AddressWidth addr
-#endif
-        let outData = readMemory mem addr
-        put0 outData
-    | ROM1 mem -> // Synchronous ROM.
-        let addr = insOld 0
-#if ASSERTS
-        assertThat (addr.Width = mem.AddressWidth)
-        <| sprintf "ROM received address with wrong width: expected %d but got %A" mem.AddressWidth addr
-#endif
-        let outData = readMemory mem addr
-        put0 outData
-    | RAM1 memory ->
-        let mem =
-            getRamStateMemory numStep (simStepOld) comp.State memory
-
-        let address = insOld 0
-#if ASSERTS
-        assertThat (address.Width = mem.AddressWidth)
-        <| sprintf "RAM received address with wrong width: expected %d but got %A" mem.AddressWidth address
-#endif
-        let dataIn = insOld 1
-#if ASSERTS
-        assertThat (dataIn.Width = mem.WordWidth)
-        <| sprintf "RAM received data-in with wrong width: expected %d but got %A" mem.WordWidth dataIn
-#endif
-        let write = extractBit (insOld 2) 1
-        // If write flag is on, write the memory content.
-        let mem, dataOut =
-            match write with
-            | 0u ->
-                // Read memory address and return memory unchanged.
-                mem, readMemory mem address
-            | 1u ->
-                // Update memory and return old content.
-                // NB - this was previously new content - but that is inconsistent and less useful.
-                writeMemory mem address dataIn, readMemory mem address
-            | _ -> failwithf $"simulation error: invalid 1 bit write value {write}"
-
-        putState (RamState mem)
-        put0 dataOut
-    // AsyncRAM1 component must be evaluated twice. Once (first) as clocked component 
-    // to update state based on previous cycle. Then again as combinational component to update output
-    //
-    | AsyncRAM1 memory ->
-        if isClockedReduction then
-            // here we propagate the state to current timestep, doing a state change if need be.
-            let mem =
-                getRamStateMemory numStep (simStepOld) comp.State memory
-
-            let address = insOld 0
-#if ASSERTS
-            assertThat (address.Width = mem.AddressWidth)
-            <| sprintf "RAM received address with wrong width: expected %d but got %A" mem.AddressWidth address
-#endif
-            let dataIn = insOld 1
-#if ASSERTS
-            assertThat (dataIn.Width = mem.WordWidth)
-            <| sprintf "RAM received data-in with wrong width: expected %d but got %A" mem.WordWidth dataIn
-#endif
-            let write = extractBit (insOld 2) 1
-            // If write flag is on, write the memory content.
-            let mem =
-                match write with
-                | 0u ->
-                    // Read memory address and return memory unchanged.
-                    mem
-                | 1u ->
-                    // Update memory and return old content.
-                    // NB - this was previously new content - but that is inconsistent and less useful.
-                    writeMemory mem address dataIn
-                | _ -> failwithf $"simulation error: invalid 1 bit write value {write}"
-            putState (RamState mem)
-        else
-            // here we do the async read using current step address and state
-            // note that state will have been written for this step previously by clocked invocation of this component
-            let mem =
-                getRamStateMemory (numStep+1) simStep comp.State memory
-
-            let address = ins 0
-            let data = readMemory mem address
-            //printfn $"reading {data} from addr={address} with state = {RamState mem}"
-            put0 data
     | _ ->
         let bits = ins 0
         //let bits = comp.InputLinks[0][simStep]

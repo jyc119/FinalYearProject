@@ -14,8 +14,8 @@ open SimulatorTypes
 /// considered synchronous.
 let couldBeSynchronousComponent compType : bool =
     match compType with
-    | ROM1 _ | RAM1 _ | AsyncRAM1 _ | Custom _ -> true // We have to assume custom components are clocked as they may be.
-    | Input _ | Output _ | IOLabel | Constant1 _ | BusSelection _ | BusCompare _ | MergeWires | SplitWire _ | Resistor | CurrentSource | Decode4 | AsyncROM1 _ | Viewer _ -> false
+    | Custom _ -> true // We have to assume custom components are clocked as they may be.
+    | Input _ | Output _ | IOLabel | Constant1 _ | BusSelection _ | BusCompare _ | MergeWires | SplitWire _ | Resistor | CurrentSource | Decode4 | Viewer _ -> false
     | _ -> failwithf $"Legacy components {compType} should never be read!"
 
 /// used to do asynchronous cycle checking on atomic components with non-trivial asynch paths.
@@ -23,8 +23,6 @@ let couldBeSynchronousComponent compType : bool =
 /// returns Some (async outputPortNumbers from inputPortNumber) if component is hybrid, otherwise None.
 let getHybridComponentAsyncOuts compType inputPortNumber =
     match compType, inputPortNumber with
-    | AsyncRAM1 _, InputPortNumber 0 -> Some [OutputPortNumber 0]
-    | AsyncRAM1 _, _ -> Some []
     | _ -> None
 
 let isHybridComponent compType = 
@@ -36,9 +34,8 @@ let rec hasSynchronousComponents graph : bool =
     graph
     |> Map.map (fun compId comp ->
             match comp.Type with
-            | ROM1 _ | RAM1 _ | AsyncRAM1 _ -> true
             | Custom _ -> hasSynchronousComponents <| Option.get comp.CustomSimulationGraph
-            | Input _ | Output _ | IOLabel | BusSelection _ | BusCompare _ | MergeWires | SplitWire _ | Resistor | CurrentSource | Decode4 | AsyncROM1 _ | Constant1 _ | Viewer _ -> false
+            | Input _ | Output _ | IOLabel | BusSelection _ | BusCompare _ | MergeWires | SplitWire _ | Resistor | CurrentSource | Decode4 | Constant1 _ | Viewer _ -> false
             | _ -> failwithf $"legacy components should never be read {comp.Type}"
         )
     |> Map.tryPick (fun compId isSync -> if isSync then Some () else None)
@@ -118,9 +115,6 @@ let getCombinatorialOutputs
         // with a custom component an inputPortNumber is expected as well.
         getCustomCombinatorialOutputs combRoutes node
         <| Option.get inputPortNumberOpt
-    | AsyncRAM1 _ when inputPortNumberOpt = Some (InputPortNumber 0) ->
-            // special case of hybrid component
-            node.Outputs
     | comp when couldBeSynchronousComponent comp ->
         // Synchronous components, no combinatorial outputs.
         Map.empty
@@ -155,7 +149,7 @@ let rec private dfs
     // Ignore the info about port number unless node is custom node, or a hybrid component
     let inputPortNumber =
         match currNode.Type with
-        | Custom _  | AsyncRAM1 _ ->  Some inputPortNumber
+        | Custom _  ->  Some inputPortNumber
         | _ -> None
 
     match visited.Contains (currId, inputPortNumber) with

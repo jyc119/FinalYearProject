@@ -221,8 +221,7 @@ let private makeEditorBody memory compId memoryEditorData model (dispatch: Msg -
                         // Write new value.
                         let oldData =
                             let comp = model.Sheet.GetComponentById compId
-                            comp.Type |> (function | (RAM1 d) | (ROM1 d) | (AsyncROM1 d) | (AsyncRAM1 d)-> d
-                                                    | _ ->
+                            comp.Type |> (function | _ ->
                                                        printfn "Should not be here"
                                                        memory)
 
@@ -273,7 +272,6 @@ let private makeFoot editMode dispatch (model: Model)=
                     | Some p, Some comp ->
                         let mem =
                             match comp.Type with
-                            | RAM1 mem | ROM1 mem | AsyncROM1 mem | AsyncRAM1 mem -> mem
                             | _ -> failwithf $"Unexpected non-memory component {comp.Type}"
                         match FilesIO.initialiseMem mem p.ProjectPath with
                         | Error msg ->
@@ -300,7 +298,6 @@ let private makeEditor memory compId model dispatch =
     // printfn "makeEditor called"
     dynamicMem <- // Need to use a mutable dynamic memory and update it locally so that the shown values are correct since the model is not immediately updated
         match model.SelectedComponent with
-        | Some {Type=RAM1 mem} | Some {Type=ROM1 mem} |Some {Type = AsyncROM1 mem} | Some {Type = AsyncRAM1 mem} -> mem
         | _ -> memory
     fun memoryEditorData ->
         div [] [

@@ -509,10 +509,6 @@ let inline writeMemoryLine model (compId, addr, value) =
 
     let newCompType =
         match comp.Type with
-        | RAM1 mem -> RAM1 { mem with Data = Map.add addr value mem.Data }
-        | AsyncRAM1 mem -> AsyncRAM1 { mem with Data = Map.add addr value mem.Data }
-        | ROM1 mem -> ROM1 { mem with Data = Map.add addr value mem.Data }
-        | AsyncROM1 mem -> AsyncROM1 { mem with Data = Map.add addr value mem.Data }
         | _ -> comp.Type
 
     let newComp = { comp with Type = newCompType }
@@ -528,7 +524,6 @@ let inline writeMemoryType model compId memory =
     
     let newCompType =
         match comp.Type with
-        | RAM1 _ | AsyncRAM1 _ | ROM1 _ | AsyncROM1 _ -> memory
         | _ -> 
             printfn $"Warning: improper use of WriteMemoryType on {comp} ignored"
             comp.Type

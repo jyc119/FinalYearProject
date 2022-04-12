@@ -150,9 +150,6 @@ let getWaveSetup (ws:WaveSimModel) (model:Model): MoreWaveSetup =
     let sheets = allSheets mainSheet
     let getSortOf path (comp:SimulationComponent) = 
         match comp.Type, path with 
-        | RAM1 _,_ -> Some (4, "RAM")
-        | AsyncRAM1 _,_ -> Some(5,"ARAM")
-        | AsyncROM1 _,_ | ROM1 _,_ -> Some (6, "ROM")
         | _,[] | _, [_] -> None
         | Input _,_-> Some (1,"Input")
         | Output _,_ -> Some (2, "Output")
@@ -204,7 +201,7 @@ let reactMoreWaves ((sheets,ticks): MoreWaveSetup) (sg:SimulationGraph) (dispatc
             (sw.Label+":"+name),ticked, comp, toggle)
         |> (fun els -> 
                 let isRamOrRom (comp: SimulationComponent) = 
-                    match comp.Type with | RAM1 _ | AsyncRAM1 _ | ROM1 _ | AsyncROM1 _ -> true | _ -> false
+                    match comp.Type with | _ -> false
                 let uniques = 
                     List.countBy (fun (name,ticked,comp, toggle) -> name) els
                     |> List.filter (fun (el,i)-> i = 1)
@@ -618,15 +615,10 @@ let rec private findName (compIds: ComponentId Set) (sd: SimulationData) (net: N
                 | None ->  { OutputsAndIOLabels = []; ComposingLabels = [] } 
             let srcComp = net[nlSource.SourceCompId]
             match net[nlSource.SourceCompId].Type with
-            | ROM _ | RAM _ | AsyncROM _ -> 
-                    failwithf "What? Legacy RAM component types should never occur"
-
             | Decode4 | Resistor | CurrentSource | BusCompare _ -> 
                 [ { LabName = compLbl; BitLimits = 0, 0 } ] 
             | Input w | Output w | Constant1(w, _,_) | Constant(w,_) | Viewer w -> 
                 [ { LabName = compLbl; BitLimits = w - 1, 0 } ] 
-            | RAM1 mem | AsyncRAM1 mem | AsyncROM1 mem | ROM1 mem -> 
-                [ { LabName = compLbl + ".Dout"; BitLimits = mem.WordWidth - 1, 0 } ]
             | Custom c -> 
                 [ { LabName = compLbl + "." + (fst c.OutputLabels[outPortInt])
                     BitLimits = snd c.OutputLabels[outPortInt] - 1, 0 } ]

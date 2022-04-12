@@ -133,10 +133,6 @@ let getPrefix compType =
     match compType with
     | Resistor -> "R"
     | CurrentSource -> "CurrentSource"
-    | AsyncROM1 _ -> "AROM"
-    | ROM1 _ -> "ROM"
-    | RAM1 _ -> "RAM"
-    | AsyncRAM1 _ -> "ARAM"
     | Custom c ->
         c.Name.ToUpper() + (if c.Name |> Seq.last |> System.Char.IsDigit then "." else "")
     | Constant1 _ -> "C"
@@ -150,10 +146,6 @@ let getPrefix compType =
 let getComponentLegend (componentType:ComponentType) =
     match componentType with
     | Decode4 -> "Decode"
-    | AsyncROM1 _ -> "Async-ROM"
-    | ROM1 _ -> "Sync-ROM"
-    | RAM1 _ -> "Sync-RAM"
-    | AsyncRAM1 _ -> "Async-RAM"
     | Custom x -> x.Name
     | _ -> ""
 
@@ -161,9 +153,6 @@ let getComponentLegend (componentType:ComponentType) =
 let portNames (componentType:ComponentType)  = //(input port names, output port names)
     match componentType with
     | Decode4 -> (["Sel";"Data"]@["0"; "1";"2"; "3"])
-    | ROM1 _ |AsyncROM1 _ -> (["Addr"]@["Dout"])
-    | RAM1 _ -> (["Addr"; "Din";"Wen" ]@["Dout"])
-    | AsyncRAM1 _ -> (["Addr"; "Din";"Wen" ]@["Dout"])
     | Resistor | CurrentSource -> ([]@[])
     | Custom x -> (List.map fst x.InputLabels)@ (List.map fst x.OutputLabels)
     | _ -> ([]@[])
@@ -351,8 +340,6 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
     let gS = Constants.gridSize
     let args = 
         match comptype with
-        | ROM _ | RAM _ | AsyncROM _ -> 
-            failwithf "What? Legacy RAM component types should never occur"
         | ComponentType.Input (a) -> ( 0 , 1, gS ,  2*gS)                
         | ComponentType.Output (a) -> (  1 , 0, gS ,  2*gS) 
         | ComponentType.Viewer a -> (  1 , 0, gS ,  gS) 
@@ -365,9 +352,6 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         | CurrentSource -> (1 , 1 , 2*gS , 2*gS)
         | BusSelection (a, b) -> (  1 , 1, gS,  2*gS) 
         | BusCompare (a, b) -> ( 1 , 1, gS ,  2*gS) 
-        | AsyncROM1 (a)  -> (  1 , 1, 4*gS  , 5*gS) 
-        | ROM1 (a) -> (   1 , 1, 4*gS  , 5*gS) 
-        | RAM1 (a) | AsyncRAM1 a -> ( 3 , 1, 4*gS  , 5*gS) 
         | Custom cct -> getCustomCompArgs cct label
                 
     makeComponent' args label
@@ -632,8 +616,6 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
                 [|{X=W*0.2;Y=H*0.5};{X=W;Y=H*0.5};{X=W*0.7;Y=H*0.4};{X=W;Y=H*0.5};{X=W*0.7;Y=H*0.6};{X=W;Y=H*0.5};{X=W;Y=H};{X=0;Y=H};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H*0.5}|]
             | BusSelection _ |BusCompare _ -> 
                 [|{X=0;Y=0};{X=0;Y=H};{X=W*0.6;Y=H};{X=W*0.8;Y=H*0.7};{X=W;Y=H*0.7};{X=W;Y =H*0.3};{X=W*0.8;Y=H*0.3};{X=W*0.6;Y=0}|]
-            | ROM1 _ |RAM1 _ | AsyncRAM1 _ -> 
-                [|{X=0;Y=H-13.};{X=8.;Y=H-7.};{X=0;Y=H-1.};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H};{X=0;Y=H}|]
             | Custom x when symbol.IsClocked = true -> 
                 [|{X=0;Y=H-13.};{X=8.;Y=H-7.};{X=0;Y=H-1.};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H};{X=0;Y=H}|]
             | _ -> 
@@ -674,8 +656,6 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
             let midt = mid'-1
             let values = [(midt,0);(msb,midb);(msb,0)]
             List.fold (fun og i -> og @ mergeSplitLine splitWiresTextPos[i] (fst values[i]) (snd values[i]) ) [] [0..2]
-        | ROM1 _ |RAM1 _ | AsyncRAM1 _  -> 
-            (addText clockTxtPos " clk" "middle" "normal" "12px")
         | BusSelection(x,y) -> (addText {X = w/2.; Y = (h/2.7)-2.} (bustitle x y) "middle" "bold" "12px")
         | BusCompare (_,y) -> (addText {X = w/2.-2.; Y = h/2.7-1.} ("=" + NumberHelpers.hex(int y)) "middle" "bold" "10px")
         | Input (x) -> (addText {X = w/2.; Y = h/2.7-3.} (title "" x) "middle" "normal" "12px")

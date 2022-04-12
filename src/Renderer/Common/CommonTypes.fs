@@ -317,17 +317,11 @@ module CommonTypes
         | Resistor | CurrentSource
         | Custom of CustomComponentType // schematic sheet used as component
         | MergeWires | SplitWire of BusWidth: int // int is bus width
-        | AsyncROM of Memory | ROM of Memory | RAM of Memory // legacy components - to be deleted
-        | AsyncROM1 of Memory1 | ROM1 of Memory1 | RAM1 of Memory1 | AsyncRAM1 of Memory1
 
     /// get memory component type constructor
     /// NB only works with new-style memory components
     let getMemType (cType: ComponentType) =
         match cType with
-        | RAM1 _ -> RAM1
-        | AsyncRAM1 _ -> AsyncRAM1
-        | ROM1 _ -> ROM1
-        | AsyncROM1 _ -> AsyncROM1
         | _ -> failwithf $"Can't get memory type from {cType}"
 
     // --------------- Types needed for symbol ---------------- //
@@ -657,8 +651,6 @@ module CommonTypes
             | Some ldc, _ ->
                 let (comps, _) = ldc.CanvasState
                 List.exists (isClocked (ct.Name :: visitedSheets) ldcs) comps                
-        | RAM _ | ROM _ ->
-            true
         | _ -> false
 
 

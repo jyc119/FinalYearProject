@@ -106,14 +106,9 @@ let private mapInputPortIdToPortNumber
 /// ROMs are stateless (they are only defined by their initial content).
 let private getDefaultState compType =
     match compType with
-    | ROM _ | RAM _ | AsyncROM _ -> 
-        failwithf "What? Legacy RAM component types should never occur"
     | Input _ | Output _ | IOLabel | BusSelection _ | BusCompare _ | Decode4
-    | Resistor | CurrentSource | Custom _ | MergeWires | SplitWire _ | ROM1 _  | Viewer _ -> NoState
+    | Resistor | CurrentSource | Custom _ | MergeWires | SplitWire _ | Viewer _ -> NoState
     | Constant1 _ | Constant _ -> NoState 
-    | AsyncROM1 _ -> NoState
-    | RAM1 memory | AsyncRAM1 memory -> RamState memory // The RamState content may change during
-                                    // the simulation.
 
 /// Build a simulation component.
 let private buildSimulationComponent

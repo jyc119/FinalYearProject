@@ -291,7 +291,7 @@ let private viewStatefulComponents step comps numBase model dispatch =
             [ splittedLine (str label) (staticNumberBox numBase (bits |> convertFastDataToWireData)) ]
         | RamState mem ->
             let label = sprintf "RAM: %s" <| label
-            let initialMem compType = match compType with RAM1 m | AsyncRAM1 m -> m | _ -> failwithf "what? viewStatefulComponents expected RAM component but got: %A" compType
+            let initialMem compType = match compType with | _ -> failwithf "what? viewStatefulComponents expected RAM component but got: %A" compType
             let viewDiffBtn =
                 Button.button [
                     Button.Props [ simulationBitStyle ]

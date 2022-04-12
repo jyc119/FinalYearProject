@@ -259,10 +259,6 @@ let getInstantiatedModules (fs: FastSimulation) =
             let name = fc.VerilogComponentName
 
             match fc.FType with
-            | RAM1 mem -> [| makeRamModule name mem |]
-            | AsyncRAM1 mem -> [| makeAsyncRamModule name mem |]
-            | ROM1 mem -> [| makeRomModule name mem |]
-            | AsyncROM1 mem -> [| makeAsyncRomModule name mem |]
             | _ -> [||])
 
 let removeHybridComps (fa: FastComponent array) =
@@ -409,12 +405,7 @@ let getVerilogComponent (fs: FastSimulation) (fc: FastComponent) =
 
         $"assign %s{outs 0} = %s{ins 0}[%d{lsbBits - 1}:0];\n"
         + $"assign %s{outs 1} = %s{ins 0}[%d{msbBits + lsbBits - 1}:%d{msbBits}];\n"
-    | AsyncROM1 mem -> sprintf $"%s{name} I{idNum} (%s{outs 0}, %s{ins 0});\n"
-    | ROM1 mem -> $"%s{name} I{idNum} (%s{outs 0}, %s{ins 0}, clk);\n"
-    | RAM1 mem | AsyncRAM1 mem -> $"%s{name} I{idNum} (%s{outs 0}, %s{ins 0}, %s{ins 1}, %s{ins 2}, clk);\n"
     | Custom _ -> failwithf "What? custom components cannot exist in fast Simulation data structure"
-    | AsyncROM _ | RAM _ | ROM _ -> 
-        failwithf $"Invalid legacy component type '{fc.FType}'"
 
 
 /// return the header of the main verilog module with hardware inputs and outputs in header.
@@ -460,10 +451,6 @@ let extractRamDefinitions (fs: FastSimulation) =
     |> Array.collect (
         (fun fc ->
             match fc.FType with
-            | ROM1 mem
-            | RAM1 mem
-            | AsyncRAM1 mem
-            | AsyncROM1 mem -> [| fc.VerilogComponentName, fc.FType |]
             | _ -> [||])
     )
 

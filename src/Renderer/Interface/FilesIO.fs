@@ -480,9 +480,6 @@ let getLatestComp (comp: Component) =
             WordWidth = mem.WordWidth
         }
     match comp.Type with
-    | RAM mem -> {comp with Type = RAM1 (updateMem mem)}
-    | ROM mem -> {comp with Type = ROM1 (updateMem mem)}
-    | AsyncROM mem -> { comp with Type = AsyncROM1 (updateMem mem)}
     | Constant(width,cVal) -> {comp with Type = Constant1(width, cVal, $"%d{cVal}")}
     | _ -> comp
 
@@ -509,21 +506,6 @@ let getLatestCanvas state =
 
 let checkMemoryContents (projectPath:string) (comp: Component) : Component =
     match comp.Type with
-    | RAM1 mem | ROM1 mem | AsyncROM1 mem | AsyncRAM1 mem when not (String.endsWith "backup" (String.toLower projectPath))->
-        match mem.Init with
-        | FromFile fName ->
-            let fPath = pathJoin [|projectPath ; (fName + ".ram")|]
-            let memData = readMemDefns mem.AddressWidth mem.WordWidth fPath
-            match memData with
-            | Ok memDat -> 
-                if memDat <> mem.Data then
-                    printfn "%s" $"Warning! RAM file {fPath} has changed so component {comp.Label} is now different"
-                let mem = {mem with Data = memDat}
-                {comp with Type = getMemType comp.Type mem}
-            | Error msg ->
-                printfn $"Error reloading component {comp.Label} from its file {fPath}:\n{msg}"
-                comp // ignore errors for now
-        | _ -> comp
     | _ -> comp
 
 /// load a component from its canvas and other elements

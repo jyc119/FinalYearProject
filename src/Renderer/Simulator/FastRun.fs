@@ -24,7 +24,6 @@ let private isValidData (fd: FastData) = fd <> emptyFastData
 let inline isComb (comp: FastComponent) =
     match comp.FType with
     | Input _ when comp.AccessPath = [] -> false
-    | AsyncRAM1 _ -> true
     | ct when couldBeSynchronousComponent ct -> false
     | _ -> true
 
@@ -114,19 +113,6 @@ let private orderCombinationalComponents (numSteps: int) (fs: FastSimulation) : 
                     propagateEval fc
 
                 match fc.FType, fc.OutputWidth[i] with
-                | RAM1 mem, Some w | AsyncRAM1 mem, Some w ->
-                    match fc.State with
-                    | Some arr -> arr.Step[0] <- RamState mem
-                    | _ -> failwithf "Component %s does not have correct state vector" fc.FullName
-
-                    let initD =
-                        match Map.tryFind 0L mem.Data with
-                        | Some n -> convertInt64ToFastData w n
-                        | _ -> convertIntToFastData w 0u
-                    // change simulation semantics to output 0 in cycle 0
-                    vec.Step[0] <- convertIntToFastData w 0u
-                | RAM1 _, _ | AsyncRAM1 _, _->
-                    failwithf "What? Bad initial values for RAM %s output %d state <%A>" fc.FullName i fc.FType
                 | _, Some w -> vec.Step[0] <- convertIntToFastData w 0u
                 | _ -> failwithf "What? Can't find width for %s output %d" fc.FullName i)
     /// print function for debugging
@@ -318,12 +304,6 @@ let extractStatefulComponents (step: int) (fastSim: FastSimulation) =
             match fc.AccessPath with
             | [] ->
                 match fc.FType with
-                | ROM1 state -> [| fc, RamState state |]
-                | RAM1 _ | AsyncRAM1 _ ->
-                    match fc.State
-                          |> Option.map (fun state -> state.Step[step % fastSim.MaxArraySize]) with
-                    | None -> failwithf "Missing RAM state for step %d of %s" step fc.FullName
-                    | Some memState -> [| fc, memState |]
                 | _ -> failwithf "Unsupported state extraction from clocked component type %s %A" fc.FullName fc.FType
             | _ -> [||])
 
@@ -423,8 +403,6 @@ let rec extractFastSimulationState
         | None -> 
             match fc.SimComponent.Type with
             // asynch ROMs have no state: value is always the same
-            | AsyncROM1 romContents -> 
-                RamState romContents
             | _ ->
                 failwithf "What? extracting State in step %d from %s failed" step fc.FullName
         | Some stepArr ->

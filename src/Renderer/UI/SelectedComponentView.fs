@@ -116,8 +116,6 @@ let private makeMemoryInfo descr mem compId cType model dispatch =
         br []
         str <| sprintf "%sData: %s"  
                 (match cType with 
-                 | RAM1 _ | AsyncRAM1 _ -> "Initial "
-                 | ROM1 _ | AsyncROM1 _ -> ""
                  | _ -> failwithf $"What - wrong component type ({cType} here")
                 (getInitSource mem)
         br []
@@ -266,8 +264,6 @@ let private makeLsbBitNumberField model (comp:Component) dispatch =
 
 let private makeDescription (comp:Component) model dispatch =
     match comp.Type with
-    | ROM _ | RAM _ | AsyncROM _ -> 
-        failwithf "What? Legacy RAM component types should never occur"
     | Input _ -> str "Input."
     | Constant1 _ | Constant _ -> str "Constant Wire."
     | Output _ -> str "Output."
@@ -318,33 +314,6 @@ let private makeDescription (comp:Component) model dispatch =
             span [Style [FontWeight "bold"; FontSize "15px"]] [str <| "Outputs"]
             ul [] (toHTMLList custom.OutputLabels)
         ]
-    | AsyncROM1 mem ->
-        let descr = "Asynchronous ROM: the output is updated as soon as the address changes."
-        makeMemoryInfo descr mem (ComponentId comp.Id) comp.Type model dispatch
-    | ROM1 mem ->
-        let descr = "Synchronous ROM: the output is updated only after a clock tick. The component is implicitly connected to the global clock."
-        makeMemoryInfo descr mem (ComponentId comp.Id) comp.Type model dispatch
-    | RAM1 mem ->
-        let descr =
-            "synchronous read and write RAM memory. 
-            At every clock tick, the RAM can read and optionally write
-            the content of the memory location selected by the address. If the
-            write signal is high, the content of the selected memory location
-            is set to the value of data-in. In cycle 0 data-out is 0, otherwise
-            data-out is the contents of the memory location addressed in the
-            previous cycle, before any optional write.
-            The component is implicitly connected to the global clock."
-        makeMemoryInfo descr mem (ComponentId comp.Id) comp.Type model dispatch
-    | AsyncRAM1 mem ->
-        let descr =
-            "Asynchronous read, synchronous write RAM memory. 
-            At every clock tick, optionally write
-            the content of the memory location selected by the address. If the
-            write signal is high, the content of the selected memory location
-            is set to the value of data-in. data-out is the contents of the memory 
-            location addressed by the current cycle addres.
-            The component is implicitly connected to the global clock."
-        makeMemoryInfo descr mem (ComponentId comp.Id) comp.Type model dispatch
 
 let private makeExtraInfo model (comp:Component) text dispatch =
     match comp.Type with
