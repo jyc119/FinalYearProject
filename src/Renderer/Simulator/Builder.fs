@@ -108,7 +108,7 @@ let private getDefaultState compType =
     match compType with
     | ROM _ | RAM _ | AsyncROM _ -> 
         failwithf "What? Legacy RAM component types should never occur"
-    | Input _ | Output _ | IOLabel | BusSelection _ | BusCompare _ | Not | And | Or | Xor | Nand | Nor | Xnor | Decode4
+    | Input _ | Output _ | IOLabel | BusSelection _ | BusCompare _ | Decode4
     | Resistor | CurrentSource | NbitsAdder _ |NbitsXor _ | Custom _ | MergeWires | SplitWire _ | ROM1 _  | Viewer _ -> NoState
     | Constant1 _ | Constant _ -> NoState 
     | AsyncROM1 _ -> NoState

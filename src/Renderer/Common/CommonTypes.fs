@@ -313,7 +313,7 @@ module CommonTypes
         | BusSelection of OutputWidth: int * OutputLSBit: int
         | Constant of Width: int * ConstValue: int64 
         | Constant1 of Width: int * ConstValue: int64 * DialogTextValue: string
-        | Not | And | Or | Xor | Nand | Nor | Xnor | Decode4
+        | Decode4
         | Resistor | CurrentSource
         | NbitsAdder of BusWidth: int | NbitsXor of BusWidth:int
         | Custom of CustomComponentType // schematic sheet used as component
@@ -323,13 +323,6 @@ module CommonTypes
         | DFF | DFFE | Register of BusWidth: int | RegisterE of BusWidth: int 
         | AsyncROM of Memory | ROM of Memory | RAM of Memory // legacy components - to be deleted
         | AsyncROM1 of Memory1 | ROM1 of Memory1 | RAM1 of Memory1 | AsyncRAM1 of Memory1
-
-    /// Active pattern which matches 2-input gate component types.
-    /// NB - NOT gates are not included here.
-    let (|IsBinaryGate|NotBinaryGate|) cType =
-        match cType with
-         | And | Or | Xor | Nand | Nor | Xnor -> IsBinaryGate
-         | _ -> NotBinaryGate
 
     /// get memory component type constructor
     /// NB only works with new-style memory components

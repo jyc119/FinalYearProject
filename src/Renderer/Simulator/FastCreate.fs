@@ -65,7 +65,6 @@ let getPortNumbers (sc: SimulationComponent) =
         | Viewer _ 
         | BusSelection _
         | BusCompare _
-        | Not
         | DFF
         | Register _
         | IOLabel  
@@ -86,7 +85,6 @@ let getPortNumbers (sc: SimulationComponent) =
             2,1
         | Decode4 -> 
             2,4
-        | Not | And | Or | Xor | Nand | Nor | Xnor -> 2,1
         | Resistor | CurrentSource -> 1,1
         | Custom _ -> failwithf "Custom components should not occur in fast simulation"
         | AsyncROM _ | RAM _ | ROM _ -> failwithf "legacy component type is not supported"
@@ -116,13 +114,6 @@ let getOutputWidths (sc: SimulationComponent) (wa: int option array) =
     | NbitsAdder w ->
         putW0 w
         putW1 1
-    | Not
-    | And
-    | Or
-    | Xor
-    | Nand
-    | Nor
-    | Xnor
     | BusCompare _ -> putW0 1
     | AsyncROM1 mem
     | ROM1 mem

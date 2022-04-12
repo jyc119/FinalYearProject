@@ -15,8 +15,7 @@ open SimulatorTypes
 let couldBeSynchronousComponent compType : bool =
     match compType with
     | DFF | DFFE | Register _ | RegisterE _ | ROM1 _ | RAM1 _ | AsyncRAM1 _ | Custom _ -> true // We have to assume custom components are clocked as they may be.
-    | Input _ | Output _ | IOLabel | Constant1 _ | BusSelection _ | BusCompare _ | MergeWires | SplitWire _ | Not | And | Or | Xor
-    | Nand | Nor | Xnor | Resistor | CurrentSource |  NbitsAdder _ | NbitsXor _ | Decode4 | AsyncROM1 _ | Viewer _ -> false
+    | Input _ | Output _ | IOLabel | Constant1 _ | BusSelection _ | BusCompare _ | MergeWires | SplitWire _ | Resistor | CurrentSource |  NbitsAdder _ | NbitsXor _ | Decode4 | AsyncROM1 _ | Viewer _ -> false
     | _ -> failwithf $"Legacy components {compType} should never be read!"
 
 /// used to do asynchronous cycle checking on atomic components with non-trivial asynch paths.
@@ -39,8 +38,7 @@ let rec hasSynchronousComponents graph : bool =
             match comp.Type with
             | DFF | DFFE | Register _ | RegisterE _ | ROM1 _ | RAM1 _ | AsyncRAM1 _ -> true
             | Custom _ -> hasSynchronousComponents <| Option.get comp.CustomSimulationGraph
-            | Input _ | Output _ | IOLabel | BusSelection _ | BusCompare _ | MergeWires | SplitWire _ | Not | And | Or
-            | Xor | Nand | Nor | Xnor | Resistor | CurrentSource | NbitsAdder _ | NbitsXor _ | Decode4 | AsyncROM1 _ | Constant1 _ | Viewer _ -> false
+            | Input _ | Output _ | IOLabel | BusSelection _ | BusCompare _ | MergeWires | SplitWire _ | Resistor | CurrentSource | NbitsAdder _ | NbitsXor _ | Decode4 | AsyncROM1 _ | Constant1 _ | Viewer _ -> false
             | _ -> failwithf $"legacy components should never be read {comp.Type}"
         )
     |> Map.tryPick (fun compId isSync -> if isSync then Some () else None)

@@ -131,7 +131,6 @@ let bustitle (wob:int) (lsb:int) : string =
 ///Decodes the component type into component labels
 let getPrefix compType = 
     match compType with
-    | Not | And | Or | Xor | Nand | Nor | Xnor -> "G"
     | Resistor -> "R"
     | CurrentSource -> "CurrentSource"
     | NbitsAdder _ -> "A"
@@ -154,10 +153,6 @@ let getPrefix compType =
 // Text to be put inside different Symbols depending on their ComponentType
 let getComponentLegend (componentType:ComponentType) =
     match componentType with
-    | And | Nand-> "&"
-    | Or | Nor-> "≥1"
-    | Xor | Xnor -> "=1"
-    | Not -> "1"
     | Decode4 -> "Decode"
     | NbitsAdder n -> title "Adder" n
     | Register n | RegisterE n-> title "Register" n
@@ -388,8 +383,6 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         match comptype with
         | ROM _ | RAM _ | AsyncROM _ -> 
             failwithf "What? Legacy RAM component types should never occur"
-        | And | Nand | Or | Nor | Xnor | Xor ->  (2 , 1, 2*gS , 2*gS) 
-        | Not -> ( 1 , 1, 2*gS ,  2*gS) 
         | ComponentType.Input (a) -> ( 0 , 1, gS ,  2*gS)                
         | ComponentType.Output (a) -> (  1 , 0, gS ,  2*gS) 
         | ComponentType.Viewer a -> (  1 , 0, gS ,  gS) 
@@ -675,8 +668,6 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
                 [|{X=W*0.2;Y=H*0.5};{X=W;Y=H*0.5};{X=W*0.7;Y=H*0.4};{X=W;Y=H*0.5};{X=W*0.7;Y=H*0.6};{X=W;Y=H*0.5};{X=W;Y=H};{X=0;Y=H};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H*0.5}|]
             | BusSelection _ |BusCompare _ -> 
                 [|{X=0;Y=0};{X=0;Y=H};{X=W*0.6;Y=H};{X=W*0.8;Y=H*0.7};{X=W;Y=H*0.7};{X=W;Y =H*0.3};{X=W*0.8;Y=H*0.3};{X=W*0.6;Y=0}|]
-            | Not | Nand | Nor | Xnor -> 
-                [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=H};{X=W;Y=H/2.};{X=W+9.;Y=H/2.};{X=W;Y=H/2.-8.};{X=W;Y=H/2.};{X=W;Y=0}|]
             | DFF | DFFE | Register _ | RegisterE _ | ROM1 _ |RAM1 _ | AsyncRAM1 _ -> 
                 [|{X=0;Y=H-13.};{X=8.;Y=H-7.};{X=0;Y=H-1.};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H};{X=0;Y=H}|]
             | Custom x when symbol.IsClocked = true -> 

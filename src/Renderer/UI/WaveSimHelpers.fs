@@ -621,7 +621,7 @@ let rec private findName (compIds: ComponentId Set) (sd: SimulationData) (net: N
             | ROM _ | RAM _ | AsyncROM _ -> 
                     failwithf "What? Legacy RAM component types should never occur"
 
-            | Not | And | Or | Xor | Nand | Nor | Xnor | Decode4 | Resistor | BusCompare _ -> 
+            | Decode4 | Resistor | CurrentSource | BusCompare _ -> 
                 [ { LabName = compLbl; BitLimits = 0, 0 } ] 
             | Input w | Output w | Constant1(w, _,_) | Constant(w,_) | Viewer w -> 
                 [ { LabName = compLbl; BitLimits = w - 1, 0 } ] 

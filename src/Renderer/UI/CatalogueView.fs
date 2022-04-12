@@ -374,16 +374,6 @@ let viewCatalogue model dispatch =
                           catTip1 "Bus Compare" (fun _ -> createBusComparePopup model dispatch) "Bus compare outputs 1 if the input bus \
                                                                                                  matches a constant value" ]
                     makeMenuGroup
-                        "Gates"
-                        [ catTip1 "Not"  (fun _ -> createCompStdLabel Not model dispatch) "Invertor: output is negation of input"
-                          catTip1 "And"  (fun _ -> createCompStdLabel And model dispatch) "Output is 1 if both the two inputs are 1"
-                          catTip1 "Or"   (fun _ -> createCompStdLabel Or model dispatch) "Output is 1 if either of the two inputs are 1"
-                          catTip1 "Xor"  (fun _ -> createCompStdLabel Xor model dispatch) "Output is 1 if the two inputs have different values"
-                          catTip1 "Nand" (fun _ -> createCompStdLabel Nand model dispatch) "Output is 0 if both the two inputs are 1"
-                          catTip1 "Nor"  (fun _ -> createCompStdLabel Nor model dispatch) "Output is 0 if either of the two inputs are 1"
-                          catTip1 "Xnor" (fun _ -> createCompStdLabel Xnor model dispatch) "Output is 1 if the two inputs have the same values"
-                          ]
-                    makeMenuGroup
                         "Analog Components"
                         [ catTip1 "Resistor"  (fun _ -> createCompStdLabel Resistor model dispatch) "Resistor"
                           catTip1 "CurrentSource"  (fun _ -> createCompStdLabel CurrentSource model dispatch) "CurrentSource"]

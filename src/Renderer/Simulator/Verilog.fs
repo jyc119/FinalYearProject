@@ -294,20 +294,6 @@ let getInstanceOf (block: string) (instanceName: string) (ports: string array) =
     let portNames = ports |> String.concat ","
     sprintf $"%s{block} %s{instanceName} (%s{portNames});\n"
 
-/// implement binary operator for two-input gate
-let getVerilogBinaryOp cType op1 op2 =
-    let bin opS = sprintf "%s %s %s" op1 opS op2
-    let not exp = sprintf "!(%s)" exp
-
-    match cType with
-    | And -> bin "&&"
-    | Or -> bin "||"
-    | Nand -> not <| bin "&&"
-    | Nor -> not <| bin "||"
-    | Xor -> sprintf "((%s && !%s) || (!%s) && %s)" op1 op2 op1 op2
-    | Xnor -> sprintf "!((%s && !%s) || (!%s) && %s)" op1 op2 op1 op2
-    | _ -> failwithf "operator %A not defined" cType
-
 /// get valid Verilog constant for bus of given width (may be 1)
 let makeBits w (c: uint64) = 
     let c = c &&& ((1UL <<< w) - 1UL)
@@ -404,15 +390,6 @@ let getVerilogComponent (fs: FastSimulation) (fc: FastComponent) =
     | Viewer _
     | IOLabel _
     | Input _ -> sprintf $"assign %s{outs 0} = %s{ins 0};\n"
-
-    | Not -> sprintf "assign %s = ! %s;\n" (outs 0) (ins 0)
-    | And
-    | Or
-    | Xor
-    | Nand
-    | Nor
-    | Xnor
-    | Xor -> sprintf "assign %s = %s;\n" (outs 0) (getVerilogBinaryOp fc.FType (ins 0) (ins 1))
     | DFFE
     | RegisterE _ -> $"always @(posedge clk) %s{outs 0} <= %s{ins 1} ? %s{ins 0} : %s{outs 0};\n"
     | DFF

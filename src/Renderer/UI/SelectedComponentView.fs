@@ -291,8 +291,6 @@ let private makeDescription (comp:Component) model dispatch =
         str "To join inputs and outputs without wires."; br []
         str "To prevent an unused output from giving an error."
         ]
-    | Not | And | Or | Xor | Nand | Nor | Xnor ->
-        div [] [ str <| sprintf "%A gate." comp.Type ]
     | Resistor -> div [] [ str "Resistor" ]
     | CurrentSource -> div [] [ str "Current Source" ]
     | MergeWires -> div [] [ str "Merge two wires of width n and m into a single wire of width n+m." ]

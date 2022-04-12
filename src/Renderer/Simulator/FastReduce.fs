@@ -227,9 +227,6 @@ let fastReduce (maxArraySize: int) (numStep: int) (isClockedReduction: bool) (co
         //let bits = comp.InputLinks[0][simStep]
         //printfn "Reducing IOLabel %A" comp.SimComponent.Label
         put0 bits
-    | Not ->
-        let bit = extractBit (ins 0) 1
-        put0 <| packBit (bitNot bit)
     | BusSelection (width, lsb) ->
         let bits = ins 0
 #if ASSERTS
@@ -255,12 +252,6 @@ let fastReduce (maxArraySize: int) (numStep: int) (isClockedReduction: bool) (co
 
 
         put0 outNum
-    | And -> getBinaryGateReducer bitAnd
-    | Or -> getBinaryGateReducer bitOr
-    | Xor -> getBinaryGateReducer bitXor
-    | Nand -> getBinaryGateReducer bitNand
-    | Nor -> getBinaryGateReducer bitNor
-    | Xnor -> getBinaryGateReducer bitXnor
     | NbitsAdder numberOfBits ->
         let cin, A, B = ins 0, ins 1, ins 2
 
