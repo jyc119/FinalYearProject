@@ -79,12 +79,6 @@ let getPortNumbers (sc: SimulationComponent) =
             2,1
         | SplitWire _ -> 
             1,2
-        | Mux2 _ -> 
-            3,1
-        | Mux4 _ ->
-            5,1
-        | Mux8 _ ->
-            9,1
         | NbitsAdder _ -> 
             3,2
         | AsyncRAM1 _
@@ -92,12 +86,6 @@ let getPortNumbers (sc: SimulationComponent) =
             2,1
         | Decode4 -> 
             2,4
-        | Demux2 -> 
-            2,2
-        | Demux4 -> 
-            2,4
-        | Demux8 ->
-            2,8
         | Not | And | Or | Xor | Nand | Nor | Xnor -> 2,1
         | Resistor | CurrentSource -> 1,1
         | Custom _ -> failwithf "Custom components should not occur in fast simulation"
@@ -148,12 +136,6 @@ let getOutputWidths (sc: SimulationComponent) (wa: int option array) =
         putW1 1
         putW2 1
         putW3 1
-    | Demux2
-    | Demux4
-    | Demux8
-    | Mux2
-    | Mux4
-    | Mux8
     | Resistor
     | CurrentSource
     | IOLabel

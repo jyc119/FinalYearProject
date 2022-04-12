@@ -314,7 +314,6 @@ module CommonTypes
         | Constant of Width: int * ConstValue: int64 
         | Constant1 of Width: int * ConstValue: int64 * DialogTextValue: string
         | Not | And | Or | Xor | Nand | Nor | Xnor | Decode4
-        | Mux2 | Mux4 | Mux8 | Demux2 | Demux4 | Demux8
         | Resistor | CurrentSource
         | NbitsAdder of BusWidth: int | NbitsXor of BusWidth:int
         | Custom of CustomComponentType // schematic sheet used as component

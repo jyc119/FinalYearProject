@@ -388,19 +388,6 @@ let viewCatalogue model dispatch =
                         [ catTip1 "Resistor"  (fun _ -> createCompStdLabel Resistor model dispatch) "Resistor"
                           catTip1 "CurrentSource"  (fun _ -> createCompStdLabel CurrentSource model dispatch) "CurrentSource"]
                     makeMenuGroup
-                        "Mux / Demux"
-                        [ catTip1 "Mux2" (fun _ -> createCompStdLabel Mux2 model dispatch) "Selects the one of its two input busses numbered by the value of the select input
-                                                                                to be the output. Adjusts bus width to match."
-                          catTip1 "Mux4" (fun _ -> createCompStdLabel Mux4 model dispatch) "Selects the one of its four input busses numbered by the value of the select input
-                                                                                            to be the output. Adjusts bus width to match."
-                          catTip1 "Mux8" (fun _ -> createCompStdLabel Mux8 model dispatch) "Selects the one of its eight input busses numbered by the value of the select input
-                                                                                            to be the output. Adjusts bus width to match."                                                                  
-                          catTip1 "Demux2" (fun _ -> createCompStdLabel Demux2 model dispatch)  "The output is equal to the input, the other is 0"
-                          catTip1 "Demux4" (fun _ -> createCompStdLabel Demux4 model dispatch)  "The output is equal to the input"
-                          catTip1 "Demux8" (fun _ -> createCompStdLabel Demux8 model dispatch)  "The output is equal to the input"
-                          catTip1 "Decode4" (fun _ -> createCompStdLabel Decode4 model dispatch) "The output numbered by the binary value 
-                                                                                                of the 2 bit sel input is equal to Data, the others are 0"]
-                    makeMenuGroup
                         "Arithmetic"
                         [ catTip1 "N bits adder" (fun _ -> createNbitsAdderPopup model dispatch) "N bit Binary adder with carry in to bit 0 and carry out from bit N-1"
                           catTip1 "N bits XOR" (fun _ -> createNbitsXorPopup model dispatch) "N bit XOR gates - use to make subtractor or comparator"]

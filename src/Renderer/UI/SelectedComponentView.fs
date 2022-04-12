@@ -293,12 +293,6 @@ let private makeDescription (comp:Component) model dispatch =
         ]
     | Not | And | Or | Xor | Nand | Nor | Xnor ->
         div [] [ str <| sprintf "%A gate." comp.Type ]
-    | Mux2 -> div [] [ str "Multiplexer with two inputs and one output." ]
-    | Mux4 -> div [] [ str "Multiplexer with four inputs and one output." ]
-    | Mux8 -> div [] [ str "Multiplexer with eight inputs and one output." ]
-    | Demux2 -> div [] [ str "Demultiplexer with one input and two outputs." ]
-    | Demux4 -> div [] [ str "Demultiplexer with one input and four outputs." ]
-    | Demux8 -> div [] [ str "Demultiplexer with one input and eight outputs." ]
     | Resistor -> div [] [ str "Resistor" ]
     | CurrentSource -> div [] [ str "Current Source" ]
     | MergeWires -> div [] [ str "Merge two wires of width n and m into a single wire of width n+m." ]

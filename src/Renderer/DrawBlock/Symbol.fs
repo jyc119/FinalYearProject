@@ -132,12 +132,6 @@ let bustitle (wob:int) (lsb:int) : string =
 let getPrefix compType = 
     match compType with
     | Not | And | Or | Xor | Nand | Nor | Xnor -> "G"
-    | Mux2 -> "MUX"
-    | Mux4 -> "MUX-4."
-    | Mux8 -> "MUX-8."
-    | Demux2 -> "DM"
-    | Demux4 -> "DM-4."
-    | Demux8 -> "DM-8."
     | Resistor -> "R"
     | CurrentSource -> "CurrentSource"
     | NbitsAdder _ -> "A"
@@ -189,12 +183,6 @@ let portNames (componentType:ComponentType)  = //(input port names, output port 
     | AsyncRAM1 _ -> (["Addr"; "Din";"Wen" ]@["Dout"])
     | DFF -> (["D"]@["Q"])
     | DFFE -> (["D";"EN"]@["Q"])
-    | Mux2 -> (["0"; "1";"SEL"]@["OUT"])
-    | Mux4 -> (["0"; "1"; "2"; "3" ;"SEL"]@["OUT"])
-    | Mux8 -> (["0"; "1"; "2" ; "3" ; "4" ; "5" ; "6" ; "7";"SEL"]@["OUT"])
-    | Demux2 -> (["IN" ; "SEL"]@["0"; "1"])
-    | Demux4 -> (["IN"; "SEL"]@["0"; "1";"2"; "3";])
-    | Demux8 -> (["IN"; "SEL"]@["0"; "1"; "2" ; "3" ; "4" ; "5" ; "6" ; "7"])
     | Resistor | CurrentSource -> ([]@[])
     | NbitsXor _ -> (["P"; "Q"]@ ["Out"])
     | Custom x -> (List.map fst x.InputLabels)@ (List.map fst x.OutputLabels)
@@ -205,12 +193,6 @@ let portNames (componentType:ComponentType)  = //(input port names, output port 
 
 let movePortsToCorrectEdgeForComponentType (ct: ComponentType) (portMaps: PortMaps): PortMaps =
     match ct with //need to put some ports to different edges
-    | Mux2 -> //need to remove select port from left and move to bottom
-        movePortToBottom portMaps 2
-    | Mux4 -> //need to remove select port from left and move to right
-        movePortToBottom portMaps 4
-    | Mux8 ->
-        movePortToBottom portMaps 8
     | NbitsAdder _ -> 
         let rightSide = portMaps.Order[Right]
         let newRightSide = List.rev rightSide
@@ -220,8 +202,6 @@ let movePortsToCorrectEdgeForComponentType (ct: ComponentType) (portMaps: PortMa
     | DFFE ->
         movePortToBottom portMaps 1
     | RegisterE _ ->
-        movePortToBottom portMaps 1
-    | Demux2 | Demux4 | Demux8 ->
         movePortToBottom portMaps 1
     | _ -> portMaps
 
@@ -418,12 +398,6 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         | Constant1 (a, b,_) | Constant(a, b) -> (  0 , 1, gS ,  2*gS) 
         | MergeWires -> ( 2 , 1, 2*gS ,  2*gS) 
         | SplitWire (a) ->(  1 , 2 , 2*gS ,  2*gS) 
-        | Mux2 -> ( 3  , 1, 3*gS ,  2*gS) 
-        | Mux4 -> ( 5  , 1, 5*gS ,  2*gS)   
-        | Mux8 -> ( 9  , 1, 7*gS ,  2*gS) 
-        | Demux2 ->( 2  , 2, 3*gS ,  2*gS) 
-        | Demux4 -> ( 2  , 4, 150 ,  50) 
-        | Demux8 -> ( 2  , 8, 200 ,  50) 
         | Resistor -> (1 , 1 , 2*gS , 3*gS)
         | CurrentSource -> (1 , 1 , 2*gS , 2*gS)
         | BusSelection (a, b) -> (  1 , 1, gS,  2*gS) 
@@ -504,45 +478,6 @@ let inline getPortBaseOffset (sym: Symbol) (side: Edge): XYPos=
     | Top -> {X = 0.0; Y = 0.0}
     | Bottom -> {X = 0.0; Y = h}
 
-/// Returns true if an edge has the select port of a mux
-let isMuxSel (sym:Symbol) (side:Edge): bool =
-    match sym.Component.Type with
-    | Mux2 | Mux4 | Mux8 | Demux2 | Demux4 | Demux8 ->
-        match sym.STransform.Rotation, side with
-        | Degree0, Bottom | Degree0, Top
-        | Degree90, Left | Degree90, Right
-        | Degree180, Bottom | Degree180, Top
-        | Degree270, Left | Degree270, Right
-             -> true
-        | _ -> false
-    | _ -> false
-
-
-/// Based on a symbol and an edge, if the port is a mux select, return an extra offset required for the port (because of the weird shape of the mux)
-let getMuxSelOffset (sym: Symbol) (side: Edge): XYPos =
-    let compType = sym.Component.Type
-    if isMuxSel sym side && (compType=Mux2 || compType=Demux2) then
-        match side with 
-            | Top -> {X = 0.0; Y = 10}
-            | Bottom -> {X = 0.0; Y = -10}
-            | Left -> {X = 10; Y = 0.0}
-            | Right -> {X = -10; Y = 0.0}
-    elif isMuxSel sym side && (compType=Mux4 || compType=Demux4) then
-        match side with 
-            | Top -> {X = 0.0; Y = 15}
-            | Bottom -> {X = 0.0; Y = -15}
-            | Left -> {X = 15; Y = 0.0}
-            | Right -> {X = -15; Y = 0.0}
-    elif isMuxSel sym side && (compType=Mux8 || compType=Demux8) then
-        match side with 
-            | Top -> {X = 0.0; Y = 20}
-            | Bottom -> {X = 0.0; Y = -20}
-            | Left -> {X = 20; Y = 0.0}
-            | Right -> {X = -20; Y = 0.0}
-    else
-        {X=0.0; Y=0.0}
-
-
 ///Given a symbol and a port, it returns the offset of the port from the top left corner of the symbol
 let getPortPos (sym: Symbol) (port: Port) : XYPos =
     //get ports on the same edge first
@@ -551,21 +486,20 @@ let getPortPos (sym: Symbol) (port: Port) : XYPos =
     let index = float( List.findIndex (fun (p:string)  -> p = port.Id) ports )
     let gap = getPortPosEdgeGap sym.Component.Type 
     let baseOffset = getPortBaseOffset sym side  //offset of the side component is on
-    let baseOffset' = baseOffset + getMuxSelOffset sym side
     let h,w = getRotatedHAndW sym
     match side with
     | Left ->
         let yOffset = (float(h))* (( index + gap )/( float( ports.Length ) + 2.0*gap - 1.0))
-        baseOffset' + {X = 0.0; Y = yOffset }
+        baseOffset + {X = 0.0; Y = yOffset }
     | Right -> 
         let yOffset = (float(h))* (( float( ports.Length ) - index - 1.0 + gap )/( float( ports.Length ) + 2.0*gap - 1.0))
-        baseOffset' + {X = 0.0; Y = yOffset }
+        baseOffset + {X = 0.0; Y = yOffset }
     | Bottom -> 
         let xOffset = (float(w))* ((index + gap)/(float (ports.Length) + 2.0*gap - 1.0))
-        baseOffset' + {X = xOffset; Y = 0.0 }
+        baseOffset + {X = xOffset; Y = 0.0 }
     | Top ->
         let xOffset = (float(w))* (( float( ports.Length ) - index - 1.0 + gap)/(float (ports.Length) + 2.0*gap - 1.0))
-        baseOffset' + {X = xOffset; Y = 0.0 }
+        baseOffset + {X = xOffset; Y = 0.0 }
 
 /// Gives the port positions to the render function, it gives the moving port pos where the mouse is, if there is a moving port
 let inline getPortPosToRender (sym: Symbol) (port: Port) : XYPos =
@@ -735,14 +669,6 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
                 [|{X=W;Y=H/6.};{X=W/2.;Y=H/6.};{X=W/2.;Y=H/2.};{X=0;Y=H/2.};{X=W/2.;Y=H/2.};{X=W/2.;Y=5.*H/6.};{X=W;Y=5.*H/6.};{X=W/2.;Y=5.*H/6.};{X=W/2.;Y=H/6.}|]
             // EXTENSION: |Mux4|Mux8 ->(sprintf "%i,%i %i,%f  %i,%f %i,%i" 0 0 w (float(h)*0.2) w (float(h)*0.8) 0 h )
             // EXTENSION: | Demux4 |Demux8 -> (sprintf "%i,%f %i,%f %i,%i %i,%i" 0 (float(h)*0.2) 0 (float(h)*0.8) w h w 0)
-            | Demux2 ->
-                [|{X=0;Y=H/5.};{X=0;Y=H*0.8};{X=W;Y=H};{X=W;Y=0}|]
-            | Mux2 ->
-                [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=H*0.8};{X=W;Y=H/5.}|]
-            | Demux2 | Demux4 | Demux8 ->
-                [|{X=0;Y=H/5.};{X=0;Y=H*0.8};{X=W;Y=H};{X=W;Y=0}|]
-            | Mux2 | Mux4 | Mux8 -> 
-                [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=H*0.8};{X=W;Y=H/5.}|]
             | Resistor ->
                 [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=H};{X=W;Y=0}|]
             | CurrentSource ->
