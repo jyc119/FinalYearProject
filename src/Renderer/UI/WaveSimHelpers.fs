@@ -625,16 +625,6 @@ let rec private findName (compIds: ComponentId Set) (sd: SimulationData) (net: N
                 [ { LabName = compLbl; BitLimits = 0, 0 } ] 
             | Input w | Output w | Constant1(w, _,_) | Constant(w,_) | Viewer w -> 
                 [ { LabName = compLbl; BitLimits = w - 1, 0 } ] 
-            | NbitsXor w -> 
-                [ { LabName = compLbl; BitLimits = w - 1, 0 } ]
-            | NbitsAdder w ->
-                match outPortInt with
-                | 0 -> [ { LabName = compLbl + ".Sum"; BitLimits = w - 1, 0 } ]
-                | _ -> [ { LabName = compLbl + ".Cout"; BitLimits = w - 1, 0 } ]
-            | DFF | DFFE -> 
-                [ { LabName = compLbl + ".Q"; BitLimits = 0, 0 } ]
-            | Register w | RegisterE w -> 
-                [ { LabName = compLbl + ".Dout"; BitLimits = w-1, 0 } ]
             | RAM1 mem | AsyncRAM1 mem | AsyncROM1 mem | ROM1 mem -> 
                 [ { LabName = compLbl + ".Dout"; BitLimits = mem.WordWidth - 1, 0 } ]
             | Custom c -> 

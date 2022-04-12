@@ -133,10 +133,6 @@ let getPrefix compType =
     match compType with
     | Resistor -> "R"
     | CurrentSource -> "CurrentSource"
-    | NbitsAdder _ -> "A"
-    | NbitsXor _ -> "XOR"
-    | DFF | DFFE -> "FF"
-    | Register _ | RegisterE _ -> "REG"
     | AsyncROM1 _ -> "AROM"
     | ROM1 _ -> "ROM"
     | RAM1 _ -> "RAM"
@@ -154,15 +150,10 @@ let getPrefix compType =
 let getComponentLegend (componentType:ComponentType) =
     match componentType with
     | Decode4 -> "Decode"
-    | NbitsAdder n -> title "Adder" n
-    | Register n | RegisterE n-> title "Register" n
     | AsyncROM1 _ -> "Async-ROM"
     | ROM1 _ -> "Sync-ROM"
     | RAM1 _ -> "Sync-RAM"
     | AsyncRAM1 _ -> "Async-RAM"
-    | DFF -> "DFF"
-    | DFFE -> "DFFE"
-    | NbitsXor (x)->   title "N-bits-Xor" x
     | Custom x -> x.Name
     | _ -> ""
 
@@ -170,36 +161,15 @@ let getComponentLegend (componentType:ComponentType) =
 let portNames (componentType:ComponentType)  = //(input port names, output port names)
     match componentType with
     | Decode4 -> (["Sel";"Data"]@["0"; "1";"2"; "3"])
-    | NbitsAdder _ -> (["Cin";"A";"B"]@["Sum "; "Cout"])
-    | Register _ -> (["D"]@["Q"])
-    | RegisterE _ -> (["D"; "EN"]@["Q"])
     | ROM1 _ |AsyncROM1 _ -> (["Addr"]@["Dout"])
     | RAM1 _ -> (["Addr"; "Din";"Wen" ]@["Dout"])
     | AsyncRAM1 _ -> (["Addr"; "Din";"Wen" ]@["Dout"])
-    | DFF -> (["D"]@["Q"])
-    | DFFE -> (["D";"EN"]@["Q"])
     | Resistor | CurrentSource -> ([]@[])
-    | NbitsXor _ -> (["P"; "Q"]@ ["Out"])
     | Custom x -> (List.map fst x.InputLabels)@ (List.map fst x.OutputLabels)
     | _ -> ([]@[])
    // |Demux8 -> (["IN"; "SEL"],["0"; "1"; "2" ; "3" ; "4" ; "5" ; "6" ; "7"])
    // |_ -> ([],[])
    // EXTENSION: Extra Components made that are not currently in Issie. Can be extended later by using this code as it is .
-
-let movePortsToCorrectEdgeForComponentType (ct: ComponentType) (portMaps: PortMaps): PortMaps =
-    match ct with //need to put some ports to different edges
-    | NbitsAdder _ -> 
-        let rightSide = portMaps.Order[Right]
-        let newRightSide = List.rev rightSide
-        let newPortOrder = Map.add Right newRightSide portMaps.Order
-        let portMaps' = {portMaps with Order = newPortOrder}
-        movePortToBottom portMaps' 0
-    | DFFE ->
-        movePortToBottom portMaps 1
-    | RegisterE _ ->
-        movePortToBottom portMaps 1
-    | _ -> portMaps
-
 
 /// Genererates a list of ports:
 let portLists numOfPorts hostID portType =
@@ -260,7 +230,7 @@ let initPortOrientation (comp: Component) =
     let res = 
         (inputMaps, (List.rev comp.OutputPorts))
         ||> List.fold (fun maps port -> addPortToMaps Right maps port.Id)
-    movePortsToCorrectEdgeForComponentType comp.Type res
+    res
 
 
 
@@ -395,15 +365,9 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         | CurrentSource -> (1 , 1 , 2*gS , 2*gS)
         | BusSelection (a, b) -> (  1 , 1, gS,  2*gS) 
         | BusCompare (a, b) -> ( 1 , 1, gS ,  2*gS) 
-        | DFF -> (  1 , 1, 3*gS  , 3*gS) 
-        | DFFE -> ( 2  , 1, 3*gS  , 3*gS) 
-        | Register (a) -> ( 1 , 1, 3*gS  , 4*gS )
-        | RegisterE (a) -> ( 2 , 1, 3*gS  , 4*gS) 
         | AsyncROM1 (a)  -> (  1 , 1, 4*gS  , 5*gS) 
         | ROM1 (a) -> (   1 , 1, 4*gS  , 5*gS) 
         | RAM1 (a) | AsyncRAM1 a -> ( 3 , 1, 4*gS  , 5*gS) 
-        | NbitsXor (n) -> (  2 , 1, 4*gS  , 4*gS) 
-        | NbitsAdder (n) -> (  3 , 2, 3*gS  , 4*gS) 
         | Custom cct -> getCustomCompArgs cct label
                 
     makeComponent' args label
@@ -668,7 +632,7 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
                 [|{X=W*0.2;Y=H*0.5};{X=W;Y=H*0.5};{X=W*0.7;Y=H*0.4};{X=W;Y=H*0.5};{X=W*0.7;Y=H*0.6};{X=W;Y=H*0.5};{X=W;Y=H};{X=0;Y=H};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H*0.5}|]
             | BusSelection _ |BusCompare _ -> 
                 [|{X=0;Y=0};{X=0;Y=H};{X=W*0.6;Y=H};{X=W*0.8;Y=H*0.7};{X=W;Y=H*0.7};{X=W;Y =H*0.3};{X=W*0.8;Y=H*0.3};{X=W*0.6;Y=0}|]
-            | DFF | DFFE | Register _ | RegisterE _ | ROM1 _ |RAM1 _ | AsyncRAM1 _ -> 
+            | ROM1 _ |RAM1 _ | AsyncRAM1 _ -> 
                 [|{X=0;Y=H-13.};{X=8.;Y=H-7.};{X=0;Y=H-1.};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H};{X=0;Y=H}|]
             | Custom x when symbol.IsClocked = true -> 
                 [|{X=0;Y=H-13.};{X=8.;Y=H-7.};{X=0;Y=H-1.};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H};{X=0;Y=H}|]
@@ -710,7 +674,7 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
             let midt = mid'-1
             let values = [(midt,0);(msb,midb);(msb,0)]
             List.fold (fun og i -> og @ mergeSplitLine splitWiresTextPos[i] (fst values[i]) (snd values[i]) ) [] [0..2]
-        | DFF | DFFE | Register _ |RegisterE _ | ROM1 _ |RAM1 _ | AsyncRAM1 _  -> 
+        | ROM1 _ |RAM1 _ | AsyncRAM1 _  -> 
             (addText clockTxtPos " clk" "middle" "normal" "12px")
         | BusSelection(x,y) -> (addText {X = w/2.; Y = (h/2.7)-2.} (bustitle x y) "middle" "bold" "12px")
         | BusCompare (_,y) -> (addText {X = w/2.-2.; Y = h/2.7-1.} ("=" + NumberHelpers.hex(int y)) "middle" "bold" "10px")

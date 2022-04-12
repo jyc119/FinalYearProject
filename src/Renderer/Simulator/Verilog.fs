@@ -339,14 +339,10 @@ let fastOutputDefinition (vType:VMode) (fc: FastComponent) (opn: OutputPortNumbe
 
     match fc.FType, fc.AccessPath with
     | Output n, [] -> $"output {vDef};\n"
-    | DFF, _
-    | DFFE, _ -> $"reg {vDef} = 1'b0;\n"
     | Input n, [] ->
         match vType with 
         | ForSynthesis -> $"input {vDef};\n"
         | ForSimulation -> $"reg {vDef} = {getZeros n};\n"
-    | Register n, _
-    | RegisterE n, _ -> $"reg {vDef} = {getZeros n};\n"
     | _ -> $"wire {vDef};\n"
 
 /// Translates from a component to its Verilog description
@@ -390,10 +386,6 @@ let getVerilogComponent (fs: FastSimulation) (fc: FastComponent) =
     | Viewer _
     | IOLabel _
     | Input _ -> sprintf $"assign %s{outs 0} = %s{ins 0};\n"
-    | DFFE
-    | RegisterE _ -> $"always @(posedge clk) %s{outs 0} <= %s{ins 1} ? %s{ins 0} : %s{outs 0};\n"
-    | DFF
-    | Register _ -> $"always @(posedge clk) %s{outs 0} <= %s{ins 0};\n"
     | Constant1 (w, c,_) 
     | Constant (w, c)
         -> $"assign %s{outs 0} = %s{makeBits w (uint64 c)};\n"
@@ -406,18 +398,6 @@ let getVerilogComponent (fs: FastSimulation) (fc: FastComponent) =
         + $"assign %s{outs 3} = (%s{ins 0} == 2'b11) ? %s{ins 1} : {makeBits w (uint64 0)};\n"
     | Resistor | CurrentSource -> 
         sprintf "assign %s = %s;\n" (outs 0) (ins 0)
-    | NbitsAdder n ->
-        let cin = ins 0
-        let a = ins 1
-        let b = ins 2
-        let sum = outs 0
-        let cout = outs 1
-        $"assign {{%s{cout},%s{sum} }} = %s{a} + %s{b} + %s{cin};\n"
-    | NbitsXor n ->
-        let a = ins 0
-        let b = ins 1
-        let xor = outs 0
-        $"assign {xor} = {a} ^ {b};\n"
     | BusSelection (outW, lsb) ->
         let sel = sprintf "[%d:%d]" (outW + lsb - 1) lsb
         $"assign {outs 0} = {ins 0}{sel};\n"

@@ -73,7 +73,7 @@ let inline private bitNand bit0 bit1 = bitAnd bit0 bit1 |> bitNot
 
 let inline private bitNor bit0 bit1 = bitOr bit0 bit1 |> bitNot
 
-let inline private bitXnor bit0 bit1 = bitXor bit0 bit1 |> bitNot
+let inline private bitXnorXnor bit0 bit1 = bitXor bit0 bit1 |> bitNot
 
 
 
@@ -252,52 +252,6 @@ let fastReduce (maxArraySize: int) (numStep: int) (isClockedReduction: bool) (co
 
 
         put0 outNum
-    | NbitsAdder numberOfBits ->
-        let cin, A, B = ins 0, ins 1, ins 2
-
-        let sum, cout =
-            let cin = convertFastDataToInt cin
-            let w = A.Width
-            match A.Dat, B.Dat with
-            | BigWord a, BigWord b ->
-                let mask = bigIntMask w
-                let a = a &&& mask
-                let b = b &&& mask
-                let sumInt = if cin = 0u then a + b else a + b + bigint 1
-                let sum = {Dat = BigWord (sumInt &&& bigIntMask w); Width = w}
-                let cout = if (sumInt >>> w) = bigint 0 then 0u else 1u
-                sum, packBit cout
-            | Word a, Word b ->
-                let mask = (1ul <<< w) - 1ul
-                if w = 32 then
-                    // mask is not needed, but 64 bit adition is needed!
-                    let sumInt =  uint64 a + uint64 b + uint64 (cin &&& 1u)
-                    let cout = uint32 (sumInt >>> w) &&& 1u
-                    let sum = convertIntToFastData w (uint32 sumInt) 
-                    sum, packBit cout
-                else
-                    let sumInt =  (a &&& mask) + (b &&& mask) + (cin &&& 1u)
-                    let cout = (sumInt >>> w) &&& 1u
-                    let sum = convertIntToFastData w (sumInt &&& mask) 
-                    sum, packBit cout
-                    
-            | a, b -> 
-                failwithf $"Inconsistent inputs to NBitsAdder {comp.FullName} A={a},{A}; B={b},{B}"
-
-        put0 sum
-        put1 cout
-    | NbitsXor numberOfBits ->
-        let A, B = ins 0, ins 1
-        let outDat =
-            match A.Dat, B.Dat with
-            | BigWord a, BigWord b ->
-                BigWord (a ^^^ b)
-            | Word a, Word b -> 
-                Word (a ^^^ b)
-            | a,b -> 
-                failwithf $"Inconsistent inputs to NBitsXOr {comp.FullName} A={a},{A}; B={b},{B}"
-
-        put0 {A with Dat = outDat}
     | Decode4 ->
         let select, data = ins 0, ins 1
         let selN = convertFastDataToInt select |> int
@@ -354,36 +308,6 @@ let fastReduce (maxArraySize: int) (numStep: int) (isClockedReduction: bool) (co
         put0 bits0
         put1 bits1
         putW 1 bits1.Width
-    | DFF ->
-        let d = extractBit (insOld 0) 1
-        put0 (packBit d)
-    | DFFE ->
-        let d, en =
-            extractBit (insOld 0) 1, extractBit (insOld 1) 1
-
-        if en = 1u then
-            put0 <| packBit d
-        else
-            put0 (getLastCycleOut 0)
-
-    | Register width ->
-        let bits = insOld 0
-#if ASSERTS
-        assertThat (bits.Width = width)
-        <| sprintf "Register received data with wrong width: expected %d but got %A" width bits.Width
-#endif
-        put0 bits
-
-    | RegisterE width ->
-        let bits, enable = insOld 0, insOld 1
-#if ASSERTS
-        assertThat (bits.Width = width)
-        <| sprintf "RegisterE received data with wrong width: expected %d but got %A" width bits.Width
-#endif
-        if (extractBit enable 1 = 1u) then
-            put0 bits
-        else
-            put0 (getLastCycleOut 0)
     | AsyncROM1 mem -> // Asynchronous ROM.
         let addr = ins 0
 #if ASSERTS

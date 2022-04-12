@@ -147,7 +147,7 @@ let private makeNumberOfBitsField model (comp:Component) text dispatch =
     
     let title, width =
         match comp.Type with
-        | Input w | Output w | NbitsAdder w | NbitsXor w | Register w | RegisterE w | Viewer w -> "Number of bits", w
+        | Input w | Output w | Viewer w -> "Number of bits", w
         | SplitWire w -> "Number of bits in the top (LSB) wire", w
         | BusSelection( w, _) -> "Number of bits selected: width", w
         | BusCompare( w, _) -> "Bus width", w
@@ -295,8 +295,6 @@ let private makeDescription (comp:Component) model dispatch =
     | CurrentSource -> div [] [ str "Current Source" ]
     | MergeWires -> div [] [ str "Merge two wires of width n and m into a single wire of width n+m." ]
     | SplitWire _ -> div [] [ str "Split a wire of width n+m into two wires of width n and m."]
-    | NbitsAdder numberOfBits -> div [] [ str <| sprintf "%d bit(s) adder." numberOfBits ]
-    | NbitsXor numberOfBits  -> div [] [ str <| sprintf "%d XOR gates with %d outputs." numberOfBits numberOfBits]
     | Decode4 -> div [] [ str <| "4 bit decoder: Data is output on the Sel output, all other outputs are 0."]
     | Custom custom ->
         let styledSpan styles txt = span [Style styles] [str <| txt]
@@ -320,17 +318,6 @@ let private makeDescription (comp:Component) model dispatch =
             span [Style [FontWeight "bold"; FontSize "15px"]] [str <| "Outputs"]
             ul [] (toHTMLList custom.OutputLabels)
         ]
-    | DFF -> div [] [ str "D-flip-flop. The component is implicitly connected to the global clock." ]
-    | DFFE -> div [] [
-        str "D-flip-flop with enable. If the enable signal is high the state of
-             the D-flip-flop will be updated at the next clock cycle.
-             The component is implicitly connected to the global clock." ]
-    | Register _  -> div [] [ str "Register. The component is implicitly connected to the global clock." ]
-    | RegisterE _ ->
-        div [] [ str "Register with enable. If the enable signal is high the
-                      state of the Register will be updated at the next clock
-                      cycle. The component is implicitly connected to the global
-                      clock." ]
     | AsyncROM1 mem ->
         let descr = "Asynchronous ROM: the output is updated as soon as the address changes."
         makeMemoryInfo descr mem (ComponentId comp.Id) comp.Type model dispatch
@@ -361,11 +348,9 @@ let private makeDescription (comp:Component) model dispatch =
 
 let private makeExtraInfo model (comp:Component) text dispatch =
     match comp.Type with
-    | Input _ | Output _ | NbitsAdder _ | NbitsXor _ | Viewer _ ->
+    | Input _ | Output _ | Viewer _ ->
         makeNumberOfBitsField model comp text dispatch
     | SplitWire _ ->
-        makeNumberOfBitsField model comp text dispatch
-    | Register _ | RegisterE _ ->
         makeNumberOfBitsField model comp text dispatch
     | BusSelection _ -> 
         div [] [

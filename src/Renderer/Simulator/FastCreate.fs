@@ -65,21 +65,13 @@ let getPortNumbers (sc: SimulationComponent) =
         | Viewer _ 
         | BusSelection _
         | BusCompare _
-        | DFF
-        | Register _
         | IOLabel  
         | ROM1 _ 
         | AsyncROM1 _->
             1,1
         | MergeWires
-        | NbitsXor _
-        | RegisterE _
-        | DFFE -> 
-            2,1
         | SplitWire _ -> 
             1,2
-        | NbitsAdder _ -> 
-            3,2
         | AsyncRAM1 _
         | RAM1 _ -> 
             2,1
@@ -93,46 +85,38 @@ let getPortNumbers (sc: SimulationComponent) =
 
 let getOutputWidths (sc: SimulationComponent) (wa: int option array) =
 
-    let putW0 w = wa[0] <- Some w
-    let putW1 w = wa[1] <- Some w
-    let putW2 w = wa[2] <- Some w
-    let putW3 w = wa[3] <- Some w
+   let putW0 w = wa[0] <- Some w
+   let putW1 w = wa[1] <- Some w
+   let putW2 w = wa[2] <- Some w
+   let putW3 w = wa[3] <- Some w
 
-    match sc.Type with
-    | ROM _ | RAM _ | AsyncROM _ -> 
-        failwithf "What? Legacy RAM component types should never occur"
-    | Input w
-    | Output w
-    | Viewer w
-    | Register w
-    | RegisterE w
-    | SplitWire w
-    | BusSelection (w, _)
-    | Constant1 (w, _,_)
-    | Constant (w,_)
-    | NbitsXor w -> putW0 w
-    | NbitsAdder w ->
-        putW0 w
-        putW1 1
-    | BusCompare _ -> putW0 1
-    | AsyncROM1 mem
-    | ROM1 mem
-    | RAM1 mem
-    | AsyncRAM1 mem -> putW0 mem.WordWidth
-    | Custom _ -> ()
-    | DFF
-    | DFFE -> putW0 1
-    | Decode4 ->
-        putW0 1
-        putW1 1
-        putW2 1
-        putW3 1
-    | Resistor
-    | CurrentSource
-    | IOLabel
-    | MergeWires -> ()
+   match sc.Type with
+   | ROM _ | RAM _ | AsyncROM _ -> 
+       failwithf "What? Legacy RAM component types should never occur"
+   | Input w
+   | Output w
+   | Viewer w
+   | SplitWire w
+   | BusSelection (w, _)
+   | Constant1 (w, _,_)
+   | Constant (w,_) -> putW0 w
+   | BusCompare _ -> putW0 1
+   | AsyncROM1 mem
+   | ROM1 mem
+   | RAM1 mem
+   | AsyncRAM1 mem -> putW0 mem.WordWidth
+   | Custom _ -> ()
+   | Decode4 ->
+       putW0 1
+       putW1 1
+       putW2 1
+       putW3 1
+   | Resistor
+   | CurrentSource
+   | IOLabel
+   | MergeWires -> ()
 
-    wa
+   wa
 
 
 /// create a FastComponent data structure with data arrays from a SimulationComponent.

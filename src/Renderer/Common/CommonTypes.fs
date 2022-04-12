@@ -315,12 +315,8 @@ module CommonTypes
         | Constant1 of Width: int * ConstValue: int64 * DialogTextValue: string
         | Decode4
         | Resistor | CurrentSource
-        | NbitsAdder of BusWidth: int | NbitsXor of BusWidth:int
         | Custom of CustomComponentType // schematic sheet used as component
         | MergeWires | SplitWire of BusWidth: int // int is bus width
-        // DFFE is a DFF with an enable signal.
-        // No initial state for DFF or Register? Default 0.
-        | DFF | DFFE | Register of BusWidth: int | RegisterE of BusWidth: int 
         | AsyncROM of Memory | ROM of Memory | RAM of Memory // legacy components - to be deleted
         | AsyncROM1 of Memory1 | ROM1 of Memory1 | RAM1 of Memory1 | AsyncRAM1 of Memory1
 
@@ -660,11 +656,8 @@ module CommonTypes
             | None, _ -> false
             | Some ldc, _ ->
                 let (comps, _) = ldc.CanvasState
-                List.exists (isClocked (ct.Name :: visitedSheets) ldcs) comps
-                        
-
-                            
-        | DFF | DFFE | Register _ | RegisterE _ | RAM _ | ROM _ ->
+                List.exists (isClocked (ct.Name :: visitedSheets) ldcs) comps                
+        | RAM _ | ROM _ ->
             true
         | _ -> false
 
