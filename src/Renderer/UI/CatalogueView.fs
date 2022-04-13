@@ -245,14 +245,14 @@ let viewCatalogue model dispatch =
                     makeMenuGroup
                         "Input / Output"
                         [ catTip1 "Input"  (fun _ -> createIOPopup true "input" Input model dispatch) "Input connection to current sheet: one or more bits"
-                          catTip1 "Output" (fun _ -> createIOPopup true "output" Output model dispatch) "Output connection from current sheet: one or more bits"
-                          catTip1 "Viewer" (fun _ -> createIOPopup true "viewer" Viewer model dispatch) "Viewer to expose value in simulation: works in subsheets"
-                          catTip1 "Wire Label" (fun _ -> createIOPopup false "label" (fun _ -> IOLabel) model dispatch) "Labels with the same name connect \
-                                                                                                                         together wires or busses"]
+                          catTip1 "Output" (fun _ -> createIOPopup true "output" Output model dispatch) "Output connection from current sheet: one or more bits"]
                     makeMenuGroup
-                        "Analog Components"
+                        "Linear Components"
                         [ catTip1 "Resistor"  (fun _ -> createCompStdLabel Resistor model dispatch) "Resistor"
-                          catTip1 "CurrentSource"  (fun _ -> createCompStdLabel CurrentSource model dispatch) "CurrentSource"]
+                          ]
+                    makeMenuGroup
+                        "Non-Linear components"
+                        [ catTip1 "CurrentSource"  (fun _ -> createCompStdLabel CurrentSource model dispatch) "CurrentSource"]
                     makeMenuGroupWithTip styles
                         "This project"
                         "Every design sheet is available for use in other sheets as a custom component: \
