@@ -615,57 +615,13 @@ let rec private findName (compIds: ComponentId Set) (sd: SimulationData) (net: N
                 | None ->  { OutputsAndIOLabels = []; ComposingLabels = [] } 
             let srcComp = net[nlSource.SourceCompId]
             match net[nlSource.SourceCompId].Type with
-            | Decode4 | Resistor | CurrentSource | BusCompare _ -> 
+            | Resistor | CurrentSource -> 
                 [ { LabName = compLbl; BitLimits = 0, 0 } ] 
             | Input w | Output w | Constant1(w, _,_) | Constant(w,_) | Viewer w -> 
                 [ { LabName = compLbl; BitLimits = w - 1, 0 } ] 
             | Custom c -> 
                 [ { LabName = compLbl + "." + (fst c.OutputLabels[outPortInt])
                     BitLimits = snd c.OutputLabels[outPortInt] - 1, 0 } ]
-            | MergeWires -> 
-                List.append (drivingOutputName (InputPortNumber 1)).ComposingLabels 
-                            (drivingOutputName (InputPortNumber 0)).ComposingLabels
-            | SplitWire w ->
-                let mostsigBranch (_, b) =
-                    match outPortInt with
-                    | 0 -> b >= 16 - w
-                    | 1 -> b < 16 - w
-                    | _ -> failwith "SplitWire output port number greater than 1"
-
-                let split { LabName = name; BitLimits = msb, lsb } st =
-                    List.zip [ lsb .. msb ] [ st + msb - lsb .. -1 .. st ]
-                    |> List.filter mostsigBranch
-                    |> List.unzip
-                    |> function
-                    | [], _ -> None 
-                    | lst, _ -> Some { LabName = name
-                                       BitLimits = List.max lst, List.min lst } 
-
-                let updateState { LabName = _; BitLimits = msb, lsb } st =
-                    st + msb - lsb + 1
-
-                (0, (drivingOutputName (InputPortNumber 0)).ComposingLabels)
-                ||> List.mapFold (fun st lstEl -> split lstEl st, updateState lstEl st)
-                |> fst
-                |> List.choose id
-            | BusSelection(w, oLSB) ->
-                let filtSelec { LabName = name; BitLimits = msb, lsb } st =
-                    List.zip [ lsb .. msb ] [ st .. st + msb - lsb ]
-                    |> List.filter (fun (_, b) -> oLSB <= b && b <= oLSB + w - 1)
-                    |> List.unzip
-                    |> function
-                    | [], _ -> None
-                    | lst, _ -> Some { LabName = name
-                                       BitLimits = List.max lst, List.min lst } 
-
-                let updateState { LabName = _; BitLimits = msb, lsb } st =
-                    st + msb - lsb + 1 
-
-                ((drivingOutputName (InputPortNumber 0)).ComposingLabels, 0)
-                ||> List.mapFoldBack (fun lstEl st -> filtSelec lstEl st, updateState lstEl st)
-                |> fst
-                |> List.choose id
-                |> List.rev
             | IOLabel -> 
                 let drivingComp = fs.FIOActive[ComponentLabel srcComp.Label,[]]
                 let ioLblWidth = FastRun.extractFastSimulationWidth fs (drivingComp.Id,[]) (OutputPortNumber 0)

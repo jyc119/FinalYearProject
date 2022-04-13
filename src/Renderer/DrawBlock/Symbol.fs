@@ -136,23 +136,18 @@ let getPrefix compType =
     | Custom c ->
         c.Name.ToUpper() + (if c.Name |> Seq.last |> System.Char.IsDigit then "." else "")
     | Constant1 _ -> "C"
-    | BusCompare _ -> "EQ"
-    | Decode4 -> "DEC"
-    | BusSelection _ -> "SEL"
     | _ -> ""
 
 
 // Text to be put inside different Symbols depending on their ComponentType
 let getComponentLegend (componentType:ComponentType) =
     match componentType with
-    | Decode4 -> "Decode"
     | Custom x -> x.Name
     | _ -> ""
 
 // Input and Output names of the ports depending on their ComponentType
 let portNames (componentType:ComponentType)  = //(input port names, output port names)
     match componentType with
-    | Decode4 -> (["Sel";"Data"]@["0"; "1";"2"; "3"])
     | Resistor | CurrentSource -> ([]@[])
     | Custom x -> (List.map fst x.InputLabels)@ (List.map fst x.OutputLabels)
     | _ -> ([]@[])
@@ -344,14 +339,9 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         | ComponentType.Output (a) -> (  1 , 0, gS ,  2*gS) 
         | ComponentType.Viewer a -> (  1 , 0, gS ,  gS) 
         | ComponentType.IOLabel  ->(  1 , 1, gS ,  2*gS) 
-        | Decode4 ->( 2 , 4 , 4*gS  , 3*gS) 
         | Constant1 (a, b,_) | Constant(a, b) -> (  0 , 1, gS ,  2*gS) 
-        | MergeWires -> ( 2 , 1, 2*gS ,  2*gS) 
-        | SplitWire (a) ->(  1 , 2 , 2*gS ,  2*gS) 
         | Resistor -> (1 , 1 , 2*gS , 3*gS)
         | CurrentSource -> (1 , 1 , 2*gS , 2*gS)
-        | BusSelection (a, b) -> (  1 , 1, gS,  2*gS) 
-        | BusCompare (a, b) -> ( 1 , 1, gS ,  2*gS) 
         | Custom cct -> getCustomCompArgs cct label
                 
     makeComponent' args label
@@ -401,7 +391,6 @@ let addToPortModel (model: Model) (sym: Symbol) =
 /// hack so that bounding box of splitwire, mergewires can be smaller height relative to ports
 let inline getPortPosEdgeGap (ct: ComponentType) =
     match ct with
-    | MergeWires | SplitWire _  -> 0.25
     | _ -> 1.0
 
 ///Given a symbol and a Port, it returns the orientation of the port
@@ -604,18 +593,12 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
                 [|{X=W/3.;Y=0};{X=0;Y=H/2.};{X=W/3.;Y=H};{X=W*0.66;Y=H};{X=W;Y=H/2.};{X=W*0.66;Y=0}|]
             | Viewer _ ->
                 [|{X=W/5.;Y=0};{X=0;Y=H/2.};{X=W/5.;Y=H};{X=W;Y=H};{X=W;Y=0}|]
-            | MergeWires -> 
-                [|{X=0;Y=H/6.};{X=W/2.;Y=H/6.};{X=W/2.;Y=H/2.};{X=W;Y=H/2.};{X=W/2.;Y=H/2.};{X=W/2.;Y=5.*H/6.};{X=0;Y=5.*H/6.};{X=W/2.;Y=5.*H/6.};{X=W/2.;Y=H/6.}|]
-            | SplitWire _ -> 
-                [|{X=W;Y=H/6.};{X=W/2.;Y=H/6.};{X=W/2.;Y=H/2.};{X=0;Y=H/2.};{X=W/2.;Y=H/2.};{X=W/2.;Y=5.*H/6.};{X=W;Y=5.*H/6.};{X=W/2.;Y=5.*H/6.};{X=W/2.;Y=H/6.}|]
             // EXTENSION: |Mux4|Mux8 ->(sprintf "%i,%i %i,%f  %i,%f %i,%i" 0 0 w (float(h)*0.2) w (float(h)*0.8) 0 h )
             // EXTENSION: | Demux4 |Demux8 -> (sprintf "%i,%f %i,%f %i,%i %i,%i" 0 (float(h)*0.2) 0 (float(h)*0.8) w h w 0)
             | Resistor ->
                 [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=H};{X=W;Y=0}|]
             | CurrentSource ->
                 [|{X=W*0.2;Y=H*0.5};{X=W;Y=H*0.5};{X=W*0.7;Y=H*0.4};{X=W;Y=H*0.5};{X=W*0.7;Y=H*0.6};{X=W;Y=H*0.5};{X=W;Y=H};{X=0;Y=H};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H*0.5}|]
-            | BusSelection _ |BusCompare _ -> 
-                [|{X=0;Y=0};{X=0;Y=H};{X=W*0.6;Y=H};{X=W*0.8;Y=H*0.7};{X=W;Y=H*0.7};{X=W;Y =H*0.3};{X=W*0.8;Y=H*0.3};{X=W*0.6;Y=0}|]
             | Custom x when symbol.IsClocked = true -> 
                 [|{X=0;Y=H-13.};{X=8.;Y=H-7.};{X=0;Y=H-1.};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H};{X=0;Y=H}|]
             | _ -> 
@@ -640,24 +623,6 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
             | _ -> textPoints
 
         match comp.Type with
-        | MergeWires -> 
-            let lo, hi = 
-                match symbol.InWidth0, symbol.InWidth1  with 
-                | Some n, Some m  -> n, m
-                | _ -> -1,-1
-            let msb = hi + lo - 1
-            let midb = lo
-            let midt = lo - 1
-            let values = [(midt,0);(msb,midb);(msb,0)]
-            List.fold (fun og i -> og @ mergeSplitLine mergeWiresTextPos[i] (fst values[i]) (snd values[i]) ) [] [0..2]
-        | SplitWire mid -> 
-            let msb, mid' = match symbol.InWidth0 with | Some n -> n - 1, mid | _ -> -100, -50
-            let midb = mid'
-            let midt = mid'-1
-            let values = [(midt,0);(msb,midb);(msb,0)]
-            List.fold (fun og i -> og @ mergeSplitLine splitWiresTextPos[i] (fst values[i]) (snd values[i]) ) [] [0..2]
-        | BusSelection(x,y) -> (addText {X = w/2.; Y = (h/2.7)-2.} (bustitle x y) "middle" "bold" "12px")
-        | BusCompare (_,y) -> (addText {X = w/2.-2.; Y = h/2.7-1.} ("=" + NumberHelpers.hex(int y)) "middle" "bold" "10px")
         | Input (x) -> (addText {X = w/2.; Y = h/2.7-3.} (title "" x) "middle" "normal" "12px")
         | Output (x) -> (addText {X = w/2.; Y = h/2.7-3.} (title "" x) "middle" "normal" "12px")
         | Viewer (x) -> (addText {X = w/2.; Y = h/2.7 - 1.25} (title "" x) "middle" "normal" "9px")
@@ -666,7 +631,6 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
 
     let outlineColour, strokeWidth =
         match comp.Type with
-        | SplitWire _ | MergeWires -> outlineColor colour, "2.0"
         | _ -> "black", "1.0"
     
 

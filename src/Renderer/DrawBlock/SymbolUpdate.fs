@@ -27,7 +27,6 @@ let generateLabelNumber listSymbols compType =
         |> List.filter (samePrefix compType)
 
     match compType with
-    | MergeWires | SplitWire _ -> ""
     | _ ->
         if List.isEmpty samePrefixLst then 1 
         else samePrefixLst
@@ -210,9 +209,6 @@ let changeNumberOfBitsf (symModel:Model) (compId:ComponentId) (newBits : int) =
         | Input _ -> Input newBits
         | Output _ -> Output newBits
         | Viewer _ -> Viewer newBits
-        | SplitWire _ -> SplitWire newBits
-        | BusSelection (_,b) -> BusSelection (newBits,b)
-        | BusCompare (_,b) -> BusCompare (newBits,b)
         | Constant1 (_,b,txt) -> Constant1 (newBits,b,txt)
         | c -> c
 
@@ -225,8 +221,6 @@ let changeLsbf (symModel:Model) (compId:ComponentId) (newLsb:int64) =
 
     let newcompotype = 
         match symbol.Component.Type with
-        | BusSelection (w, _) -> BusSelection (w, int32(newLsb))
-        | BusCompare (w, _) -> BusCompare (w, uint32(newLsb)) 
         | Constant1(w, _,txt) -> Constant1 (w, newLsb,txt)
         | _ -> failwithf "this shouldnt happen, incorrect call of message changeLsb"
 

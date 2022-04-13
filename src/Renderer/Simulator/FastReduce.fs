@@ -223,87 +223,9 @@ let fastReduce (maxArraySize: int) (numStep: int) (isClockedReduction: bool) (co
         //let bits = comp.InputLinks[0][simStep]
         //printfn "Reducing IOLabel %A" comp.SimComponent.Label
         put0 bits
-    | BusSelection (width, lsb) ->
-        let bits = ins 0
-#if ASSERTS
-        assertThat
-            (bits.Width >= width + lsb)
-            (sprintf "Bus Selection received too few bits: expected at least %d but got %d" (width + lsb) bits.Width)
-#endif
-        let outBits = getBits (lsb + width - 1) lsb bits
-        put0 outBits
-    | BusCompare (width, compareVal) ->
-        //printfn "Reducing compare %A" comp.SimComponent.Label
-        let bits = ins 0
-#if ASSERTS
-        assertThat
-            (bits.Width = width)
-            ($"Bus Compare {comp.FullName} received wrong number of bits: expecting  {width} but got {bits.Width}")
-#endif
-        let inputNum = convertFastDataToInt bits
-
-        let outNum : FData =
-            if inputNum = compareVal then 1u else 0u
-            |> packBit
-
-
-        put0 outNum
-    | Decode4 ->
-        let select, data = ins 0, ins 1
-        let selN = convertFastDataToInt select |> int
-        let dataN = convertFastDataToInt data |> int
-
-        let outs =
-            [| 0 .. 3 |]
-            |> Array.map
-                (fun n ->
-                    let outBit = if n = selN then dataN else 0
-                    convertIntToFastData 1 (uint32 outBit))
-
-        put0 outs[0]
-        put1 outs[1]
-        put2 outs[2]
-        put3 outs[3]
-
     | Custom c ->
         // Custom components are removed
         failwithf "what? Custom components are removed before the fast simulation: %A" c
-    | MergeWires ->
-        let bits0, bits1 = ins 0, ins 1
-        // Little endian, bits coming from the top wire are the least
-        // significant.
-        let wOut = bits0.Width + bits1.Width
-        let outBits =
-            if wOut <= 32 then
-                match bits0.Dat, bits1.Dat with
-                | Word b0, Word b1 ->
-                    (b1 <<< bits0.Width) ||| b0
-                    |> (fun n ->  convertIntToFastData wOut n)
-                | _ -> failwithf $"inconsistent merge widths: {bits0},{bits1}"
-            else
-                let b0 = convertFastDataToBigint bits0
-                let b1 = convertFastDataToBigint bits1
-                (b1 <<< bits0.Width) ||| b0
-                |> convertBigintToFastData wOut  
-        put0 outBits
-        putW 0 outBits.Width
-    | SplitWire topWireWidth ->
-        let bits = ins 0
-#if ASSERTS
-        assertThat (bits.Width >= topWireWidth + 1)
-        <| sprintf "SplitWire received too little bits: expected at least %d but got %d" (topWireWidth + 1) bits.Width
-#endif
-        let bits0, bits1 =
-                let bits1 = getBits (bits.Width - 1) topWireWidth bits
-                let bits0 = getBits (topWireWidth-1) 0 bits
-                bits0, bits1
-
-            
-        // Little endian, bits leaving from the top wire are the least
-        // significant.
-        put0 bits0
-        put1 bits1
-        putW 1 bits1.Width
     | _ ->
         let bits = ins 0
         //let bits = comp.InputLinks[0][simStep]

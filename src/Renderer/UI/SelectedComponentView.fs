@@ -146,9 +146,6 @@ let private makeNumberOfBitsField model (comp:Component) text dispatch =
     let title, width =
         match comp.Type with
         | Input w | Output w | Viewer w -> "Number of bits", w
-        | SplitWire w -> "Number of bits in the top (LSB) wire", w
-        | BusSelection( w, _) -> "Number of bits selected: width", w
-        | BusCompare( w, _) -> "Bus width", w
         | Constant1(w, _,_) -> "Number of bits in the wire", w
         | c -> failwithf "makeNumberOfBitsField called with invalid component: %A" c
     intFormField title "60px" width 1 (
@@ -159,11 +156,11 @@ let private makeNumberOfBitsField model (comp:Component) text dispatch =
                 dispatch <| SetPropertiesNotification props
             else
                 model.Sheet.ChangeWidth sheetDispatch (ComponentId comp.Id) newWidth
-                let text' = match comp.Type with | BusSelection _ -> text | _ -> formatLabelAsBus newWidth text
+                let text' = match comp.Type with | _ -> formatLabelAsBus newWidth text
                 //SetComponentLabelFromText model comp text' // change the JS component label
                 let lastUsedWidth = 
                     match comp.Type with 
-                    | SplitWire _ | BusSelection _ | Constant1 _ -> 
+                    | Constant1 _ -> 
                         model.LastUsedDialogWidth 
                     | _ ->  
                         newWidth
@@ -229,35 +226,9 @@ let private makeLsbBitNumberField model (comp:Component) dispatch =
     let sheetDispatch sMsg = dispatch (Sheet sMsg)
     let lsbPos, infoText =
         match comp.Type with 
-        | BusSelection(width,lsb) -> uint32 lsb, "Least Significant Bit number selected: lsb"
-        | BusCompare(width,cVal) -> cVal, "Compare with"
         | _ -> failwithf "makeLsbBitNumberfield called from %A" comp.Type
 
     match comp.Type with
-    | BusCompare(width, _) -> 
-        intFormField infoText "120px"  (int lsbPos) 1  (
-            fun cVal ->
-                if cVal < 0 || uint32 cVal > uint32 ((1 <<< width) - 1)
-                then
-                    let note = errorPropsNotification <| sprintf "Invalid Comparison Value for bus of width %d" width
-                    dispatch <| SetPropertiesNotification note
-                else
-                    model.Sheet.ChangeLSB sheetDispatch (ComponentId comp.Id) (int64 cVal)
-                    dispatch (ReloadSelectedComponent (width)) // reload the new component
-                    dispatch ClosePropertiesNotification
-        )
-    | BusSelection(width, _) -> 
-        intFormField infoText "60px" (int lsbPos) 1 (
-            fun newLsb ->
-                if newLsb < 0
-                then
-                    let note = errorPropsNotification "Invalid LSB bit position"
-                    dispatch <| SetPropertiesNotification note
-                else
-                    model.Sheet.ChangeLSB sheetDispatch (ComponentId comp.Id) (int64 newLsb)
-                    dispatch (ReloadSelectedComponent (width)) // reload the new component
-                    dispatch ClosePropertiesNotification
-        )
     | _ -> failwithf "What? invalid component for lsbpos in properties"
 
 
@@ -268,16 +239,6 @@ let private makeDescription (comp:Component) model dispatch =
     | Constant1 _ | Constant _ -> str "Constant Wire."
     | Output _ -> str "Output."
     | Viewer _ -> str "Viewer."
-    | BusCompare _ -> str "The output is one if the bus unsigned binary value is equal to the integer specified. This will display in hex on the design sheet, and decimal in this dialog. Busses of greater than 32 bits are not supported"
-    | BusSelection _ -> div [] [
-                str "Bus Selection."
-                br []
-                str "The output is the subrange [width+lsb-1..lsb] of the input bits. If width = 1 this selects one bit. Error if the input has less than width + lsb bits."
-                br []
-                br []
-                str "Note that the output bit(s) are numbered from 0 even if the input range has LS bit number > 0. \
-                     The input bits connected are displayed in the schematic symbol"
-        ]
     | IOLabel -> div [] [
         str "Label on Wire or Bus. Labels with the same name connect wires. Each label has input on left and output on right. \
             No output connection is required from a set of labels. Since a set represents one wire of bus, exactly one input connection is required. \
@@ -289,9 +250,6 @@ let private makeDescription (comp:Component) model dispatch =
         ]
     | Resistor -> div [] [ str "Resistor" ]
     | CurrentSource -> div [] [ str "Current Source" ]
-    | MergeWires -> div [] [ str "Merge two wires of width n and m into a single wire of width n+m." ]
-    | SplitWire _ -> div [] [ str "Split a wire of width n+m into two wires of width n and m."]
-    | Decode4 -> div [] [ str <| "4 bit decoder: Data is output on the Sel output, all other outputs are 0."]
     | Custom custom ->
         let styledSpan styles txt = span [Style styles] [str <| txt]
         let boldSpan txt = styledSpan [FontWeight "bold"] txt
@@ -319,19 +277,6 @@ let private makeExtraInfo model (comp:Component) text dispatch =
     match comp.Type with
     | Input _ | Output _ | Viewer _ ->
         makeNumberOfBitsField model comp text dispatch
-    | SplitWire _ ->
-        makeNumberOfBitsField model comp text dispatch
-    | BusSelection _ -> 
-        div [] [
-            makeNumberOfBitsField model comp text dispatch
-            makeLsbBitNumberField model comp dispatch
-            ]
-    | BusCompare _ -> 
-        div [] [
-            makeNumberOfBitsField model comp text dispatch
-            makeLsbBitNumberField model comp dispatch
-            ]
-
     | Constant1 _ ->         
              makeConstantDialog model comp text dispatch
     | _ -> div [] []
@@ -353,7 +298,7 @@ let viewSelectedComponent (model: ModelType.Model) dispatch =
             let label' = Option.defaultValue "L" (formatLabelText comp.Label) // No formatting atm
             readOnlyFormField "Description" <| makeDescription comp model dispatch
             makeExtraInfo model comp label' dispatch
-            let required = match comp.Type with | SplitWire _ | MergeWires | BusSelection _ -> false | _ -> true
+            let required = match comp.Type with  | _ -> true
             textFormField required "Component Name" label' (fun text ->
                 // TODO: removed formatLabel for now
                 //setComponentLabel model sheetDispatch comp (formatLabel comp text)

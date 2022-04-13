@@ -106,8 +106,8 @@ let private mapInputPortIdToPortNumber
 /// ROMs are stateless (they are only defined by their initial content).
 let private getDefaultState compType =
     match compType with
-    | Input _ | Output _ | IOLabel | BusSelection _ | BusCompare _ | Decode4
-    | Resistor | CurrentSource | Custom _ | MergeWires | SplitWire _ | Viewer _ -> NoState
+    | Input _ | Output _ | IOLabel
+    | Resistor | CurrentSource | Custom _ | Viewer _ -> NoState
     | Constant1 _ | Constant _ -> NoState 
 
 /// Build a simulation component.

@@ -15,7 +15,7 @@ open SimulatorTypes
 let couldBeSynchronousComponent compType : bool =
     match compType with
     | Custom _ -> true // We have to assume custom components are clocked as they may be.
-    | Input _ | Output _ | IOLabel | Constant1 _ | BusSelection _ | BusCompare _ | MergeWires | SplitWire _ | Resistor | CurrentSource | Decode4 | Viewer _ -> false
+    | Input _ | Output _ | IOLabel | Constant1 _ | Resistor | CurrentSource | Viewer _ -> false
     | _ -> failwithf $"Legacy components {compType} should never be read!"
 
 /// used to do asynchronous cycle checking on atomic components with non-trivial asynch paths.
@@ -35,7 +35,7 @@ let rec hasSynchronousComponents graph : bool =
     |> Map.map (fun compId comp ->
             match comp.Type with
             | Custom _ -> hasSynchronousComponents <| Option.get comp.CustomSimulationGraph
-            | Input _ | Output _ | IOLabel | BusSelection _ | BusCompare _ | MergeWires | SplitWire _ | Resistor | CurrentSource | Decode4 | Constant1 _ | Viewer _ -> false
+            | Input _ | Output _ | IOLabel | Resistor | CurrentSource | Constant1 _ | Viewer _ -> false
             | _ -> failwithf $"legacy components should never be read {comp.Type}"
         )
     |> Map.tryPick (fun compId isSync -> if isSync then Some () else None)

@@ -309,14 +309,10 @@ module CommonTypes
     // Types instantiating objects in the Digital extension.
     type ComponentType =
         | Input of BusWidth: int | Output of BusWidth: int | Viewer of BusWidth: int | IOLabel 
-        | BusCompare of BusWidth: int * CompareValue: uint32
-        | BusSelection of OutputWidth: int * OutputLSBit: int
         | Constant of Width: int * ConstValue: int64 
         | Constant1 of Width: int * ConstValue: int64 * DialogTextValue: string
-        | Decode4
         | Resistor | CurrentSource
         | Custom of CustomComponentType // schematic sheet used as component
-        | MergeWires | SplitWire of BusWidth: int // int is bus width
 
     /// get memory component type constructor
     /// NB only works with new-style memory components

@@ -880,18 +880,6 @@ let update (msg : Msg) (model : Model) : Model*Cmd<Msg> =
                     let symbol = m[symId]
 
                     match symbol.Component.Type with
-                    | SplitWire n ->
-                        match inPort.PortNumber with
-                        | Some 0 -> {symbol with InWidth0 = Some wire.Width}
-                        | x -> failwithf $"What? wire found with input port {x} other than 0 connecting to SplitWire"
-                        |> (fun sym -> Map.add symId sym m)
-                    | MergeWires ->
-                        match inPort.PortNumber with
-                        | Some 0 ->
-                            Map.add symId  {symbol with InWidth0 = Some wire.Width} m
-                        | Some 1 ->
-                            Map.add symId {symbol with InWidth1 = Some wire.Width} m
-                        | x -> failwithf $"What? wire found with input port {x} other than 0 or 1 connecting to MergeWires"
                     | _ -> m
 
             let newWires = ((Map.empty, model.Wires) ||> Map.fold addWireWidthFolder)

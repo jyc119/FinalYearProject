@@ -80,23 +80,6 @@ let private createIOPopup hasInt typeStr compType (model:Model) dispatch =
             (getInt dialogData < 1) || (getText dialogData = "")
     dialogPopup title body buttonText buttonAction isDisabled dispatch
 
-
-let private createSplitWirePopup model dispatch =
-    let title = sprintf "Add SplitWire node" 
-    let beforeInt =
-        fun _ -> str "How many bits should go to the top (LSB) wire? The remaining bits will go to the bottom (MSB) wire."
-    let intDefault = 1
-    let body = dialogPopupBodyOnlyInt beforeInt intDefault dispatch
-    let buttonText = "Add"
-    let buttonAction =
-        fun (dialogData : PopupDialogData) ->
-            let inputInt = getInt dialogData
-            createCompStdLabel (SplitWire inputInt) model dispatch
-            dispatch ClosePopup
-    let isDisabled =
-        fun (dialogData : PopupDialogData) -> getInt dialogData < 1
-    dialogPopup title body buttonText buttonAction isDisabled dispatch
-
 /// two react text lines in red
 let private twoErrorLines errMsg1 errMsg2 =
     span [Style [Color Red]] [str errMsg1; br []; str errMsg2; br [] ]
@@ -155,67 +138,7 @@ let private createConstantPopup model dispatch =
     let isDisabled = parseConstantDialog >> snd >> Option.isNone
     dialogPopup title body buttonText buttonAction isDisabled dispatch
 
-let private createBusSelectPopup model dispatch =
-    let title = sprintf "Add Bus Selection node" 
-    let beforeInt2 =
-        fun _ -> str "Which input bit is the least significant output bit?"
-    let beforeInt =
-        fun _ -> str "How many bits width is the output bus?"
-    let intDefault = 1
-    let intDefault2 = 0L
-    let body = dialogPopupBodyTwoInts (beforeInt,beforeInt2) (intDefault, int64 intDefault2) "60px" dispatch
-    let buttonText = "Add"
-    let buttonAction =
-        fun (dialogData : PopupDialogData) ->
-            let width = getInt dialogData
-            let lsb = int32 (getInt2 dialogData)
-            createCompStdLabel (BusSelection(width,lsb)) model dispatch
-            dispatch ClosePopup
-    let isDisabled =
-        fun (dialogData : PopupDialogData) -> getInt dialogData < 1 || getInt2 dialogData < 0L
-    dialogPopup title body buttonText buttonAction isDisabled dispatch
 
-let private createBusComparePopup (model:Model) dispatch =
-    let title = sprintf "Add Bus Compare node" 
-    let beforeInt2 =
-        fun _ -> str "What is the decimal value to compare the input with?"
-    let beforeInt =
-        fun _ -> str "How many bits width is the input bus?"
-    let intDefault = model.LastUsedDialogWidth
-    let intDefault2 = 0L
-    let body = dialogPopupBodyTwoInts (beforeInt,beforeInt2) (intDefault, int64 intDefault2) "120px" dispatch
-    let buttonText = "Add"
-    let buttonAction =
-        fun (dialogData : PopupDialogData) ->
-            let width = getInt dialogData
-            let cVal = getInt2 dialogData
-            createCompStdLabel (BusCompare(width, uint32 cVal)) model dispatch
-            dispatch ClosePopup
-    let isDisabled =
-        fun (dialogData : PopupDialogData) -> 
-            let w = getInt dialogData
-            let cVal = getInt2 dialogData |> uint32
-            w > 32 || w < 1 || cVal > (1u <<< w) - 1u
-    dialogPopup title body buttonText buttonAction isDisabled dispatch
-
-let private createRegisterPopup regType (model:Model) dispatch =
-    let title = sprintf "Add Register" 
-    let beforeInt =
-        fun _ -> str "How wide should the register be (in bits)?"
-    let intDefault = model.LastUsedDialogWidth
-    let body = dialogPopupBodyOnlyInt beforeInt intDefault dispatch
-    let buttonText = "Add"
-    let buttonAction =
-        fun (dialogData : PopupDialogData) ->
-            let inputInt = getInt dialogData
-            createCompStdLabel (regType inputInt) model dispatch
-            dispatch ClosePopup
-    let isDisabled =
-        fun (dialogData : PopupDialogData) -> getInt dialogData < 1
-    dialogPopup title body buttonText buttonAction isDisabled dispatch
-
-
- 
     
 
 let private createMemoryPopup memType model (dispatch: Msg -> Unit) =
@@ -328,16 +251,6 @@ let viewCatalogue model dispatch =
                                                                                             e.g. 0 or 1 to drive an unused input"
                           catTip1 "Wire Label" (fun _ -> createIOPopup false "label" (fun _ -> IOLabel) model dispatch) "Labels with the same name connect \
                                                                                                                          together wires or busses"]
-                    makeMenuGroup
-                        "Buses"
-                        [ catTip1 "MergeWires"  (fun _ -> createComponent MergeWires "" model dispatch) "Use Mergewire when you want to \
-                                                                                       join the bits of a two busses to make a wider bus"
-                          catTip1 "SplitWire" (fun _ -> createSplitWirePopup model dispatch) "Use Splitwire when you want to split the \
-                                                                                             bits of a bus into two sets"
-                          catTip1 "Bus Select" (fun _ -> createBusSelectPopup model dispatch) "Bus Select output connects to one or \
-                                                                                                more selected bits of its input"
-                          catTip1 "Bus Compare" (fun _ -> createBusComparePopup model dispatch) "Bus compare outputs 1 if the input bus \
-                                                                                                 matches a constant value" ]
                     makeMenuGroup
                         "Analog Components"
                         [ catTip1 "Resistor"  (fun _ -> createCompStdLabel Resistor model dispatch) "Resistor"

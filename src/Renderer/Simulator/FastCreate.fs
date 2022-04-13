@@ -63,15 +63,8 @@ let getPortNumbers (sc: SimulationComponent) =
         | Input _
         | Output _
         | Viewer _ 
-        | BusSelection _
-        | BusCompare _
         | IOLabel  ->
             1,1
-        | MergeWires
-        | SplitWire _ -> 
-            1,2
-        | Decode4 -> 
-            2,4
         | Resistor | CurrentSource -> 1,1
         | Custom _ -> failwithf "Custom components should not occur in fast simulation"
 
@@ -88,21 +81,12 @@ let getOutputWidths (sc: SimulationComponent) (wa: int option array) =
    | Input w
    | Output w
    | Viewer w
-   | SplitWire w
-   | BusSelection (w, _)
    | Constant1 (w, _,_)
    | Constant (w,_) -> putW0 w
-   | BusCompare _ -> putW0 1
    | Custom _ -> ()
-   | Decode4 ->
-       putW0 1
-       putW1 1
-       putW2 1
-       putW3 1
    | Resistor
    | CurrentSource
-   | IOLabel
-   | MergeWires -> ()
+   | IOLabel -> ()
 
    wa
 

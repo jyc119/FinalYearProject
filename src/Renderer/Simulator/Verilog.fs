@@ -52,8 +52,6 @@ let writeVerilogNames (fs: FastSimulation) =
         let fakeName s = $"%s{s}{String.substringLength 0 2 (match sc.Id with | ComponentId s -> s)}"
         let cLabel =
             match sc.Label , sc.Type with
-            | ComponentLabel "", SplitWire _ -> fakeName "Split"
-            | ComponentLabel "", MergeWires ->  fakeName "Merge"
             | ComponentLabel "", _ -> fakeName "Other"
             | ComponentLabel lab,_ -> lab.ToUpper()
 
@@ -385,26 +383,8 @@ let getVerilogComponent (fs: FastSimulation) (fc: FastComponent) =
     | Constant1 (w, c,_) 
     | Constant (w, c)
         -> $"assign %s{outs 0} = %s{makeBits w (uint64 c)};\n"
-    | Decode4 ->
-        let w = outW 1
-
-        $"assign %s{outs 0} = (%s{ins 0} == 2'b00) ? %s{ins 1} : {makeBits w (uint64 0)};\n"
-        + $"assign %s{outs 1} = (%s{ins 0} == 2'b01) ? %s{ins 1} : {makeBits w (uint64 0)};\n"
-        + $"assign %s{outs 2} = (%s{ins 0} == 2'b10) ? %s{ins 1} : {makeBits w (uint64 0)};\n"
-        + $"assign %s{outs 3} = (%s{ins 0} == 2'b11) ? %s{ins 1} : {makeBits w (uint64 0)};\n"
     | Resistor | CurrentSource -> 
         sprintf "assign %s = %s;\n" (outs 0) (ins 0)
-    | BusSelection (outW, lsb) ->
-        let sel = sprintf "[%d:%d]" (outW + lsb - 1) lsb
-        $"assign {outs 0} = {ins 0}{sel};\n"
-    | BusCompare (w, c) -> $"assign %s{outs 0} = %s{ins 0} == %s{makeBits w (uint64 (uint32 c))};\n"
-    | MergeWires -> $"assign {outs 0} = {{ {ins 0},{ins 1} }};\n"  
-    | SplitWire _ ->
-        let lsbBits = outW 0
-        let msbBits = outW 1
-
-        $"assign %s{outs 0} = %s{ins 0}[%d{lsbBits - 1}:0];\n"
-        + $"assign %s{outs 1} = %s{ins 0}[%d{msbBits + lsbBits - 1}:%d{msbBits}];\n"
     | Custom _ -> failwithf "What? custom components cannot exist in fast Simulation data structure"
 
 
