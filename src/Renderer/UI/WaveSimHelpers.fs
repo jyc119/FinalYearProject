@@ -617,7 +617,7 @@ let rec private findName (compIds: ComponentId Set) (sd: SimulationData) (net: N
             match net[nlSource.SourceCompId].Type with
             | Resistor | CurrentSource -> 
                 [ { LabName = compLbl; BitLimits = 0, 0 } ] 
-            | Input w | Output w | Constant1(w, _,_) | Constant(w,_) | Viewer w -> 
+            | Input w | Output w | Constant1(w, _,_) | Viewer w -> 
                 [ { LabName = compLbl; BitLimits = w - 1, 0 } ] 
             | Custom c -> 
                 [ { LabName = compLbl + "." + (fst c.OutputLabels[outPortInt])

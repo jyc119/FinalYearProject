@@ -309,7 +309,6 @@ module CommonTypes
     // Types instantiating objects in the Digital extension.
     type ComponentType =
         | Input of BusWidth: int | Output of BusWidth: int | Viewer of BusWidth: int | IOLabel 
-        | Constant of Width: int * ConstValue: int64 
         | Constant1 of Width: int * ConstValue: int64 * DialogTextValue: string
         | Resistor | CurrentSource
         | Custom of CustomComponentType // schematic sheet used as component

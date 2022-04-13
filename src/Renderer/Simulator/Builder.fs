@@ -108,7 +108,7 @@ let private getDefaultState compType =
     match compType with
     | Input _ | Output _ | IOLabel
     | Resistor | CurrentSource | Custom _ | Viewer _ -> NoState
-    | Constant1 _ | Constant _ -> NoState 
+    | Constant1 _  -> NoState 
 
 /// Build a simulation component.
 let private buildSimulationComponent

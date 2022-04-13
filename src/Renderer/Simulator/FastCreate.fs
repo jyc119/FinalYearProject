@@ -58,7 +58,7 @@ let getFid (cid: ComponentId) (ap: ComponentId list) =
 let getPortNumbers (sc: SimulationComponent) =
     let ins,outs =
         match sc.Type with
-        | Constant1 _ | Constant _ ->
+        | Constant1 _ ->
             0,1
         | Input _
         | Output _
@@ -82,7 +82,7 @@ let getOutputWidths (sc: SimulationComponent) (wa: int option array) =
    | Output w
    | Viewer w
    | Constant1 (w, _,_)
-   | Constant (w,_) -> putW0 w
+       -> putW0 w
    | Custom _ -> ()
    | Resistor
    | CurrentSource

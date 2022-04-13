@@ -204,7 +204,7 @@ let fastReduce (maxArraySize: int) (numStep: int) (isClockedReduction: bool) (co
             put0 bits
     //printfn "Finished!"
 
-    | Constant1 (width, cVal,_) | Constant (width,cVal)->
+    | Constant1 (width, cVal,_) ->
         put0
         <| convertInt64ToFastData width cVal
     | Output width ->

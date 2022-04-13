@@ -236,7 +236,7 @@ let private makeLsbBitNumberField model (comp:Component) dispatch =
 let private makeDescription (comp:Component) model dispatch =
     match comp.Type with
     | Input _ -> str "Input."
-    | Constant1 _ | Constant _ -> str "Constant Wire."
+    | Constant1 _ -> str "Constant Wire."
     | Output _ -> str "Output."
     | Viewer _ -> str "Viewer."
     | IOLabel -> div [] [

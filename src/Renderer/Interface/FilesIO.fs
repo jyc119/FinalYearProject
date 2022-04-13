@@ -480,7 +480,6 @@ let getLatestComp (comp: Component) =
             WordWidth = mem.WordWidth
         }
     match comp.Type with
-    | Constant(width,cVal) -> {comp with Type = Constant1(width, cVal, $"%d{cVal}")}
     | _ -> comp
 
 

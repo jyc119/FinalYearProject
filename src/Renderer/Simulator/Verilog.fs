@@ -381,7 +381,6 @@ let getVerilogComponent (fs: FastSimulation) (fc: FastComponent) =
     | IOLabel _
     | Input _ -> sprintf $"assign %s{outs 0} = %s{ins 0};\n"
     | Constant1 (w, c,_) 
-    | Constant (w, c)
         -> $"assign %s{outs 0} = %s{makeBits w (uint64 c)};\n"
     | Resistor | CurrentSource -> 
         sprintf "assign %s = %s;\n" (outs 0) (ins 0)
