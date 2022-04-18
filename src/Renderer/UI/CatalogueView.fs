@@ -249,10 +249,10 @@ let viewCatalogue model dispatch =
                     makeMenuGroup
                         "Linear Components"
                         [ catTip1 "Resistor"  (fun _ -> createCompStdLabel Resistor model dispatch) "Resistor"
-                          ]
+                          catTip1 "Voltage Source"  (fun _ -> createCompStdLabel VoltageSource model dispatch) "Voltage Source"]
                     makeMenuGroup
                         "Non-Linear components"
-                        [ catTip1 "CurrentSource"  (fun _ -> createCompStdLabel CurrentSource model dispatch) "CurrentSource"]
+                        [ catTip1 "CurrentSource"  (fun _ -> createCompStdLabel CurrentSource model dispatch) "Current ource"]
                     makeMenuGroupWithTip styles
                         "This project"
                         "Every design sheet is available for use in other sheets as a custom component: \

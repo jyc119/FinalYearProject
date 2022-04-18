@@ -311,6 +311,7 @@ module CommonTypes
         | Input of BusWidth: int | Output of BusWidth: int | Viewer of BusWidth: int | IOLabel 
         | Constant1 of Width: int * ConstValue: int64 * DialogTextValue: string
         | Resistor | CurrentSource
+        | VoltageSource
         | Custom of CustomComponentType // schematic sheet used as component
 
     /// get memory component type constructor

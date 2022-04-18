@@ -250,6 +250,7 @@ let private makeDescription (comp:Component) model dispatch =
         ]
     | Resistor -> div [] [ str "Resistor" ]
     | CurrentSource -> div [] [ str "Current Source" ]
+    | VoltageSource -> div [] [ str "Voltage Source" ]
     | Custom custom ->
         let styledSpan styles txt = span [Style styles] [str <| txt]
         let boldSpan txt = styledSpan [FontWeight "bold"] txt

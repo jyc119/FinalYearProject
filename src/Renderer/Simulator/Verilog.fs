@@ -382,7 +382,7 @@ let getVerilogComponent (fs: FastSimulation) (fc: FastComponent) =
     | Input _ -> sprintf $"assign %s{outs 0} = %s{ins 0};\n"
     | Constant1 (w, c,_) 
         -> $"assign %s{outs 0} = %s{makeBits w (uint64 c)};\n"
-    | Resistor | CurrentSource -> 
+    | Resistor | CurrentSource | VoltageSource -> 
         sprintf "assign %s = %s;\n" (outs 0) (ins 0)
     | Custom _ -> failwithf "What? custom components cannot exist in fast Simulation data structure"
 

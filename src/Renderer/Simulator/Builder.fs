@@ -107,7 +107,7 @@ let private mapInputPortIdToPortNumber
 let private getDefaultState compType =
     match compType with
     | Input _ | Output _ | IOLabel
-    | Resistor | CurrentSource | Custom _ | Viewer _ -> NoState
+    | Resistor | CurrentSource | VoltageSource | Custom _ | Viewer _ -> NoState
     | Constant1 _  -> NoState 
 
 /// Build a simulation component.

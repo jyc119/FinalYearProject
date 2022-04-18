@@ -133,6 +133,7 @@ let getPrefix compType =
     match compType with
     | Resistor -> "R"
     | CurrentSource -> "CurrentSource"
+    | VoltageSource -> "V"
     | Custom c ->
         c.Name.ToUpper() + (if c.Name |> Seq.last |> System.Char.IsDigit then "." else "")
     | Constant1 _ -> "C"
@@ -341,7 +342,7 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         | ComponentType.IOLabel  ->(  1 , 1, gS ,  2*gS) 
         | Constant1 (a, b,_)  -> (  0 , 1, gS ,  2*gS) 
         | Resistor -> (1 , 1 , 2*gS , 3*gS)
-        | CurrentSource -> (1 , 1 , 2*gS , 2*gS)
+        | CurrentSource | VoltageSource -> (1 , 1 , 2*gS , 2*gS)
         | Custom cct -> getCustomCompArgs cct label
                 
     makeComponent' args label
@@ -596,38 +597,15 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
             // EXTENSION: |Mux4|Mux8 ->(sprintf "%i,%i %i,%f  %i,%f %i,%i" 0 0 w (float(h)*0.2) w (float(h)*0.8) 0 h )
             // EXTENSION: | Demux4 |Demux8 -> (sprintf "%i,%f %i,%f %i,%i %i,%i" 0 (float(h)*0.2) 0 (float(h)*0.8) w h w 0)
             | Resistor ->
-                [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=H};{X=W;Y=0}|]
+                [|{X=0;Y=0.5*H};{X=0.1*W;Y=0.5*H};{X=0.15*W;Y=H};{X=0.3*W;Y=0};{X=0.45*W;Y=H};{X=0.6*W;Y=0};{X=0.75*W;Y=0.5*H};{X=0.85*W;Y=0.5*H};{X=0.75*W;Y=0.5*H};{X=0.6*W;Y=0};{X=0.45*W;Y=H};{X=0.3*W;Y=0};{X=0.15*W;Y=H};{X=0.1*W;Y=0.5*H}|]
             | CurrentSource ->
-                [|{X=W*0.2;Y=H*0.5};{X=W;Y=H*0.5};{X=W*0.7;Y=H*0.4};{X=W;Y=H*0.5};{X=W*0.7;Y=H*0.6};{X=W;Y=H*0.5};{X=W;Y=H};{X=0;Y=H};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H*0.5}|]
+                [|{X=0.2;Y=0.5};{X=0.8;Y=0.5};{X=0.7;Y=0.4};{X=0.8;Y=0.5};{X=0.9;Y=0.4};{X=0.8;Y=0.5}|]
             | Custom x when symbol.IsClocked = true -> 
                 [|{X=0;Y=H-13.};{X=8.;Y=H-7.};{X=0;Y=H-1.};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H};{X=0;Y=H}|]
             | _ -> 
                 [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=H};{X=W;Y=0}|]
         rotatePoints originalPoints {X=W/2.;Y=H/2.} transform
         |> toString 
-
-
-
-    let additions =       // Helper function to add certain characteristics on specific symbols (inverter, enables, clocks)
-        let mergeWiresTextPos =
-            let textPoints = rotatePoints [|{X=W/5.;Y=H/6.+2.};{X=W/5.;Y=H*5./6.+2.};{X=W*0.75;Y=H/2.+2.}|] {X=W/2.;Y=H/2.} transform
-            match transform.Rotation with
-            | Degree90 | Degree270 -> Array.map (fun pos -> pos + {X=12.;Y=0}) textPoints
-            | Degree180 -> Array.map (fun pos -> pos + {X=0;Y= +5.}) textPoints
-            | _ -> textPoints
-        let splitWiresTextPos =
-            let textPoints = rotatePoints [|{X=W*0.75;Y=H/6.+2.};{X=W*0.75;Y=H*5./6.+2.};{X=W/4.;Y=H/2.+2.}|] {X=W/2.;Y=H/2.} transform
-            match transform.Rotation with
-            | Degree90 | Degree270 -> Array.map (fun pos -> pos + {X=12.;Y=0}) textPoints
-            | Degree180 -> Array.map (fun pos -> pos + {X=0;Y= +5.}) textPoints
-            | _ -> textPoints
-
-        match comp.Type with
-        | Input (x) -> (addText {X = w/2.; Y = h/2.7-3.} (title "" x) "middle" "normal" "12px")
-        | Output (x) -> (addText {X = w/2.; Y = h/2.7-3.} (title "" x) "middle" "normal" "12px")
-        | Viewer (x) -> (addText {X = w/2.; Y = h/2.7 - 1.25} (title "" x) "middle" "normal" "9px")
-        | _ when symbol.IsClocked -> (addText (Array.head (rotatePoints [|{X = 15.; Y = float H - 11.}|] {X=W/2.;Y=H/2.} transform )) " clk" "middle" "normal" "12px")
-        | _ -> []
 
     let outlineColour, strokeWidth =
         match comp.Type with
@@ -659,11 +637,12 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
             (box.TopLeft - symbol.Pos + {X=margin;Y=margin}) 
             comp.Label ::  [] //corners uncomment this to display lavel bounding box corners.
 
-
-
- 
-            
-            
+                
+    let createSymbol = 
+        match comp.Type with
+        | CurrentSource -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 5 30 55 30 defaultLine; makeLine 45 20 55 30 defaultLine; makeLine 45 40 55 30 defaultLine]
+        | VoltageSource -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 40 30 55 30 defaultLine; makeLine 47.5 40 47.5 20 defaultLine; makeLine 12.5 40 12.5 20 defaultLine]
+        | _ -> createBiColorPolygon points colour outlineColour opacity strokeWidth
    
     // Put everything together 
 
@@ -672,8 +651,7 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
     |> List.append (drawPortsText (comp.InputPorts @ comp.OutputPorts) (portNames comp.Type) symbol)
     |> List.append (addText {X = float w/2.; Y = float h/2. - 7.} (getComponentLegend comp.Type) "middle" "bold" "14px")
     |> List.append (addComponentLabel comp transform)
-    |> List.append (additions)
-    |> List.append (createBiColorPolygon points colour outlineColour opacity strokeWidth)
+    |> List.append (createSymbol)
 
 let init () = 
     { 
