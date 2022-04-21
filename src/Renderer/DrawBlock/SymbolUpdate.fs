@@ -215,6 +215,12 @@ let changeNumberOfBitsf (symModel:Model) (compId:ComponentId) (newBits : int) =
     let newcompo = {symbol.Component with Type = newcompotype}
     {symbol with Component = newcompo}
 
+/// Helper function to change the number of bits expected in a port of each component type.
+let changeValuesf (symModel:Model) (compId:ComponentId) (newValue: float) =
+    let symbol = Map.find compId symModel.Symbols
+
+    {symbol with Value = Some newValue}
+
 /// Helper function to change the number of bits expected in the LSB port of BusSelection and BusCompare
 let changeLsbf (symModel:Model) (compId:ComponentId) (newLsb:int64) =
     let symbol = Map.find compId symModel.Symbols
@@ -862,6 +868,10 @@ let update (msg : Msg) (model : Model): Model*Cmd<'a>  =
         let newsymbol = changeNumberOfBitsf model compId newBits
         (replaceSymbol model newsymbol compId), Cmd.none
     
+    | ChangeValue (compId, newValue) ->
+        let newsymbol = changeValuesf model compId newValue
+        (replaceSymbol model newsymbol compId), Cmd.none
+
     | ChangeLsb (compId, newLsb) -> 
         let newsymbol = changeLsbf model compId newLsb
         (replaceSymbol model newsymbol compId), Cmd.none

@@ -87,7 +87,7 @@ let private createResistorPopup hasInt typeStr compType (model:Model) dispatch =
     let placeholder = "Component name"
     let beforeInt =
         fun _ -> str <|  "Resistance"
-    let floatDefault = model.LastResistance
+    let floatDefault = 0
     let body = 
         match hasInt with
         | true -> dialogPopupBodyTextAndFloat beforeText placeholder beforeInt floatDefault dispatch

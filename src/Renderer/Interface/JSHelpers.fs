@@ -98,7 +98,7 @@ let getIntEventValue (event: Browser.Types.Event) =
     getFailIfNull event.currentTarget ["value"] |> unbox<float> |> int
 
 let getFloatEventValue (event: Browser.Types.Event) =
-    getFailIfNull event.currentTarget ["value"] |> unbox<float> |> float
+    getFailIfNull event.currentTarget ["value"] |> unbox<float>
 
 let getInt64EventValue( event: Browser.Types.Event) =
     let boxText = getFailIfNull event ["target";"value"] |> unbox<string>

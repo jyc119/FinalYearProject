@@ -186,15 +186,12 @@ let private makeResistorField model (comp:Component) text dispatch =
         match comp.Type with
         | Resistor r -> "Resistance", r
         | c -> failwithf "makeResistorField called with invalid component: %A" c
-    floatFormField title "100px" resistance 10.0 (
-        fun newResistance ->
+    floatFormField title "100px" resistance 0.0 (
+        fun (newResistance:float) ->
+            model.Sheet.ChangeValue sheetDispatch (ComponentId comp.Id) newResistance
             //let text' = match comp.Type with | _ -> formatLabelAsBus newResistance text
             //SetComponentLabelFromText model comp text' // change the JS component label
-            let lastUsedWidth = 
-                match comp.Type with 
-                | _ ->  
-                    newResistance
-            dispatch (ReloadSelectedAnalogComponent (lastUsedWidth)) // reload the new component
+            dispatch (ReloadSelectedAnalogComponent (newResistance)) // reload the new component
             dispatch <| SetPopupDialogFloat (Some newResistance)
             dispatch ClosePropertiesNotification
     )
@@ -340,7 +337,7 @@ let viewSelectedComponent (model: ModelType.Model) dispatch =
                     dispatch <| SetPopupDialogText (Some label)
                 | None -> ()
                 //updateNames model (fun _ _ -> model.WaveSim.Ports) |> StartWaveSim |> dispatch
-                dispatch (ReloadSelectedComponent model.LastUsedDialogWidth) // reload the new component
+                dispatch (ReloadSelectedAnalogComponent model.LastResistance) // reload the new component
                 )
         ]    
     | _ -> div [] [ str "Select a component in the diagram to view or change its properties, for example number of bits." ]

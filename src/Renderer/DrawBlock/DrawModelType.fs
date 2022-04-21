@@ -110,6 +110,7 @@ module SymbolT =
         | ColorSymbols of compList : ComponentId list * colour : HighLightColor
         | ErrorSymbols of errorIds: ComponentId list * selectIds: ComponentId list * isDragAndDrop: bool
         | ChangeNumberOfBits of compId:ComponentId * NewBits:int 
+        | ChangeValue of compId:ComponentId * NewValue:float
         | ChangeLsb of compId: ComponentId * NewBits:int64 
         | ChangeConstant of compId: ComponentId * NewBits:int64 * NewText:string
         | ResetModel // For Issie Integration
