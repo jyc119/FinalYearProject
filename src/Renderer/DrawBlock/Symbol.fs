@@ -133,7 +133,7 @@ let getPrefix compType =
     match compType with
     | Resistor _ -> "R"
     | CurrentSource _ -> "CurrentSource"
-    | VoltageSource -> "V"
+    | VoltageSource _ -> "V"
     | Custom c ->
         c.Name.ToUpper() + (if c.Name |> Seq.last |> System.Char.IsDigit then "." else "")
     | Constant1 _ -> "C"
@@ -342,7 +342,7 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         | ComponentType.IOLabel  ->(  1 , 1, gS ,  2*gS) 
         | Constant1 (a, b,_)  -> (  0 , 1, gS ,  2*gS) 
         | Resistor _ -> (1 , 1 , 2*gS , 3*gS)
-        | CurrentSource _ | VoltageSource -> (1 , 1 , 2*gS , 2*gS)
+        | CurrentSource _ | VoltageSource _ -> (1 , 1 , 2*gS , 2*gS)
         | Custom cct -> getCustomCompArgs cct label
                 
     makeComponent' args label
@@ -646,7 +646,7 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
     let createSymbol = 
         match comp.Type with
         | CurrentSource _ -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 5 30 55 30 defaultLine; makeLine 45 20 55 30 defaultLine; makeLine 45 40 55 30 defaultLine]
-        | VoltageSource -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 40 30 55 30 defaultLine; makeLine 47.5 40 47.5 20 defaultLine; makeLine 12.5 40 12.5 20 defaultLine]
+        | VoltageSource _ -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 40 30 55 30 defaultLine; makeLine 47.5 40 47.5 20 defaultLine; makeLine 12.5 40 12.5 20 defaultLine]
         | _ -> createBiColorPolygon points colour outlineColour opacity strokeWidth
    
     // Put everything together 

@@ -80,13 +80,19 @@ let private createIOPopup hasInt typeStr compType (model:Model) dispatch =
             (getInt dialogData < 1) || (getText dialogData = "")
     dialogPopup title body buttonText buttonAction isDisabled dispatch
 
-let private createResistorPopup hasInt typeStr compType (model:Model) dispatch =
+let private createAnalogComponentPopup hasInt typeStr compType (model:Model) dispatch =
     let title = sprintf "Add %s" typeStr
     let beforeText =
         fun _ -> str <| sprintf "How do you want to name your %s?" typeStr
     let placeholder = "Component name"
+    let unit = 
+        match typeStr with
+        | "Resistor" -> "Resistor"
+        | "Current Source" -> "Current"
+        | "Voltage Source" -> "Voltage"
+        | _ -> failwithf "Never happens"
     let beforeInt =
-        fun _ -> str <|  "Resistance"
+        fun _ -> str <| unit
     let floatDefault = 0
     let body = 
         match hasInt with
@@ -276,8 +282,9 @@ let viewCatalogue model dispatch =
                           catTip1 "Output" (fun _ -> createIOPopup true "output" Output model dispatch) "Output connection from current sheet: one or more bits"]
                     makeMenuGroup
                         "Linear Components"
-                        [ catTip1 "Resistor"  (fun _ -> createResistorPopup true "Resistor" Resistor model dispatch) "Resistor"
-                          catTip1 "Voltage Source"  (fun _ -> createCompStdLabel VoltageSource model dispatch) "Voltage Source"]
+                        [ catTip1 "Resistor"  (fun _ -> createAnalogComponentPopup true "Resistor" Resistor model dispatch) "Resistor"
+                          catTip1 "Current Source"  (fun _ -> createAnalogComponentPopup true "Current Source" CurrentSource model dispatch) "Current Source"
+                          catTip1 "Voltage Source"  (fun _ -> createAnalogComponentPopup true "Voltage Source" VoltageSource model dispatch) "Voltage Source"]
                     //makeMenuGroup
                         //"Non-Linear components"
                         //[ catTip1 "CurrentSource"  (fun _ -> createCompStdLabel CurrentSource model dispatch) "Current ource"]

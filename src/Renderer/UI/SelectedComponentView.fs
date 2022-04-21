@@ -179,12 +179,14 @@ let private makeNumberOfBitsField model (comp:Component) text dispatch =
                 dispatch ClosePropertiesNotification
     )
 
-let private makeResistorField model (comp:Component) text dispatch =
+let private makeAnalogComponentField model (comp:Component) text dispatch =
     let sheetDispatch sMsg = dispatch (Sheet sMsg)
     
     let title, resistance =
         match comp.Type with
         | Resistor r -> "Resistance", r
+        | VoltageSource v -> "Voltage", v
+        | CurrentSource i -> "Current" , i
         | c -> failwithf "makeResistorField called with invalid component: %A" c
     floatFormField title "100px" resistance 0.0 (
         fun (newResistance:float) ->
@@ -276,7 +278,7 @@ let private makeDescription (comp:Component) model dispatch =
         ]
     | Resistor _ -> div [] [ str "Resistor" ]
     | CurrentSource _ -> div [] [ str "Current Source" ]
-    | VoltageSource -> div [] [ str "Voltage Source" ]
+    | VoltageSource _ -> div [] [ str "Voltage Source" ]
     | Custom custom ->
         let styledSpan styles txt = span [Style styles] [str <| txt]
         let boldSpan txt = styledSpan [FontWeight "bold"] txt
@@ -304,8 +306,8 @@ let private makeExtraInfo model (comp:Component) text dispatch =
     match comp.Type with
     | Input _ | Output _ | Viewer _ ->
         makeNumberOfBitsField model comp text dispatch
-    | Resistor _ ->
-        makeResistorField model comp text dispatch
+    | Resistor _ | VoltageSource _ | CurrentSource _ ->
+        makeAnalogComponentField model comp text dispatch
     | Constant1 _ ->         
              makeConstantDialog model comp text dispatch
     | _ -> div [] []
