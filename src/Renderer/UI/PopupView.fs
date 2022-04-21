@@ -108,6 +108,9 @@ let getInt (dialogData : PopupDialogData) =
 let getInt2 (dialogData : PopupDialogData) : int64 =
     Option.defaultValue 0L dialogData.Int2
 
+let getFloat (dialogData : PopupDialogData) =
+    Option.defaultValue 0.0 dialogData.Float
+
 let getMemorySetup (dialogData : PopupDialogData) wordWidthDefault =
     Option.defaultValue (4,wordWidthDefault,FromData,None) dialogData.MemorySetup
 
@@ -328,6 +331,28 @@ let dialogPopupBodyIntAndText beforeText placeholder beforeInt intDefault dispat
                 Input.OnChange (getTextEventValue >> Some >> SetPopupDialogText >> dispatch)
             ]
 
+        ]
+
+/// Create the body of a dialog Popup with both text and int.
+let dialogPopupBodyTextAndFloat beforeText placeholder beforeFloat floatDefault dispatch =
+    floatDefault |> Some |> SetPopupDialogFloat |> dispatch
+    fun (dialogData : PopupDialogData) ->
+        div [] [
+            beforeText dialogData
+            Input.text [
+                Input.Props [AutoFocus true; SpellCheck false]
+                Input.Placeholder placeholder
+                Input.OnChange (getTextEventValue >> Some >> SetPopupDialogText >> dispatch)
+            ]
+            br []
+            br []
+            beforeFloat dialogData
+            br []
+            Input.number [
+                Input.Props [Style [Width "60px"]]
+                Input.DefaultValue <| sprintf "%f" floatDefault
+                Input.OnChange (getFloatEventValue >> Some >> SetPopupDialogFloat >> dispatch)
+            ]
         ]
 
 let makeSourceMenu 

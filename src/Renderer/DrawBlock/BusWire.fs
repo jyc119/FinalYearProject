@@ -463,6 +463,7 @@ let extractConnection (wModel : Model) (cId : ConnectionId) : Connection =
         Source = { Symbol.getPort wModel.Symbol strOutputPort with PortNumber = None } // None for connections 
         Target = { Symbol.getPort wModel.Symbol strInputPort with PortNumber = None } // None for connections 
         Vertices = segmentsToIssieVertices conn.Segments conn
+        Voltage = None
     }
 
 /// This function is given a list of ConnectionId and it

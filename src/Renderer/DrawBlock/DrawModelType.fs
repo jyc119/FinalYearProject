@@ -50,6 +50,8 @@ module SymbolT =
             /// Width of the output port 1
             InWidth1: int option
 
+            Value: float option
+
             LabelBoundingBox: BoundingBox
             LabelHasDefaultPos: bool
         
@@ -330,6 +332,7 @@ module SheetT =
         | ClosePopup
         | SetPopupDialogText of string option
         | SetPopupDialogInt of int option
+        | SetPopupDialogFloat of float option
         // ------------------- Issie Interface Messages ----------------------
         | InitialiseCreateComponent of LoadedComponent list * ComponentType * string // Need to initialise for drag-and-drop
         | FlushCommandStack

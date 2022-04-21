@@ -131,8 +131,8 @@ let bustitle (wob:int) (lsb:int) : string =
 ///Decodes the component type into component labels
 let getPrefix compType = 
     match compType with
-    | Resistor -> "R"
-    | CurrentSource -> "CurrentSource"
+    | Resistor _ -> "R"
+    | CurrentSource _ -> "CurrentSource"
     | VoltageSource -> "V"
     | Custom c ->
         c.Name.ToUpper() + (if c.Name |> Seq.last |> System.Char.IsDigit then "." else "")
@@ -149,7 +149,7 @@ let getComponentLegend (componentType:ComponentType) =
 // Input and Output names of the ports depending on their ComponentType
 let portNames (componentType:ComponentType)  = //(input port names, output port names)
     match componentType with
-    | Resistor | CurrentSource -> ([]@[])
+    | Resistor _ | CurrentSource _ -> ([]@[])
     | Custom x -> (List.map fst x.InputLabels)@ (List.map fst x.OutputLabels)
     | _ -> ([]@[])
    // |Demux8 -> (["IN"; "SEL"],["0"; "1"; "2" ; "3" ; "4" ; "5" ; "6" ; "7"])
@@ -341,8 +341,8 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         | ComponentType.Viewer a -> (  1 , 0, gS ,  gS) 
         | ComponentType.IOLabel  ->(  1 , 1, gS ,  2*gS) 
         | Constant1 (a, b,_)  -> (  0 , 1, gS ,  2*gS) 
-        | Resistor -> (1 , 1 , 2*gS , 3*gS)
-        | CurrentSource | VoltageSource -> (1 , 1 , 2*gS , 2*gS)
+        | Resistor _ -> (1 , 1 , 2*gS , 3*gS)
+        | CurrentSource _ | VoltageSource -> (1 , 1 , 2*gS , 2*gS)
         | Custom cct -> getCustomCompArgs cct label
                 
     makeComponent' args label
@@ -354,6 +354,10 @@ let createNewSymbol (ldcs: LoadedComponent list) (pos: XYPos) (comptype: Compone
     let style = Constants.componentLabelStyle
     let comp = makeComponent pos comptype id label
     let transform = {Rotation= Degree0; flipped= false}
+    let symbolVal = 
+        match comptype with 
+        | Resistor x | CurrentSource x -> Some x
+        | _ -> None
     { 
       Pos = { X = pos.X - float comp.W / 2.0; Y = pos.Y - float comp.H / 2.0 }
       LabelBoundingBox = calcLabelBoundingBox style comp transform
@@ -368,6 +372,7 @@ let createNewSymbol (ldcs: LoadedComponent list) (pos: XYPos) (comptype: Compone
           }
       InWidth0 = None // set by BusWire
       InWidth1 = None
+      Value = symbolVal
       Id = ComponentId id
       Component = comp
       Moving = false
@@ -596,9 +601,9 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
                 [|{X=W/5.;Y=0};{X=0;Y=H/2.};{X=W/5.;Y=H};{X=W;Y=H};{X=W;Y=0}|]
             // EXTENSION: |Mux4|Mux8 ->(sprintf "%i,%i %i,%f  %i,%f %i,%i" 0 0 w (float(h)*0.2) w (float(h)*0.8) 0 h )
             // EXTENSION: | Demux4 |Demux8 -> (sprintf "%i,%f %i,%f %i,%i %i,%i" 0 (float(h)*0.2) 0 (float(h)*0.8) w h w 0)
-            | Resistor ->
+            | Resistor _ ->
                 [|{X=0;Y=0.5*H};{X=0.1*W;Y=0.5*H};{X=0.15*W;Y=H};{X=0.3*W;Y=0};{X=0.45*W;Y=H};{X=0.6*W;Y=0};{X=0.75*W;Y=0.5*H};{X=0.85*W;Y=0.5*H};{X=0.75*W;Y=0.5*H};{X=0.6*W;Y=0};{X=0.45*W;Y=H};{X=0.3*W;Y=0};{X=0.15*W;Y=H};{X=0.1*W;Y=0.5*H}|]
-            | CurrentSource ->
+            | CurrentSource _ ->
                 [|{X=0.2;Y=0.5};{X=0.8;Y=0.5};{X=0.7;Y=0.4};{X=0.8;Y=0.5};{X=0.9;Y=0.4};{X=0.8;Y=0.5}|]
             | Custom x when symbol.IsClocked = true -> 
                 [|{X=0;Y=H-13.};{X=8.;Y=H-7.};{X=0;Y=H-1.};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H};{X=0;Y=H}|]
@@ -640,7 +645,7 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
                 
     let createSymbol = 
         match comp.Type with
-        | CurrentSource -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 5 30 55 30 defaultLine; makeLine 45 20 55 30 defaultLine; makeLine 45 40 55 30 defaultLine]
+        | CurrentSource _ -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 5 30 55 30 defaultLine; makeLine 45 20 55 30 defaultLine; makeLine 45 40 55 30 defaultLine]
         | VoltageSource -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 40 30 55 30 defaultLine; makeLine 47.5 40 47.5 20 defaultLine; makeLine 12.5 40 12.5 20 defaultLine]
         | _ -> createBiColorPolygon points colour outlineColour opacity strokeWidth
    

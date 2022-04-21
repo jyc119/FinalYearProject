@@ -472,6 +472,7 @@ let createSymbol ldcs prevSymbols comp =
                 Moving = false
                 InWidth0 = None
                 InWidth1 = None
+                Value = None
                 STransform = getSTransformWithDefault comp.SymbolInfo
                 PortMaps = portMaps
                 

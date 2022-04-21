@@ -59,6 +59,16 @@ let private intFormField name (width:string) defaultValue minValue onChange =
         ]
     ]
 
+let private floatFormField name (width:string) defaultValue minValue onChange =
+    Field.div [] [
+        Label.label [] [ str name ]
+        Input.number [
+            Input.Props [Style [Width width]; Min minValue]
+            Input.DefaultValue <| sprintf "%f" defaultValue
+            Input.OnChange (getFloatEventValue >> onChange)
+        ]
+    ]
+
 let private int64FormField name (width:string) defaultValue minValue onChange =
     Field.div [] [
         Label.label [] [ str name ]
@@ -169,6 +179,25 @@ let private makeNumberOfBitsField model (comp:Component) text dispatch =
                 dispatch ClosePropertiesNotification
     )
 
+let private makeResistorField model (comp:Component) text dispatch =
+    let sheetDispatch sMsg = dispatch (Sheet sMsg)
+    
+    let title, resistance =
+        match comp.Type with
+        | Resistor r -> "Resistance", r
+        | c -> failwithf "makeResistorField called with invalid component: %A" c
+    floatFormField title "100px" resistance 10.0 (
+        fun newResistance ->
+            //let text' = match comp.Type with | _ -> formatLabelAsBus newResistance text
+            //SetComponentLabelFromText model comp text' // change the JS component label
+            let lastUsedWidth = 
+                match comp.Type with 
+                | _ ->  
+                    newResistance
+            dispatch (ReloadSelectedAnalogComponent (lastUsedWidth)) // reload the new component
+            dispatch <| SetPopupDialogFloat (Some newResistance)
+            dispatch ClosePropertiesNotification
+    )
 
 
 
@@ -248,8 +277,8 @@ let private makeDescription (comp:Component) model dispatch =
         str "To join inputs and outputs without wires."; br []
         str "To prevent an unused output from giving an error."
         ]
-    | Resistor -> div [] [ str "Resistor" ]
-    | CurrentSource -> div [] [ str "Current Source" ]
+    | Resistor _ -> div [] [ str "Resistor" ]
+    | CurrentSource _ -> div [] [ str "Current Source" ]
     | VoltageSource -> div [] [ str "Voltage Source" ]
     | Custom custom ->
         let styledSpan styles txt = span [Style styles] [str <| txt]
@@ -278,6 +307,8 @@ let private makeExtraInfo model (comp:Component) text dispatch =
     match comp.Type with
     | Input _ | Output _ | Viewer _ ->
         makeNumberOfBitsField model comp text dispatch
+    | Resistor _ ->
+        makeResistorField model comp text dispatch
     | Constant1 _ ->         
              makeConstantDialog model comp text dispatch
     | _ -> div [] []

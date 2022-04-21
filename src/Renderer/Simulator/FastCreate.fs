@@ -65,7 +65,7 @@ let getPortNumbers (sc: SimulationComponent) =
         | Viewer _ 
         | IOLabel  ->
             1,1
-        | Resistor | CurrentSource | VoltageSource -> 1,1
+        | Resistor _ | CurrentSource _ | VoltageSource -> 1,1
         | Custom _ -> failwithf "Custom components should not occur in fast simulation"
 
     ins, outs
@@ -84,8 +84,8 @@ let getOutputWidths (sc: SimulationComponent) (wa: int option array) =
    | Constant1 (w, _,_)
        -> putW0 w
    | Custom _ -> ()
-   | Resistor
-   | CurrentSource
+   | Resistor _
+   | CurrentSource _
    | VoltageSource
    | IOLabel -> ()
 

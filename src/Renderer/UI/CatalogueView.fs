@@ -80,6 +80,34 @@ let private createIOPopup hasInt typeStr compType (model:Model) dispatch =
             (getInt dialogData < 1) || (getText dialogData = "")
     dialogPopup title body buttonText buttonAction isDisabled dispatch
 
+let private createResistorPopup hasInt typeStr compType (model:Model) dispatch =
+    let title = sprintf "Add %s" typeStr
+    let beforeText =
+        fun _ -> str <| sprintf "How do you want to name your %s?" typeStr
+    let placeholder = "Component name"
+    let beforeInt =
+        fun _ -> str <|  "Resistance"
+    let floatDefault = model.LastResistance
+    let body = 
+        match hasInt with
+        | true -> dialogPopupBodyTextAndFloat beforeText placeholder beforeInt floatDefault dispatch
+        | false -> dialogPopupBodyOnlyText beforeText placeholder dispatch
+    let buttonText = "Add"
+    let buttonAction =
+        fun (dialogData : PopupDialogData) ->
+            // TODO: format text for only uppercase and allowed chars (-, not number start)
+            // TODO: repeat this throughout this file and selectedcomponentview (use functions)
+            let inputText = getText dialogData
+            let inputfloat = getFloat dialogData
+            createComponent (compType inputfloat) (formatLabelFromType (compType inputfloat) inputText) model dispatch
+            dispatch ClosePopup
+    let isDisabled =
+        fun (dialogData : PopupDialogData) ->
+            (getInt dialogData < 1) || (getText dialogData = "")
+    dialogPopup title body buttonText buttonAction isDisabled dispatch
+
+
+
 /// two react text lines in red
 let private twoErrorLines errMsg1 errMsg2 =
     span [Style [Color Red]] [str errMsg1; br []; str errMsg2; br [] ]
@@ -248,11 +276,11 @@ let viewCatalogue model dispatch =
                           catTip1 "Output" (fun _ -> createIOPopup true "output" Output model dispatch) "Output connection from current sheet: one or more bits"]
                     makeMenuGroup
                         "Linear Components"
-                        [ catTip1 "Resistor"  (fun _ -> createCompStdLabel Resistor model dispatch) "Resistor"
+                        [ catTip1 "Resistor"  (fun _ -> createResistorPopup true "Resistor" Resistor model dispatch) "Resistor"
                           catTip1 "Voltage Source"  (fun _ -> createCompStdLabel VoltageSource model dispatch) "Voltage Source"]
-                    makeMenuGroup
-                        "Non-Linear components"
-                        [ catTip1 "CurrentSource"  (fun _ -> createCompStdLabel CurrentSource model dispatch) "Current ource"]
+                    //makeMenuGroup
+                        //"Non-Linear components"
+                        //[ catTip1 "CurrentSource"  (fun _ -> createCompStdLabel CurrentSource model dispatch) "Current ource"]
                     makeMenuGroupWithTip styles
                         "This project"
                         "Every design sheet is available for use in other sheets as a custom component: \

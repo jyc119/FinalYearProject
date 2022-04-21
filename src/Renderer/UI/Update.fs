@@ -263,6 +263,7 @@ let update (msg : Msg) oldModel =
     | SetDragMode mode -> {model with DividerDragMode= mode}, Cmd.none
     | SetViewerWidth w -> {model with WaveSimViewerWidth = w}, Cmd.none
     | ReloadSelectedComponent width -> {model with LastUsedDialogWidth=width}, Cmd.none
+    | ReloadSelectedAnalogComponent value -> {model with LastResistance=value}, Cmd.none
     | StartSimulation simData -> 
         { model with CurrentStepSimulationStep = Some simData }, 
         Cmd.batch [
@@ -352,6 +353,8 @@ let update (msg : Msg) oldModel =
         { model with PopupDialogData = {model.PopupDialogData with Text = text} }, Cmd.none
     | SetPopupDialogInt int ->
         { model with PopupDialogData = {model.PopupDialogData with Int = int} }, Cmd.none
+    | SetPopupDialogFloat float ->
+        { model with PopupDialogData = {model.PopupDialogData with Float = float} }, Cmd.none
     | SetPopupDialogTwoInts data ->
         { model with PopupDialogData = 
                         match data with

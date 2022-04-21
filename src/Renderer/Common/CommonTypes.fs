@@ -310,7 +310,7 @@ module CommonTypes
     type ComponentType =
         | Input of BusWidth: int | Output of BusWidth: int | Viewer of BusWidth: int | IOLabel 
         | Constant1 of Width: int * ConstValue: int64 * DialogTextValue: string
-        | Resistor | CurrentSource
+        | Resistor of float | CurrentSource of float
         | VoltageSource
         | Custom of CustomComponentType // schematic sheet used as component
 
@@ -406,6 +406,7 @@ module CommonTypes
         Source : Port
         Target : Port
         Vertices : (float * float * bool) list
+        Voltage: float option
     }
 
     /// F# data describing the contents of a single schematic sheet.
@@ -432,6 +433,7 @@ module CommonTypes
                     |> List.map (function 
                         | (x,y) when x >= 0. && y >= 0. -> (x,y,false)
                         | (x,y) -> (abs x, abs y, true))
+                Voltage = None
             }
         let convertComponent (comp:LegacyCanvas.LegacyComponent) : Component =
 

@@ -42,6 +42,7 @@ type MoreWaveSetup = SheetWave list * Set<ComponentId list>
 /// Possible fields that may (or may not) be used in a dialog popup.
 type PopupDialogData = {
     Text : string option;
+    Float: float option;
     Int : int option;
     Int2: int64 option
     ProjectPath: string
@@ -289,6 +290,7 @@ type Msg =
     | SetPopupDialogText of string option
     | SetPopupDialogInt of int option
     | SetPopupDialogTwoInts of (int64 option * IntMode * string option)
+    | SetPopupDialogFloat of float option
     | SetPropertiesExtraDialogText of string option
     | SetPopupDialogMemorySetup of (int * int * InitMemData * string option) option
     | SetPopupMemoryEditorData of MemoryEditorData option
@@ -309,6 +311,7 @@ type Msg =
     | ClosePropertiesNotification
     | SetTopMenu of TopMenu
     | ReloadSelectedComponent of int
+    | ReloadSelectedAnalogComponent of float
     | SetDragMode of DragMode
     | SetViewerWidth of int
     | MenuAction of MenuCommand * (Msg -> unit)
@@ -385,6 +388,8 @@ type Model = {
     LastSelectedIds: string list * string list
     // last used bus width in bits - used as default in next component create dialog
     LastUsedDialogWidth: int
+    // last resistance value
+    LastResistance: float
     // component currently selected in properties dialog
     SelectedComponent : Component option // None if no component is selected.
     // used during step simulation: simgraph for current clock tick
@@ -435,6 +440,7 @@ let reduce (this: Model) = {|
          LastSelectedIds = this.LastSelectedIds
          CurrentSelected = this.CurrentSelected
          LastUsedDialogWidth = this.LastUsedDialogWidth
+         LastResistance = this.LastResistance
          SelectedComponent= this.SelectedComponent
          CreateComponent = this.LastCreatedComponent
          HasUnsavedChanges = false
@@ -454,6 +460,7 @@ let reduceApprox (this: Model) = {|
          CurrProject = match this.PopupViewFunc with None -> false | _ -> true
          SimulationIsStale = this.WaveSimulationIsOutOfDate
          LastUsedDialogWidth = this.LastUsedDialogWidth
+         LastResistance = this.LastResistance
          CreateComponent = this.LastCreatedComponent
          HasUnsavedChanges = false
          CurrProject = match this.PopupViewFunc with None -> false | _ -> true
