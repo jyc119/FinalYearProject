@@ -46,13 +46,9 @@ type SimulationComponent = {
     Id : ComponentId
     Type : ComponentType
     Label : ComponentLabel
-    // Mapping from each input port number to its value (it will be set
-    // during the simulation process).
-    // TODO: maybe using a list would improve performance?
-    Inputs : Map<InputPortNumber, WireData>
     // Mapping from each output port number to all of the ports and
     // Components connected to that port.
-    Outputs : Map<OutputPortNumber,(ComponentId * InputPortNumber) list>
+    Outputs : Map<OutputPortNumber,ComponentId>
     // this is MUTABLE and used only during clock tick change propagation
     // location n = true => the output (of a synchronous component) has been
     // propagated in propagateStateChanges. Location n corresponds to
@@ -68,39 +64,10 @@ type SimulationComponent = {
     // The state should only be changed when clock ticks are fed. Other changes
     // will be ignored.
     State : SimulationComponentState
-    // Function that takes the inputs and transforms them into the outputs,
-    // according to the behaviour of the component.
-    // The size of the Inputs map, must be as expected by the component,
-    // otherwhise the reducer will return None (i.e. keep on waiting for more
-    // inputs to arrive).
-    // The idea is similar to partial application, keep on providing inputs
-    // until the output can be evaluated.
-    // The reducer should fail if more inputs than expected are received.
-    // The reducer accepts a SimulationGraph for custom components only.
-    // The reducer accepts an IsClockTick flag that tells you if that is an
-    // update due to the global clock.
-    Reducer : ReducerInput -> ReducerOutput
 }
 
 /// Map every ComponentId to its SimulationComponent.
 and SimulationGraph = Map<ComponentId, SimulationComponent>
-
-/// This drives the generation of component outputs
-/// it is processed by the Reducer function.
-and ReducerInput = {
-    Inputs: Map<InputPortNumber, WireData>
-    CustomSimulationGraph: SimulationGraph option
-    IsClockTick: IsClockTick
-}
-
-/// When all inputs are available the reducer function will generate
-/// these outputs. For custom components the SimulationGraph contains
-/// embedded state.
-and ReducerOutput = {
-    Outputs: Map<OutputPortNumber, WireData> option
-    NewCustomSimulationGraph: SimulationGraph option
-    NewState: SimulationComponentState // Will be saved only after clock ticks.
-}
 
 /// contains info needed to propagate wire value changes through a simulation.
 and OutputChange = {
@@ -458,8 +425,6 @@ type FastComponent = {
     mutable VerilogComponentName: string
 
     } with
-
-    member inline this.GetInput (epoch)  (InputPortNumber n) = this.InputLinks[n].Step[epoch]
     member this.ShortId =
         let (ComponentId sid,ap) = this.fId
         (EEExtensions.String.substringLength 0 5 sid)
@@ -507,7 +472,7 @@ type FastSimulation = {
     mutable FIOActive: Map<ComponentLabel*ComponentId list,FastComponent>
     // list of deferred links driven from inactive IOlabls - at end of linkage the
     // corresponding active IOLabel can be substituted as driver an dthe link made
-    mutable FIOLinks: ((FastComponent*InputPortNumber)*FastComponent) list
+    mutable FIOLinks: ((FastComponent*OutputPortNumber)*FastComponent) list
     // Fast components: this array is longer than FOrderedComps because it contains
     // IOlabel components that are redundant in the simulation
     FComps: Map<FComponentId,FastComponent>
@@ -533,7 +498,7 @@ type FastSimulation = {
 and GatherTemp = {
     // Links Custom Component Id and input port number to corresponding Input 
     // Component Id (of an Input component which is not top-level)
-    CustomInputCompLinksT: ((FComponentId * InputPortNumber) * FComponentId) list
+    CustomInputCompLinksT: ((FComponentId * OutputPortNumber) * FComponentId) list
     // Links (non-top-level) Output component Id to corresponding Custom Component Id & output port number
     CustomOutputCompLinksT: (FComponentId * (FComponentId * OutputPortNumber)) list
     // Shortcut to find the label of a component; notice that the access path is not needed here because
@@ -551,7 +516,7 @@ and  GatherData = {
     Simulation: SimulationGraph
     // Maps Custom Component Id and input port number to corresponding Input 
     // Component Id (of an Input component which is not top-level)
-    CustomInputCompLinks: Map<FComponentId * InputPortNumber, FComponentId>
+    CustomInputCompLinks: Map<FComponentId * OutputPortNumber, FComponentId>
     // Maps (non-top-level) Output component Id to corresponding Custom Component Id & output port number
     CustomOutputCompLinks: Map<FComponentId,  FComponentId * OutputPortNumber>
     // Maps custom component output to corresponding output FastComponent.

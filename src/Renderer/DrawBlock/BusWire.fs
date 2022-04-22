@@ -221,7 +221,7 @@ let inline getSourcePort (model:Model) (wire:Wire) =
     port
 
 let inline getTargetPort (model:Model) (wire:Wire) =
-    let portId = Symbol.inputPortStr wire.InputPort
+    let portId = Symbol.outputPortStr wire.OutputPort1
     let port = model.Symbol.Ports[portId]
     port
 
@@ -232,7 +232,7 @@ let inline getSourceSymbol (model:Model) (wire:Wire) =
     symbol
 
 let inline getTargetSymbol (model:Model) (wire:Wire) =
-    let portId = Symbol.inputPortStr wire.InputPort
+    let portId = Symbol.outputPortStr wire.OutputPort1
     let port = model.Symbol.Ports[portId]
     let symbol = model.Symbol.Symbols[ComponentId port.HostId]
     symbol
@@ -457,7 +457,7 @@ let segmentsToIssieVertices (segList:Segment list) (wire:Wire) =
 /// between our implementation and Issie.
 let extractConnection (wModel : Model) (cId : ConnectionId) : Connection =
     let conn = wModel.Wires[cId]
-    let ConnectionId strId, InputPortId strInputPort, OutputPortId strOutputPort = conn.WId, conn.InputPort, conn.OutputPort
+    let ConnectionId strId, OutputPortId strInputPort, OutputPortId strOutputPort = conn.WId, conn.OutputPort1, conn.OutputPort
     {
         Id = strId
         Source = { Symbol.getPort wModel.Symbol strOutputPort with PortNumber = None } // None for connections 
@@ -719,7 +719,7 @@ let view (model : Model) (dispatch : Dispatch<Msg>) =
         let outPortId = Symbol.getOutputPortIdStr wire.OutputPort
         let outputPortLocation = Symbol.getPortLocation None model.Symbol outPortId
         let outputPortEdge = Symbol.getOutputPortOrientation model.Symbol wire.OutputPort 
-        let stringInId = Symbol.getInputPortIdStr wire.InputPort
+        let stringInId = Symbol.getOutputPortIdStr wire.OutputPort1
         let inputPortLocation = Symbol.getPortLocation None model.Symbol stringInId 
         let strokeWidthP =
             match wire.Width with
@@ -734,7 +734,7 @@ let view (model : Model) (dispatch : Dispatch<Msg>) =
             OutputPortEdge = outputPortEdge
             OutputPortLocation = outputPortLocation
             DisplayType = model.Type
-            TriangleEdge = Symbol.getInputPortOrientation model.Symbol wire.InputPort
+            TriangleEdge = Symbol.getOutputPortOrientation model.Symbol wire.OutputPort1
             InputPortLocation = inputPortLocation
         }
         

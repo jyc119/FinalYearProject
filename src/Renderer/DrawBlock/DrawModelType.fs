@@ -16,7 +16,7 @@ module SymbolT =
     type RotationType = RotateClockwise | RotateAntiClockwise
 
     /// Wraps around the input and output port id types
-    type PortId = | InputId of InputPortId | OutputId of OutputPortId
+    type PortId =  OutputId of OutputPortId
 
     /// data structures defining where ports are put on symbol boundary
     /// strings here are used for port ids
@@ -84,10 +84,7 @@ module SymbolT =
 
         /// Contains all the inputports that have a wire connected to them.
         /// If a port is in the set, it is connected, otherwise it is not
-        InputPortsConnected:  Set<InputPortId>
-
-        /// Represents the number of wires connected to each output port in the model
-        OutputPortsConnected: Map<OutputPortId, int>
+        OutputPortsConnected:  Set<OutputPortId>
 
         }
 
@@ -167,8 +164,8 @@ module BusWireT =
     type Wire =
         {
             WId: ConnectionId 
-            InputPort: InputPortId
             OutputPort: OutputPortId
+            OutputPort1: OutputPortId
             Color: HighLightColor
             Width: int
             Segments: list<Segment>
@@ -203,7 +200,7 @@ module BusWireT =
     /// BusWire messages: see BusWire.update for more info
     type Msg =
         | Symbol of SymbolT.Msg // record containing messages from Symbol module
-        | AddWire of (InputPortId * OutputPortId) // add a new wire between these ports to the model
+        | AddWire of (OutputPortId * OutputPortId) // add a new wire between these ports to the model
         | BusWidths
         | CopyWires of list<ConnectionId>
         | DeleteWires of list<ConnectionId>
@@ -232,7 +229,6 @@ module SheetT =
     /// Used to keep track of what the mouse is on
     type MouseOn =
         | Label of CommonTypes.ComponentId
-        | InputPort of CommonTypes.InputPortId * XYPos
         | OutputPort of CommonTypes.OutputPortId * XYPos
         | Component of CommonTypes.ComponentId
         | Connection of CommonTypes.ConnectionId
@@ -247,7 +243,6 @@ module SheetT =
         | MovingLabel
         | DragAndDrop
         | MovingWire of CommonTypes.ConnectionId // Sends mouse messages on to BusWire
-        | ConnectingInput of CommonTypes.InputPortId // When trying to connect a wire from an input
         | ConnectingOutput of CommonTypes.OutputPortId // When trying to connect a wire from an output
         | Scrolling // For Automatic Scrolling by moving mouse to edge to screen
         | Idle

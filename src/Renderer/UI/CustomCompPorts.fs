@@ -371,7 +371,7 @@ let changeInstance (comp:Component) (change: PortChange) =
                     Id = JSHelpers.uuid ()
                     PortNumber = Some ports.Length // next available number
                     HostId = comp.Id
-                    PortType = match dir with | InputIO -> PortType.Input | OutputIO -> PortType.Output
+                    PortType = PortType.Output
                 }
             let ports = ports @ [newPort]
             labels,ports

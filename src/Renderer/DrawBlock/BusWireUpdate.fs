@@ -136,10 +136,10 @@ let getWireList (model: Model) =
 /// Returns the IDs of the wires in the model connected to a list of components given by compIds
 let getConnectedWires model compIds =
     let containsPorts wire =
-        let inputPorts, outputPorts =
+        let outputPorts =
             Symbol.getPortLocations model.Symbol compIds
 
-        Map.containsKey wire.InputPort inputPorts
+        Map.containsKey wire.OutputPort1 outputPorts
         || Map.containsKey wire.OutputPort outputPorts
 
     model
