@@ -150,6 +150,7 @@ let private makeMemoryInfo descr mem compId cType model dispatch =
 
     ]
 
+(*
 let private makeNumberOfBitsField model (comp:Component) text dispatch =
     let sheetDispatch sMsg = dispatch (Sheet sMsg)
     
@@ -178,6 +179,7 @@ let private makeNumberOfBitsField model (comp:Component) text dispatch =
                 dispatch <| SetPopupDialogInt (Some newWidth)
                 dispatch ClosePropertiesNotification
     )
+*)
 
 let private makeAnalogComponentField model (comp:Component) text dispatch =
     let sheetDispatch sMsg = dispatch (Sheet sMsg)
@@ -218,6 +220,7 @@ let constantDialogWithDefault (w,cText) dialog =
     let cText = Option.defaultValue cText dialog.Text
     w, cText
 
+(*
 /// Create react to chnage constant properties
 let makeConstantDialog (model:Model) (comp: Component) (text:string) (dispatch: Msg -> Unit): ReactElement =
         let symbolDispatch msg = dispatch <| msgToS msg
@@ -249,6 +252,7 @@ let makeConstantDialog (model:Model) (comp: Component) (text:string) (dispatch: 
                         dispatch <| SetPopupDialogText (Some txt))
                 
             ]              
+*)
 
 let private makeLsbBitNumberField model (comp:Component) dispatch =
     let sheetDispatch sMsg = dispatch (Sheet sMsg)
@@ -304,12 +308,8 @@ let private makeDescription (comp:Component) model dispatch =
 
 let private makeExtraInfo model (comp:Component) text dispatch =
     match comp.Type with
-    | Input _ | Output _ | Viewer _ ->
-        makeNumberOfBitsField model comp text dispatch
     | Resistor _ | VoltageSource _ | CurrentSource _ ->
         makeAnalogComponentField model comp text dispatch
-    | Constant1 _ ->         
-             makeConstantDialog model comp text dispatch
     | _ -> div [] []
 
 

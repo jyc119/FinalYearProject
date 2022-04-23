@@ -201,7 +201,6 @@ module BusWireT =
     type Msg =
         | Symbol of SymbolT.Msg // record containing messages from Symbol module
         | AddWire of (OutputPortId * OutputPortId) // add a new wire between these ports to the model
-        | BusWidths
         | CopyWires of list<ConnectionId>
         | DeleteWires of list<ConnectionId>
         | SelectWires of list<ConnectionId>

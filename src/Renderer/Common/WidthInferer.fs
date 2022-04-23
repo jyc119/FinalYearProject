@@ -1,5 +1,5 @@
 (*
-   Function to perform bus width inference on a canvas
+Function to perform bus width inference on a canvas
 *)
 
 module BusWidthInferer
@@ -22,5 +22,4 @@ open Helpers
 //       width of outgoing wires yet.
 //       (for example, a mergeBus components with only one bus connected)
 //       - return
-
 

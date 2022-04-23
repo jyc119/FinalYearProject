@@ -163,11 +163,6 @@ let private loadStateIntoModel (compToSetup:LoadedComponent) waveSim ldComps (mo
             // Run the a connection widths inference.
             //printfn "Check 4..."
     
-            Sheet (SheetT.Wire (BusWireT.BusWidths))
-            // JSdispatch <| InferWidths()
-            //printfn "Check 5..."
-            // Set no unsaved changes.
-    
         
             JSDiagramMsg (SetHasUnsavedChanges false)
             // set waveSim data

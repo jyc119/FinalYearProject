@@ -41,15 +41,6 @@ module SheetInterface =
         member this.ChangeLabel (dispatch: Dispatch<Msg>) (compId: ComponentId) (lbl: string) =
             dispatch <| (Wire (BusWireT.Symbol (SymbolT.ChangeLabel (compId, lbl) ) ) )
 
-        /// Run Bus Width Inference check
-        member this.DoBusWidthInference dispatch =
-            dispatch <| (Wire (BusWireT.BusWidths))
-
-        /// Given a compId and a width, update the width of the Component specified by compId
-        member this.ChangeWidth (dispatch: Dispatch<Msg>) (compId: ComponentId) (width: int) =
-            dispatch <| (Wire (BusWireT.Symbol (SymbolT.ChangeNumberOfBits (compId, width) ) ) )
-            this.DoBusWidthInference dispatch
-
         /// Given a compId and a width, update the width of the Component specified by compId
         member this.ChangeValue (dispatch: Dispatch<Msg>) (compId: ComponentId) (value: float) =
             dispatch <| (Wire (BusWireT.Symbol (SymbolT.ChangeValue (compId, value) ) ) )
