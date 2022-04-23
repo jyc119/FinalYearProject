@@ -48,7 +48,7 @@ type SimulationComponent = {
     Label : ComponentLabel
     // Mapping from each output port number to all of the ports and
     // Components connected to that port.
-    Outputs : Map<OutputPortNumber,ComponentId>
+    Outputs : Map<OutputPortNumber,(ComponentId * OutputPortNumber) list>
     // this is MUTABLE and used only during clock tick change propagation
     // location n = true => the output (of a synchronous component) has been
     // propagated in propagateStateChanges. Location n corresponds to

@@ -26,7 +26,7 @@ let getHybridComponentAsyncOuts compType inputPortNumber =
     | _ -> None
 
 let isHybridComponent compType = 
-    getHybridComponentAsyncOuts compType (InputPortNumber 0)
+    getHybridComponentAsyncOuts compType (OutputPortNumber 0)
     |> Option.isSome
 
 /// Find out whether a simulation graph has some synchronous components.
@@ -66,7 +66,7 @@ let getNodeOrFail
 /// For each graph identified by its name, keep a mapping from input ports and
 /// what output ports can be reached.
 type private CustomCompsCombPaths =
-    Map<string, Map<InputPortNumber, OutputPortNumber list>>
+    Map<string, Map<OutputPortNumber, OutputPortNumber list>>
 
 /// Convert the label of a port on a custom component to its port number.
 /// Assumes that all labels are unique, otherwise it is undefined behaviour.
@@ -84,8 +84,8 @@ let private labelToPortNumber label (labels : string list) =
 let private getCustomCombinatorialOutputs
         (combRoutes : CustomCompsCombPaths)
         (customNode : SimulationComponent)
-        (inputPortNumber : InputPortNumber)
-        : Map<OutputPortNumber, (ComponentId * InputPortNumber) list> =
+        (inputPortNumber : OutputPortNumber)
+        : Map<OutputPortNumber, (ComponentId * OutputPortNumber) list> =
     // Determine the outputs connected to the input port.
     let combOutputs =
         match combRoutes.TryFind <| getCustomName customNode.Type with
@@ -107,8 +107,8 @@ let private getCustomCombinatorialOutputs
 let getCombinatorialOutputs
         (combRoutes : CustomCompsCombPaths)
         (node : SimulationComponent)
-        (inputPortNumberOpt : InputPortNumber option)
-        : Map<OutputPortNumber, (ComponentId * InputPortNumber) list> =
+        (inputPortNumberOpt : OutputPortNumber option)
+        : Map<OutputPortNumber, (ComponentId * OutputPortNumber) list> =
     match node.Type with
     | Custom _ ->
         // Only extract the combinatorial outputs. When calling this function
@@ -131,12 +131,12 @@ let rec private dfs
         (graph : SimulationGraph)
         (combPaths : CustomCompsCombPaths)
         (currId : ComponentId)
-        (inputPortNumber : InputPortNumber)
-        (visited: Set<ComponentId * InputPortNumber option>)
+        (output1PortNumber : OutputPortNumber)
+        (visited: Set<ComponentId * OutputPortNumber option>)
         (outputsReached: ComponentLabel list)
-        : Set<ComponentId * InputPortNumber option> * ComponentLabel list =
+        : Set<ComponentId * OutputPortNumber option> * ComponentLabel list =
     let rec exploreChildren visited outputsReached children
-            : Set<ComponentId * InputPortNumber option> * ComponentLabel list =
+            : Set<ComponentId * OutputPortNumber option> * ComponentLabel list =
         match children with
         | [] -> visited, outputsReached
         | (childId, childInpPNum) :: children' ->
@@ -149,7 +149,7 @@ let rec private dfs
     // Ignore the info about port number unless node is custom node, or a hybrid component
     let inputPortNumber =
         match currNode.Type with
-        | Custom _  ->  Some inputPortNumber
+        | Custom _  ->  Some output1PortNumber
         | _ -> None
 
     match visited.Contains (currId, inputPortNumber) with
@@ -175,7 +175,7 @@ let private findCombinatorialPaths
         (customComp : CustomComponentType)
         (currGraph : SimulationGraph)
         (combPaths : CustomCompsCombPaths)
-        : Map<InputPortNumber, OutputPortNumber list> =
+        : Map<OutputPortNumber, OutputPortNumber list> =
     let labelToString (ComponentLabel label) = label
     let labelsToStrings (labels) = List.map fst labels
     let rec runDfs inputs =
@@ -183,7 +183,7 @@ let private findCombinatorialPaths
         | [] -> Map.empty
         | (_, input) :: inputs' ->
             let _, outputsReached =
-                dfs currGraph combPaths input.Id (InputPortNumber 0) Set.empty []
+                dfs currGraph combPaths input.Id (OutputPortNumber 0) Set.empty []
             let res = runDfs inputs' // Keep on exploring.
             // Add results for the current inputs to the map.
             // Need to transform form labels to port numbers.
@@ -195,7 +195,7 @@ let private findCombinatorialPaths
             res.Add (
                 labelToPortNumber (labelToString input.Label)
                                   (labelsToStrings customComp.InputLabels)
-                |> InputPortNumber,
+                |> OutputPortNumber,
                 outputsPNums |> List.map OutputPortNumber
             )
 
