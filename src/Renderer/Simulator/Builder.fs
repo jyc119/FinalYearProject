@@ -39,8 +39,8 @@ let private getPortNumberOrFail port =
 /// The values are returned in the the passed order. E.g. if portNumbers is
 /// [0, 1, 2], the returned value will be [bit0, bit1, bit2].
 let rec private getValuesForPorts
-        (inputs : Map<InputPortNumber, WireData>)
-        (portNumbers : InputPortNumber list)
+        (inputs : Map<OutputPortNumber, WireData>)
+        (portNumbers : OutputPortNumber list)
         : (WireData list) option =
     match portNumbers with
     | [] -> Some []
@@ -65,8 +65,6 @@ let rec private getValuesForPorts
 /// TODO: some components reducers are quite similar, for example Register and
 /// RegisterE and DFF and DFFE. It is probably a good idea to merge them
 /// together to avoid duplicated logic.
-let private getReducer (componentType : ComponentType) : ReducerInput -> ReducerOutput =
-    fun _ -> failwithf "Reducer function is legacy code and should never be called!"
 
 
 
@@ -76,10 +74,10 @@ let private getReducer (componentType : ComponentType) : ReducerInput -> Reducer
 /// set to None for ports in connections.
 let private buildSourceToTargetPortMap
         (connections : Connection list)
-        : Map<OutputPortId, (ComponentId * InputPortId) list> =
+        : Map<OutputPortId, (ComponentId * OutputPortId) list> =
     (Map.empty, connections) ||> List.fold (fun map conn ->
         let key = OutputPortId conn.Source.Id
-        let target = ComponentId conn.Target.HostId, InputPortId conn.Target.Id
+        let target = ComponentId conn.Target.HostId, OutputPortId conn.Target.Id
         // Append the new target to the list associated with the key.
         let newValue =
             match map.TryFind key with
@@ -91,11 +89,11 @@ let private buildSourceToTargetPortMap
 /// For each input port in each component, map it to its port number.
 let private mapInputPortIdToPortNumber
         (components : Component list)
-        : Map<InputPortId, InputPortNumber> =
+        : Map<OutputPortId, OutputPortNumber> =
     (Map.empty, components) ||> List.fold (fun map comp ->
-        (map, comp.InputPorts) ||> List.fold (fun map port ->
-            map.Add (InputPortId port.Id,
-                     InputPortNumber (getPortNumberOrFail port.PortNumber))
+        (map, comp.OutputPorts) ||> List.fold (fun map port ->
+            map.Add (OutputPortId port.Id,
+                     OutputPortNumber (getPortNumberOrFail port.PortNumber))
         )
     )
 
@@ -112,14 +110,14 @@ let private getDefaultState compType =
 
 /// Build a simulation component.
 let private buildSimulationComponent
-        (sourceToTargetPort : Map<OutputPortId, (ComponentId * InputPortId) list>)
-        (portIdToPortNumber : Map<InputPortId, InputPortNumber>)
+        (sourceToTargetPort : Map<OutputPortId, (ComponentId * OutputPortId) list>)
+        (portIdToPortNumber : Map<OutputPortId, OutputPortNumber>)
         (comp : Component)
         : SimulationComponent =
     // Remove portIds and use portNumbers instead.
     let mapPortIdsToPortNumbers
-            (targets : (ComponentId * InputPortId) list)
-            : (ComponentId * InputPortNumber) list =
+            (targets : (ComponentId * OutputPortId) list)
+            : (ComponentId * OutputPortNumber) list =
         targets |> List.map (fun (compId, portId) ->
             match portIdToPortNumber.TryFind <| portId with
             | None -> failwithf "what? Input port with portId %A has no portNumber associated" portId
@@ -156,18 +154,16 @@ let private buildSimulationComponent
             // that will always work. Presetting the outputs solves the problem
             // and the value does not matter as all outputs will be set again
             // in that initialization process.
-            Map.empty.Add (InputPortNumber 0, List.replicate width Zero)
+            Map.empty.Add (OutputPortNumber 0, List.replicate width Zero)
         | _ -> Map.empty
     {
         Id = ComponentId comp.Id
         Type = comp.Type
         Label = ComponentLabel comp.Label
-        Inputs = inputs
         Outputs = outputs
         OutputsPropagated = Array.replicate 0 false // default for non-clocked components
         CustomSimulationGraph = None // Custom components will be augumented by the DependencyMerger.
         State = getDefaultState comp.Type
-        Reducer = getReducer comp.Type
     }
 
 let getLabelConnections (comps:Component list) (conns: Connection list) =
@@ -190,7 +186,7 @@ let getLabelConnections (comps:Component list) (conns: Connection list) =
     let getConnection (compTarget:Component) = targetMap[ComponentId compTarget.Id]
 
     let copyConnection (conn: Connection) (compTarget:Component) (tagNum:int) =
-        {conn with Target = compTarget.InputPorts[0]; Id = sprintf "iolab%d" tagNum + conn.Id}
+        {conn with Target = compTarget.OutputPorts[0]; Id = sprintf "iolab%d" tagNum + conn.Id}
 
     let getDriverConnection (comps: Component list) =
         comps
