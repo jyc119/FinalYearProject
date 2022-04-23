@@ -129,7 +129,7 @@ let createFastComponent (numSteps: int) (sComp: SimulationComponent) (accessPath
         if isHybridComponent sc.Type then
             [0..ipn]
             |> List.sumBy (fun ipn -> 
-                getHybridComponentAsyncOuts sc.Type (InputPortNumber ipn)
+                getHybridComponentAsyncOuts sc.Type (OutputPortNumber ipn)
                 |> function | None | Some [] -> 0 | Some _ -> 1)
         else ipn
 
@@ -272,7 +272,7 @@ let rec private createFlattenedSimulation (ap: ComponentId list) (graph: Simulat
                             let inp = 
                                 List.find (fun (k,v) -> k = (ComponentLabel lab, labOutWidth)) inputs
                                 |> snd
-                            (((cid, ap), InputPortNumber i), (inp, ap')))
+                            (((cid, ap), OutputPortNumber i), (inp, ap')))
                 {
                      CustomInputCompLinksT = inLinks @ gatherT.CustomInputCompLinksT
                      CustomOutputCompLinksT = outLinks @ gatherT.CustomOutputCompLinksT
@@ -367,14 +367,14 @@ let private reLinkIOLabels (fs: FastSimulation) =
     // Go through all the components driven by IOLabels and link them from the active label
     // at this point exactly one out of every labelled set will be active, and contained in FIOActive
     fs.FIOLinks
-    |> List.iter (fun ((fcDriven, InputPortNumber ipn), ioDriver) -> 
+    |> List.iter (fun ((fcDriven, OutputPortNumber ipn), ioDriver) -> 
         let labKey = ioDriver.SimComponent.Label, ioDriver.AccessPath
         let fcActiveDriver = fs.FIOActive[labKey]
         fcDriven.InputLinks[ipn] <- fcActiveDriver.Outputs[0]
         fcDriven.InputDrivers[ipn] <- Some (fcActiveDriver.fId, OutputPortNumber 0)
         // DrivenComponents must only include asynchronous drive paths on hybrid components
         // on clocked components, or combinational components, it can include all drive paths
-        match getHybridComponentAsyncOuts fcDriven.FType (InputPortNumber ipn) with
+        match getHybridComponentAsyncOuts fcDriven.FType (OutputPortNumber ipn) with
         | None | Some (_ :: _) ->
             fcActiveDriver.DrivenComponents <- fcDriven :: fcActiveDriver.DrivenComponents
         | _ -> ()
@@ -401,7 +401,7 @@ let linkFastComponents (g: GatherData) (f: FastSimulation) =
     let apOf fid = fComps[fid].AccessPath
     /// This function recursively propagates a component output across Custom component boundaries to find the
     ///
-    let rec getLinks ((cid, ap): FComponentId) (opn: OutputPortNumber) (ipnOpt: InputPortNumber option) =
+    let rec getLinks ((cid, ap): FComponentId) (opn: OutputPortNumber) (ipnOpt: OutputPortNumber option) =
         let sComp = getSComp (cid, ap)
         //printfn "Getting links: %A %A %A" sComp.Type opn ipnOpt
         match isOutput sComp.Type, isCustom sComp.Type, ipnOpt with
@@ -418,7 +418,7 @@ let linkFastComponents (g: GatherData) (f: FastSimulation) =
             //printfn "CustomInCompLinks=\n%A" (Map.map (fun (vfid,vipn) fid ->
             //sprintf "%A:%A -> %A\n" (g.getFullName vfid) vipn (g.getFullName fid) ) g.CustomInputCompLinks |> mapValues)
             //printfn "Done"
-            [| g.CustomInputCompLinks[(cid, ap), ipn], opn, InputPortNumber 0 |] // go from CC input to inner input: must be valid
+            [| g.CustomInputCompLinks[(cid, ap), ipn], opn, OutputPortNumber 0 |] // go from CC input to inner input: must be valid
         | _, false, Some ipn -> [| (cid, ap), opn, ipn |] // must be a valid link
         | false, _, None ->
             sComp.Outputs
@@ -432,7 +432,7 @@ let linkFastComponents (g: GatherData) (f: FastSimulation) =
 
         | x -> failwithf "Unexpected link match: %A" x
 
-    let mutable linkCheck : Map<(FComponentId * InputPortNumber), (FComponentId * OutputPortNumber)> = Map.empty
+    let mutable linkCheck : Map<(FComponentId * OutputPortNumber), (FComponentId * OutputPortNumber)> = Map.empty
 
     f.FComps
     |> Map.iter
@@ -444,16 +444,16 @@ let linkFastComponents (g: GatherData) (f: FastSimulation) =
                     getLinks fDriverId (OutputPortNumber iOut) None
                     |> Array.map (fun (fid, _, ip) -> fid, iOut, ip)
                     |> Array.iter
-                        (fun (fDrivenId, opn, (InputPortNumber ipn)) ->
+                        (fun (fDrivenId, opn, (OutputPortNumber ipn)) ->
                             let linked =
-                                Map.tryFind (fDrivenId, InputPortNumber ipn) linkCheck
+                                Map.tryFind (fDrivenId, OutputPortNumber ipn) linkCheck
 
                             match linked with
                             | None -> ()
                             | Some (fid, opn) ->
                                 failwithf "Multiple linkage: (previous driver was %A,%A)" (g.getFullName fid) opn
 
-                            linkCheck <- Map.add (fDrivenId, InputPortNumber ipn) (fDriverId, OutputPortNumber opn) linkCheck
+                            linkCheck <- Map.add (fDrivenId, OutputPortNumber ipn) (fDriverId, OutputPortNumber opn) linkCheck
                             let fDriven = f.FComps[fDrivenId]
                             let (_, ap) = fDrivenId
 
@@ -470,13 +470,13 @@ let linkFastComponents (g: GatherData) (f: FastSimulation) =
                             if isIOLabel fDriver.FType then
                                 // we do not yet know which label will be active, so record all links from
                                 // labels for later resolution
-                                f.FIOLinks <- ((fDriven, InputPortNumber ipn), fDriver) :: f.FIOLinks
+                                f.FIOLinks <- ((fDriven, OutputPortNumber ipn), fDriver) :: f.FIOLinks
                             else
                                 // if driver is not IO label make the link now
                                 fDriven.InputLinks[ipn] <- fDriver.Outputs[opn]
                                 // DrivenComponents must only include asynchronous drive paths on hybrid components
                                 // on clocked components, or combinational components, it can include all drive paths
-                                match getHybridComponentAsyncOuts fDriven.FType (InputPortNumber ipn) with
+                                match getHybridComponentAsyncOuts fDriven.FType (OutputPortNumber ipn) with
                                 | None | Some (_ :: _) ->
                                     fDriver.DrivenComponents <- fDriven :: fDriver.DrivenComponents
                                 | _ -> ()

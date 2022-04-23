@@ -112,7 +112,7 @@ let fastReduce (maxArraySize: int) (numStep: int) (isClockedReduction: bool) (co
             | Some w, 0 -> if w < 33 then {Dat=Word 0u; Width = w} else {Dat =BigWord (bigint 0); Width = w}
             | Some w, _ -> comp.Outputs[n].Step[simStepOld]
         fd
-
+(*
     /// get last cycle data from output i for component
     let inline insOld i = 
 #if ASSERTS
@@ -130,7 +130,7 @@ let fastReduce (maxArraySize: int) (numStep: int) (isClockedReduction: bool) (co
         let fd =
             comp.GetInput(simStepOld) (InputPortNumber i) 
         fd
-
+*)
     /// Write current step output data for output port 0
     let inline put0 fd =
         comp.PutOutput(simStep) (OutputPortNumber 0) fd
