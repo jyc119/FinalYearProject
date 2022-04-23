@@ -82,9 +82,6 @@ let feedSimulationInput = SimulationRunner.feedSimulationInput
 /// Expose the feedClockTick function from SimulationRunner.
 let feedClockTick = SimulationRunner.feedClockTick
 
-/// Expose the extractSimulationIOs function from SimulationRunner.
-let extractSimulationIOs = SimulationRunner.extractSimulationIOs
-
 /// Get some info and the state of all stateful components in a graph.
 let extractStatefulComponents
         (graph : SimulationGraph)
