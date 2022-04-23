@@ -162,11 +162,11 @@ let getFilteredIdList condition wireLst =
 let filterWiresByCompMoved (model: Model) (compIds: list<ComponentId>) =
     let wireList = getWireList model
 
-    let inputPorts, outputPorts =
+    let outputPorts =
         Symbol.getPortLocations model.Symbol compIds
 
     let containsInputPort wire =
-        Map.containsKey wire.InputPort inputPorts
+        Map.containsKey wire.OutputPort1 outputPorts
 
     let containsOutputPort wire =
         Map.containsKey wire.OutputPort outputPorts
@@ -183,7 +183,7 @@ let filterWiresByCompMoved (model: Model) (compIds: list<ComponentId>) =
     let fullyConnected =
         wireList |> getFilteredIdList containsBothPort
 
-    {| Inputs = inputWires; Outputs = outputWires; Both = fullyConnected |}
+    {| Output1 = inputWires; Output = outputWires; Both = fullyConnected |}
 
 //--------------------------------------------------------------------------------//
 
@@ -359,10 +359,10 @@ let rec rotateSegments (target: Edge) (wire: {| edge: Edge; segments: Segment li
 /// Returns a newly autorouted version of a wire for the given model
 let autoroute (model: Model) (wire: Wire) : Wire =
     let destPos, startPos =
-        Symbol.getTwoPortLocations (model.Symbol) (wire.InputPort) (wire.OutputPort)
+        Symbol.getTwoPortLocations (model.Symbol) (wire.OutputPort1) (wire.OutputPort)
 
     let destEdge =
-        Symbol.getInputPortOrientation model.Symbol wire.InputPort
+        Symbol.getOutputPortOrientation model.Symbol wire.OutputPort1
 
     let startEdge =
         Symbol.getOutputPortOrientation model.Symbol wire.OutputPort
@@ -461,7 +461,7 @@ let partialAutoroute (model: Model) (wire: Wire) (newPortPos: XYPos) (reversed: 
         let portId = 
             match reversed with
             | false -> OutputId wire.OutputPort
-            | true -> InputId wire.InputPort
+            | true -> OutputId wire.OutputPort1
         if  getWireOutgoingEdge wire = Symbol.getPortOrientation model.Symbol portId &&
             relativeToFixed newStartPos = relativeToFixed oldStartPos then
             Some (manualIdx, newStartPos - oldStartPos)
@@ -510,7 +510,7 @@ let reverseWire (wire: Wire) =
 let updateWire (model : Model) (wire : Wire) (reverse : bool) =
     let newPort = 
         match reverse with
-        | true -> Symbol.getInputPortLocation None model.Symbol wire.InputPort
+        | true -> Symbol.getOutputPortLocation None model.Symbol wire.OutputPort1
         | false -> Symbol.getOutputPortLocation None model.Symbol wire.OutputPort
     if reverse then
         partialAutoroute model (reverseWire wire) newPort true
@@ -785,9 +785,9 @@ let updateWires (model : Model) (compIdList : ComponentId list) (diff : XYPos) =
         |> List.map (fun (cId, wire) -> 
             if List.contains cId wires.Both //Translate wires that are connected to moving components on both sides
             then (cId, moveWire wire diff)
-            elif List.contains cId wires.Inputs //Only route wires connected to ports that moved for efficiency
+            elif List.contains cId wires.Output1 //Only route wires connected to ports that moved for efficiency
             then (cId, updateWire model wire true)
-            elif List.contains cId wires.Outputs
+            elif List.contains cId wires.Output
             then (cId, updateWire model wire false)
             else (cId, wire))
         |> Map.ofList
@@ -804,9 +804,9 @@ let updateSymbolWires (model: Model) (compId: ComponentId) =
                 cId, (
                     updateWire model wire true 
                     |> fun wire -> updateWire model wire false)
-            elif List.contains cId wires.Inputs then 
+            elif List.contains cId wires.Output1 then 
                 cId, updateWire model wire true
-            elif List.contains cId wires.Outputs then
+            elif List.contains cId wires.Output then
                 cId, updateWire model wire false
             else cId, wire)
         |> Map.ofList
@@ -835,7 +835,7 @@ let update (msg : Msg) (model : Model) : Model*Cmd<Msg> =
         // partial routing will be done if this makes sense
         updateSymbolWires model compId, Cmd.none
 
-    | AddWire ( (inputId, outputId) : (InputPortId * OutputPortId) ) ->
+    | AddWire ( (outputId, output1Id) : (OutputPortId * OutputPortId) ) ->
         // add a newly created wire to the model
         // then send BusWidths message which will re-infer bus widths
         // the new wires (extarcted as connections) are not added back into Issie model. 
@@ -844,8 +844,8 @@ let update (msg : Msg) (model : Model) : Model*Cmd<Msg> =
         let newWire = 
             {
                 WId = wireId
-                InputPort = inputId
                 OutputPort = outputId
+                OutputPort1 = output1Id
                 Color = HighLightColor.DarkSlateGrey
                 Width = 1
                 Segments = []
