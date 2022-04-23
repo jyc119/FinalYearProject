@@ -164,8 +164,8 @@ module BusWireT =
     type Wire =
         {
             WId: ConnectionId 
-            OutputPort: OutputPortId
             OutputPort1: OutputPortId
+            OutputPort: OutputPortId
             Color: HighLightColor
             Width: int
             Segments: list<Segment>
