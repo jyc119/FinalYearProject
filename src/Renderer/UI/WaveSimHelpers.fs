@@ -332,7 +332,7 @@ let extractSimData simData nCycles =
 
 /// get NLSource option from ComponentId and InputPortNumber
 let private drivingOutput (netList: NetList) compId inPortN =
-    netList[compId].Inputs[inPortN]
+    netList[compId].Outputs[inPortN]
 
 
 
@@ -532,7 +532,7 @@ let private nlTrgtLst2CommonNLSource (netList: NetList) (nlTrgtLst: NLTarget lis
     List.tryPick (fun (nlTrgt: NLTarget) -> 
         match Map.tryFind nlTrgt.TargetCompId netList with
         | Some comp -> 
-            match Map.tryFind nlTrgt.InputPort comp.Inputs with
+            match Map.tryFind nlTrgt.InputPort comp.Output1s with
             | Some (Some src) -> Some src
             | _ -> None
         | None -> None ) nlTrgtLst
@@ -607,12 +607,6 @@ let rec private findName (compIds: ComponentId Set) (sd: SimulationData) (net: N
         else   
             let compLbl = labelNoParenthesis net nlSource.SourceCompId
             let outPortInt = outPortInt2int nlSource.OutputPort
-            let drivingOutputName inPortN =
-                match drivingOutput net nlSource.SourceCompId inPortN with
-                | Some nlSource' ->
-                    net[nlSource'.SourceCompId].Outputs[nlSource'.OutputPort]
-                    |> findName compIds sd net netGrp
-                | None ->  { OutputsAndIOLabels = []; ComposingLabels = [] } 
             let srcComp = net[nlSource.SourceCompId]
             match net[nlSource.SourceCompId].Type with
             | Resistor _ | CurrentSource _ | VoltageSource _ -> 

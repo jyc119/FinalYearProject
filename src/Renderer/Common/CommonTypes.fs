@@ -555,6 +555,7 @@ module CommonTypes
         Label : string
         // Mapping from each output port number to all of the input ports and
         // Components connected to that port.
+        Output1s : Map<OutputPortNumber, NLSource option>
         Outputs : Map<OutputPortNumber, NLTarget list>
      }
 

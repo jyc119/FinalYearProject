@@ -214,6 +214,7 @@ let getNetList ((comps,conns) : CanvasState) =
                 Id = ComponentId comp.Id
                 Type = comp.Type
                 Label = comp.Label
+                Output1s =  getPortInts OutputPortNumber None comp.OutputPorts
                 Outputs = getPortInts OutputPortNumber [] comp.OutputPorts
             })
         |> List.map (fun comp -> comp.Id,comp)

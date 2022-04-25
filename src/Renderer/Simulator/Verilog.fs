@@ -310,7 +310,7 @@ let getVPortOutWithSlice (fc: FastComponent) (opn: OutputPortNumber) =
     | _ -> $" [%d{width - 1}:0] {name}"
 
 /// Get string corresponding to name of signal that drives component input port
-let getVPortInput (fs: FastSimulation) (fc: FastComponent) (InputPortNumber ipn) : string =
+let getVPortInput (fs: FastSimulation) (fc: FastComponent) (OutputPortNumber ipn) : string =
     let labBase = fc.FullName
 
     match fc.InputDrivers[ipn] with
@@ -341,7 +341,7 @@ let fastOutputDefinition (vType:VMode) (fc: FastComponent) (opn: OutputPortNumbe
 
 /// Translates from a component to its Verilog description
 let getVerilogComponent (fs: FastSimulation) (fc: FastComponent) =
-    let ins i = getVPortInput fs fc (InputPortNumber i)
+    let ins i = getVPortInput fs fc (OutputPortNumber i)
     let outs i = getVPortOut fc (OutputPortNumber i)
     let name = fc.VerilogComponentName
     let idNum =

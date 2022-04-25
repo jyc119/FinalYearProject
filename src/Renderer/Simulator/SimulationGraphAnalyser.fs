@@ -15,7 +15,7 @@ open SynchronousUtils
 type private DfsType =
     // No cycle detected in the subtree. Return the new visited set and keep
     // on exploring.
-    | NoCycle of Set<ComponentId * InputPortNumber option>
+    | NoCycle of Set<ComponentId * OutputPortNumber option>
     // Found a cycle and bactracking to record all components that form the
     // cycle. Stop recording when the componentId that closes the loop is
     // reached.
@@ -29,10 +29,10 @@ type private DfsType =
 /// a difference (only) in the custom components.
 let rec private dfs
         (currNodeId : ComponentId)
-        (inputPortNumber : InputPortNumber)
+        (inputPortNumber : OutputPortNumber)
         (graph : SimulationGraph)
-        (visited : Set<ComponentId * InputPortNumber option>)
-        (currStack : Set<ComponentId * InputPortNumber option>)
+        (visited : Set<ComponentId * OutputPortNumber option>)
+        (currStack : Set<ComponentId * OutputPortNumber option>)
         getCombOuts
         : DfsType =
     let rec exploreChildren visited currStack children : DfsType =
@@ -138,11 +138,11 @@ let private checkCombinatorialCycle
         match comp.Type with
         | Custom custom ->
             // Explore ever input port of a custom component.
-            custom.InputLabels |> List.mapi (fun i _ -> id, InputPortNumber i)
+            custom.InputLabels |> List.mapi (fun i _ -> id, OutputPortNumber i)
         | _ ->
             // The input port number does not matter for non custom components,
             // it will be ignored in the dfs.
-            [id, InputPortNumber 0]
+            [id, OutputPortNumber 0]
     )
     checkGraphForest allIdsAndPNums visited
 

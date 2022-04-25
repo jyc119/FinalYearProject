@@ -156,7 +156,7 @@ let getCopiedSymbol model portId =
 /// ComponentIds at same index in both list 1 and list 2 need to be of the same ComponentType.
 /// CompIds1 need to be in model.CopiedSymbols.
 /// Assumes ports are in the same order in equivalent symbols
-let getEquivalentCopiedPorts (model: Model) (copiedIds) (pastedIds) (InputPortId copiedInputPort, OutputPortId copiedOutputPort) =
+let getEquivalentCopiedPorts (model: Model) (copiedIds) (pastedIds) (OutputPortId copiedOutput1Port, OutputPortId copiedOutputPort) =
     let findEquivalentPorts compId1 compId2 =
         let copiedComponent = model.CopiedSymbols[compId1].Component
         let pastedComponent = model.Symbols[compId2].Component // TODO: These can be different for an output gate for some reason.
@@ -171,9 +171,10 @@ let getEquivalentCopiedPorts (model: Model) (copiedIds) (pastedIds) (InputPortId
                     Some pastedPorts[portIndex].Id // Get the equivalent port in pastedPorts. Assumes ports at the same index are the same (should be the case unless copy pasting went wrong).
                 | _ -> None
         
+        let pastedOutputPort1Id = tryFindEquivalentPort copiedComponent.OutputPorts pastedComponent.OutputPorts copiedOutput1Port
         let pastedOutputPortId = tryFindEquivalentPort copiedComponent.OutputPorts pastedComponent.OutputPorts copiedOutputPort
     
-        pastedOutputPortId
+        pastedOutputPort1Id , pastedOutputPortId
         
     let foundPastedPorts =
         List.zip copiedIds pastedIds

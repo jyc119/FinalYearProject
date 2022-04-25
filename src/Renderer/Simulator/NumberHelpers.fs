@@ -117,10 +117,6 @@ let extractValueFromMap map =
 /// Second element of a three element tuple
 let secondElement (_,c,_) = c
 
-let combineIndexList (list1:ComponentType list) (list2: ComponentLabel list) = 
-    list1 
-    |> List.mapi (fun i x -> (x, list2[i]))
-
 let convertInt64ToFastData (width:int) (n:int64) =
     let n' = uint64 n
     let dat = 

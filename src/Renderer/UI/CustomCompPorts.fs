@@ -295,7 +295,7 @@ let deleteIncompleteConnections ((comps,conns): CanvasState) =
     let okPorts = 
         Array.ofList comps
         |> Array.collect (fun comp ->
-            Array.append (arrayOfIds comp.InputPorts) (arrayOfIds comp.OutputPorts))
+            Array.append (arrayOfIds comp.OutputPorts) (arrayOfIds comp.OutputPorts))
         |> Set
     let conns' = List.filter (fun (conn:Connection) -> 
         Set.contains conn.Source.Id okPorts && 
@@ -338,9 +338,9 @@ let changeInstance (comp:Component) (change: PortChange) =
                 match comp.Type with 
                 | Custom ct -> ct.InputLabels,ct
                 | cType -> failwithf $"What? '{cType}' not allowed"
-            let ports = comp.InputPorts
+            let ports = comp.OutputPorts
             let (labels,ports) = f (labels,ports)
-            {comp with InputPorts = ports; Type = Custom {ct with InputLabels = labels }}
+            {comp with OutputPorts = ports; Type = Custom {ct with InputLabels = labels }}
         | OutputIO ->
             let labels,ct = 
                 match comp.Type with 
@@ -430,10 +430,10 @@ let updateInstance (newSig: Signature) (sheet:string,cid:string,oldSig:Signature
                     let oldSig = ct.InputLabels, ct.OutputLabels
                     let newIn,newOut = newSig
                     let oldIn,oldOut = oldSig
-                    let newInPorts = reorderPorts newIn oldIn comp.InputPorts
+                    let newInPorts = reorderPorts newIn oldIn comp.OutputPorts
                     let newOutPorts = reorderPorts newOut oldOut comp.OutputPorts
                     let ct' = {ct with InputLabels = fst newSig; OutputLabels = snd newSig}
-                    {comp with Type = Custom ct'; InputPorts=newInPorts; OutputPorts=newOutPorts}
+                    {comp with Type = Custom ct' ; OutputPorts=newOutPorts}
 
                 else
                     printfn "What? Signatures do not match after changes are made"

@@ -79,9 +79,6 @@ let rec prepareSimulation
 /// Expose the feedSimulationInput function from SimulationRunner.
 let feedSimulationInput = SimulationRunner.feedSimulationInput
 
-/// Expose the feedClockTick function from SimulationRunner.
-let feedClockTick = SimulationRunner.feedClockTick
-
 /// Get some info and the state of all stateful components in a graph.
 let extractStatefulComponents
         (graph : SimulationGraph)
