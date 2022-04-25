@@ -460,17 +460,6 @@ let private viewSimulationData (step: int) (simData : SimulationData) model disp
             (FastRun.extractFastSimulationIOs simData.Inputs simData)
             dispatch
 
-
-        Heading.h5 [ 
-            Heading.Props [ Style [ MarginTop "15px" ] ] 
-            ] [ 
-                str "Outputs &" 
-                tip "Add Viewer components to any sheet in the simulation" "Viewers"
-            ]
-        viewViewers simData.NumberBase <| List.sort (FastRun.extractViewers simData)
-        viewSimulationOutputs simData.NumberBase
-        <| FastRun.extractFastSimulationIOs simData.Outputs simData
-
         maybeStatefulComponents()
     ]
 
