@@ -167,61 +167,31 @@ let private makeIOLabel label width =
     | 1 -> label
     | w -> sprintf "%s (%d bits)" label w
 
+let private combineIndexList (list1:ComponentLabel list) (list2: ComponentType list) = 
+    list1 
+    |> List.mapi (fun i x -> (x, list2[i]))
+
 let private viewSimulationInputs
-        (numberBase : NumberBase)
         (simulationData : SimulationData)
         (inputs : (SimulationIO * WireData) list)
         dispatch =
+    let componentList = List.map (fun x -> x.Type) (extractValueFromMap simulationData.Graph)
+    let labelList = List.map secondElement (List.map fst inputs)
+    let componentLabellist = combineIndexList labelList componentList
     let simulationGraph = simulationData.Graph
-    let makeInputLine ((ComponentId inputId, ComponentLabel inputLabel, width), wireData) =
-#if ASSERTS
-        assertThat (List.length wireData = width)
-        <| sprintf "Inconsistent wireData length in viewSimulationInput for %s: expected %d but got %A" inputLabel width wireData.Length
-#endif
+    let makeInputLine (inputLabel : ComponentLabel, component: ComponentType) =
+        let value = 
+            match component with
+            | Resistor x | CurrentSource x | VoltageSource x -> x
+            | _ -> failwithf "what mythical componenet are you using?"
         let valueHandle =
-            match wireData with
-            | [] -> failwith "what? Empty wireData while creating a line in simulation inputs."
-            | [bit] ->
-                // For simple bits, just have a Zero/One button.
-                Button.button [
-                    Button.Props [ simulationBitStyle ]
-                    //Button.Color IsPrimary
-                    (match bit with Zero -> Button.Color Color.IsGreyLighter | One -> Button.Color IsPrimary)
-                    Button.IsHovered false
-                    Button.OnClick (fun _ ->
-                        let newBit = match bit with
-                                     | Zero -> One
-                                     | One -> Zero
-                        let graph = simulationGraph
-                        FastRun.changeInput (ComponentId inputId) [newBit] simulationData.ClockTickNumber simulationData.FastSim
-                        dispatch <| SetSimulationGraph(graph, simulationData.FastSim)
-                    )
-                ] [ str <| bitToString bit ]
-            | bits ->
-                let defValue = viewNum numberBase <| convertWireDataToInt bits
-                Input.text [
-                    Input.Key (numberBase.ToString())
-                    Input.DefaultValue defValue
-                    Input.Props [
-                        simulationNumberStyle
-                        OnChange (getTextEventValue >> (fun text ->
-                            match strToIntCheckWidth width text with
-                            | Error err ->
-                                let note = errorPropsNotification err
-                                dispatch  <| SetSimulationNotification note
-                            | Ok num ->
-                                let bits = convertIntToWireData width num
-                                // Close simulation notifications.
-                                CloseSimulationNotification |> dispatch
-                                // Feed input.
-                                let graph = simulationGraph
-                                FastRun.changeInput (ComponentId inputId) bits simulationData.ClockTickNumber simulationData.FastSim
-                                dispatch <| SetSimulationGraph(graph, simulationData.FastSim)
-                        ))
-                    ]
-                ]
-        splittedLine (str <| makeIOLabel inputLabel width) valueHandle
-    div [] <| List.map makeInputLine inputs
+            Input.text [
+                Input.IsReadOnly true
+                Input.DefaultValue <| sprintf "%f" value
+                Input.Props [simulationNumberStyle]
+            ]
+        splittedLine (str <| makeIOLabel (string inputLabel) 1) valueHandle
+    div [] <| List.map makeInputLine componentLabellist
 
 let private staticBitButton bit =
     Button.button [
@@ -452,45 +422,6 @@ let private viewSimulationData (step: int) (simData : SimulationData) model disp
         match hasMultiBitOutputs with
         | false -> div [] []
         | true -> baseSelector simData.NumberBase (changeBase dispatch)
-    let maybeClockTickBtn =
-        let step = simData.ClockTickNumber
-        match simData.IsSynchronous with
-        | false -> div [] []
-        | true ->
-            div [] [
-                Button.button [
-                    Button.Color IsSuccess
-                    Button.OnClick (fun _ ->
-                        let isDisabled (dialogData:PopupDialogData) =
-                            match dialogData.Int with
-                            | Some n -> n <= step
-                            | None -> true
-                        dialogPopup 
-                            "Advance Simulation"
-                            (simulationClockChangePopup simData dispatch)
-                            "Goto Tick"
-                            (simulationClockChangeAction dispatch simData)
-                            isDisabled
-                            dispatch)
-                        ] [ str "Goto" ]
-                str " "
-                str " "
-                Button.button [
-                    Button.Color IsSuccess
-                    Button.OnClick (fun _ ->
-                        if SimulationRunner.simTrace <> None then
-                            printfn "*********************Incrementing clock from simulator button******************************"
-                            printfn "-------------------------------------------------------------------------------------------"
-                        //let graph = feedClockTick simData.Graph
-                        FastRun.runFastSimulation (simData.ClockTickNumber+1) simData.FastSim 
-                        dispatch <| SetSimulationGraph(simData.Graph, simData.FastSim)                    
-                        if SimulationRunner.simTrace <> None then
-                            printfn "-------------------------------------------------------------------------------------------"
-                            printfn "*******************************************************************************************"
-                        IncrementSimulationClockTick 1 |> dispatch
-                    )
-                ] [ str <| sprintf "Clock Tick %d" simData.ClockTickNumber ]
-            ]
     let maybeStatefulComponents() =
         let stateful = 
             FastRun.extractStatefulComponents simData.ClockTickNumber simData.FastSim
@@ -521,11 +452,10 @@ let private viewSimulationData (step: int) (simData : SimulationData) model disp
                             TextAlign TextAlignOptions.Center]]
             ] [str txt] ]
     div [] [
-        splittedLine maybeBaseSelector maybeClockTickBtn
+        splittedLine maybeBaseSelector (div [] [])
 
         Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Inputs" ]
         viewSimulationInputs
-            simData.NumberBase
             simData
             (FastRun.extractFastSimulationIOs simData.Inputs simData)
             dispatch

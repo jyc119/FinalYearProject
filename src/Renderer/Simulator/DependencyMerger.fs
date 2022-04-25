@@ -201,6 +201,7 @@ let private checkDependenciesAndBuildMap
 // Merge dependencies //
 //====================//
 
+(*
 /// Convert the label of a port on a custom componetnt to its port number.
 /// Assumes that all labels are unique, otherwise it is undefined behaviour.
 let private labelToPortNumber label (labels : string list) =
@@ -231,6 +232,7 @@ let private extractOutputValuesAsMap graph graphOutputs outputLabels : Map<Outpu
             OutputPortNumber <| labelToPortNumber label outputLabels, wireData)
     |> Map.ofList
 
+*)
 /// Check that the outputs of a custom component have the same keys every time.
 /// This should be the case as we always use the same extraction function, so
 /// this function provides an extra guarantee that can probably be removed if
@@ -247,6 +249,7 @@ let private assertConsistentCustomOutputs
     ()
 #endif
 
+(*
 /// Create the Reducer for a custom component.
 /// Passing graphInputs and graphOutputs would not be strictly necessary, but it
 /// is good for performance as so the Input and Output nodes don't have to be
@@ -257,6 +260,7 @@ let private makeCustomReducer
         (graphOutputs : SimulationIO list)
         : ReducerInput -> ReducerOutput =
         failwithf "Custom rducer should never be called"
+*)
 
 /// Recursively merge the simulationGraph with its dependencies (a dependecy can
 /// have its own dependencies).
@@ -295,7 +299,6 @@ let rec private merger
             let newComp = {
                 comp with
                     CustomSimulationGraph = Some dependencyGraph
-                    Reducer = fun _ -> failwithf "Reducer should never be used!"
             }
             currGraph.Add(compId, newComp)
         | _ -> currGraph // Ignore non-custom components.
