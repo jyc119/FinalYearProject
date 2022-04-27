@@ -220,23 +220,11 @@ let inline getSourcePort (model:Model) (wire:Wire) =
     let port = model.Symbol.Ports[portId]
     port
 
-let inline getTargetPort (model:Model) (wire:Wire) =
-    let portId = Symbol.inputPortStr wire.InputPort
-    let port = model.Symbol.Ports[portId]
-    port
-
 let inline getSourceSymbol (model:Model) (wire:Wire) =
     let portId = Symbol.outputPortStr wire.OutputPort
     let port = model.Symbol.Ports[portId]
     let symbol = model.Symbol.Symbols[ComponentId port.HostId]
     symbol
-
-let inline getTargetSymbol (model:Model) (wire:Wire) =
-    let portId = Symbol.inputPortStr wire.InputPort
-    let port = model.Symbol.Ports[portId]
-    let symbol = model.Symbol.Symbols[ComponentId port.HostId]
-    symbol
-
 
 
 //-------------------------------Implementation code----------------------------//
@@ -457,11 +445,11 @@ let segmentsToIssieVertices (segList:Segment list) (wire:Wire) =
 /// between our implementation and Issie.
 let extractConnection (wModel : Model) (cId : ConnectionId) : Connection =
     let conn = wModel.Wires[cId]
-    let ConnectionId strId, InputPortId strInputPort, OutputPortId strOutputPort = conn.WId, conn.InputPort, conn.OutputPort
+    let ConnectionId strId, OutputPortId strOutputPort1, OutputPortId strOutputPort = conn.WId, conn.OutputPort1, conn.OutputPort
     {
         Id = strId
-        Source = { Symbol.getPort wModel.Symbol strOutputPort with PortNumber = None } // None for connections 
-        Target = { Symbol.getPort wModel.Symbol strInputPort with PortNumber = None } // None for connections 
+        OutputPort1 = { Symbol.getPort wModel.Symbol strOutputPort1 with PortNumber = None } // None for connections 
+        OutputPort = { Symbol.getPort wModel.Symbol strOutputPort with PortNumber = None } // None for connections 
         Vertices = segmentsToIssieVertices conn.Segments conn
         Voltage = None
     }
@@ -493,8 +481,7 @@ type WireRenderProps =
         OutputPortEdge : Edge
         OutputPortLocation: XYPos
         DisplayType : WireType
-        TriangleEdge : Edge
-        InputPortLocation: XYPos
+        OutputPort1Location: XYPos
     }
 
 /// extract absolute segments from a wire.
@@ -719,8 +706,8 @@ let view (model : Model) (dispatch : Dispatch<Msg>) =
         let outPortId = Symbol.getOutputPortIdStr wire.OutputPort
         let outputPortLocation = Symbol.getPortLocation None model.Symbol outPortId
         let outputPortEdge = Symbol.getOutputPortOrientation model.Symbol wire.OutputPort 
-        let stringInId = Symbol.getInputPortIdStr wire.InputPort
-        let inputPortLocation = Symbol.getPortLocation None model.Symbol stringInId 
+        let stringOutput1Id = Symbol.getOutputPortIdStr wire.OutputPort1
+        let inputPortLocation = Symbol.getPortLocation None model.Symbol stringOutput1Id 
         let strokeWidthP =
             match wire.Width with
             | 1 -> 1.5
@@ -734,8 +721,7 @@ let view (model : Model) (dispatch : Dispatch<Msg>) =
             OutputPortEdge = outputPortEdge
             OutputPortLocation = outputPortLocation
             DisplayType = model.Type
-            TriangleEdge = Symbol.getInputPortOrientation model.Symbol wire.InputPort
-            InputPortLocation = inputPortLocation
+            OutputPort1Location = inputPortLocation
         }
         
 
@@ -753,15 +739,9 @@ let view (model : Model) (dispatch : Dispatch<Msg>) =
                     defaultPolygon with
                         Fill = "black"
                         }
-                let x,y = props.InputPortLocation.X, props.InputPortLocation.Y
-                let str:string = 
-                    match props.TriangleEdge with
-                    | CommonTypes.Top -> $"{x},{y},{x+2.},{y-4.},{x-2.},{y-4.}"
-                    | CommonTypes.Bottom -> $"{x},{y},{x+2.},{y+4.},{x-2.},{y+4.}"
-                    | CommonTypes.Right -> $"{x},{y},{x+4.},{y+2.},{x+4.},{y-2.}"
-                    | CommonTypes.Left -> $"{x},{y},{x-4.},{y+2.},{x-4.},{y-2.}"
+                let x,y = props.OutputPort1Location.X, props.OutputPort1Location.Y
 
-                g [] [ makePolygon str polygon ; wireReact ]           
+                g [] [wireReact ]           
             , "Wire"
             , equalsButFunctions
         )
