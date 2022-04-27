@@ -85,8 +85,7 @@ let simCacheInit name = {
     StoredResult = Ok {
         FastSim = FastCreate.emptyFastSimulation()
         Graph = Map.empty 
-        Inputs = []
-        Outputs = []
+        Component = []
         IsSynchronous=false
         NumberBase = NumberBase.Hex
         ClockTickNumber = 0
@@ -176,16 +175,15 @@ let private viewSimulationInputs
         (inputs : (SimulationIO * WireData) list)
         dispatch =
     let componentList = List.map (fun x -> x.Type) (extractValueFromMap simulationData.Graph)
-    let labelList = List.map secondElement (List.map fst inputs)
+    let labelList = List.map snd (List.map fst inputs)
     let componentLabellist = combineIndexList labelList componentList
-    let simulationGraph = simulationData.Graph
     let makeInputLine (inputLabel : ComponentLabel, component: ComponentType) =
         let value = 
             match component with
             | Resistor x | CurrentSource x | VoltageSource x -> x
-            | _ -> failwithf "what mythical componenet are you using?"
+            | _ -> 4.8
         let valueHandle =
-            Input.text [
+            Input.number [
                 Input.IsReadOnly true
                 Input.DefaultValue <| sprintf "%f" value
                 Input.Props [simulationNumberStyle]
@@ -211,6 +209,7 @@ let private staticNumberBox numBase bits =
         Input.Props [simulationNumberStyle]
     ]
 
+(*
 let private viewSimulationOutputs numBase (simOutputs : (SimulationIO * WireData) list) =
     let makeOutputLine ((ComponentId _, ComponentLabel outputLabel, width), wireData) =
 #if ASSERTS
@@ -224,7 +223,7 @@ let private viewSimulationOutputs numBase (simOutputs : (SimulationIO * WireData
             | bits -> staticNumberBox numBase bits
         splittedLine (str <| makeIOLabel outputLabel width) valueHandle
     div [] <| List.map makeOutputLine simOutputs
-
+*)
 let private viewViewers numBase (simViewers : ((string*string) * int * WireData) list) =
     let makeViewerOutputLine ((label,fullName), width, wireData) =
 #if ASSERTS
@@ -416,12 +415,53 @@ let simulationClockChangeAction dispatch simData (dialog:PopupDialogData) =
 
 
 let private viewSimulationData (step: int) (simData : SimulationData) model dispatch =
+    (*
     let hasMultiBitOutputs =
-        simData.Outputs |> List.filter (fun (_,_,w) -> w > 1) |> List.isEmpty |> not
+        simData.Component|> List.filter (fun (_,_,w) -> w > 1) |> List.isEmpty |> not
     let maybeBaseSelector =
         match hasMultiBitOutputs with
         | false -> div [] []
         | true -> baseSelector simData.NumberBase (changeBase dispatch)
+    let maybeClockTickBtn =
+        let step = simData.ClockTickNumber
+        match simData.IsSynchronous with
+        | false -> div [] []
+        | true ->
+            div [] [
+                Button.button [
+                    Button.Color IsSuccess
+                    Button.OnClick (fun _ ->
+                        let isDisabled (dialogData:PopupDialogData) =
+                            match dialogData.Int with
+                            | Some n -> n <= step
+                            | None -> true
+                        dialogPopup 
+                            "Advance Simulation"
+                            (simulationClockChangePopup simData dispatch)
+                            "Goto Tick"
+                            (simulationClockChangeAction dispatch simData)
+                            isDisabled
+                            dispatch)
+                        ] [ str "Goto" ]
+                str " "
+                str " "
+                Button.button [
+                    Button.Color IsSuccess
+                    Button.OnClick (fun _ ->
+                        if SimulationRunner.simTrace <> None then
+                            printfn "*********************Incrementing clock from simulator button******************************"
+                            printfn "-------------------------------------------------------------------------------------------"
+                        //let graph = feedClockTick simData.Graph
+                        FastRun.runFastSimulation (simData.ClockTickNumber+1) simData.FastSim 
+                        dispatch <| SetSimulationGraph(simData.Graph, simData.FastSim)                    
+                        if SimulationRunner.simTrace <> None then
+                            printfn "-------------------------------------------------------------------------------------------"
+                            printfn "*******************************************************************************************"
+                        IncrementSimulationClockTick 1 |> dispatch
+                    )
+                ] [ str <| sprintf "Clock Tick %d" simData.ClockTickNumber ]
+            ]
+    *)
     let maybeStatefulComponents() =
         let stateful = 
             FastRun.extractStatefulComponents simData.ClockTickNumber simData.FastSim
@@ -451,13 +491,17 @@ let private viewSimulationData (step: int) (simData : SimulationData) model disp
                             Width "80px"
                             TextAlign TextAlignOptions.Center]]
             ] [str txt] ]
+    let test = Input.number [
+                  Input.IsReadOnly true
+                  Input.DefaultValue <| sprintf "%f" 20.5
+                  Input.Props [simulationNumberStyle]
+               ]
     div [] [
-        splittedLine maybeBaseSelector (div [] [])
 
         Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Inputs" ]
         viewSimulationInputs
             simData
-            (FastRun.extractFastSimulationIOs simData.Inputs simData)
+            (FastRun.extractFastSimulationIOs simData.Component simData)
             dispatch
 
         maybeStatefulComponents()

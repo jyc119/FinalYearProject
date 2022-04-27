@@ -44,7 +44,7 @@ let rec prepareSimulation
             // Simulation graph is fully merged with dependencies.
             // Perform checks on it.
             let components, connections = canvasState
-            let inputs, outputs = getSimulationIOs components
+            let analog = getSimulationIOs components
             match analyseSimulationGraph diagramName graph connections with
             | Some err -> Error err
             | None -> 
@@ -54,8 +54,7 @@ let rec prepareSimulation
                         Ok {
                             FastSim = fs                           
                             Graph = graph // NB graph is now not initialised with data
-                            Inputs = inputs;
-                            Outputs = outputs
+                            Component = analog
                             IsSynchronous = hasSynchronousComponents graph
                             NumberBase = Hex
                             ClockTickNumber = 0

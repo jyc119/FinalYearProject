@@ -45,23 +45,21 @@ let feedSimulationInput graph inputId wireData =
 /// Get ComponentIds, ComponentLabels and wire widths of all input and output
 /// nodes.
 let getSimulationIOs
-        (components : Component list)
-        : SimulationIO list * SimulationIO list =
-    (([], []), components) ||> List.fold (fun (inputs, outputs) comp ->
-        match comp.Type with
-        | Input w  -> ((ComponentId comp.Id, ComponentLabel comp.Label, w) :: inputs, outputs)
-        | Output w -> (inputs, (ComponentId comp.Id, ComponentLabel comp.Label, w) :: outputs)
-        | _ -> (inputs, outputs)
-    )
+    (components : Component list)
+    : SimulationIO list =
+        ([], components) ||> List.fold (fun every comp ->
+    match comp.Type with
+    | _ -> ((ComponentId comp.Id, ComponentLabel comp.Label) :: every)
+            )      
 
 /// Get ComponentIds, ComponentLabels and wire widths of all input and output
 /// nodes in a simulationGraph.
 let getSimulationIOsFromGraph
-        (graph : SimulationGraph)
-        : SimulationIO list * SimulationIO list =
-    (([], []), graph) ||> Map.fold (fun (inputs, outputs) compId comp ->
-        match comp.Type with
-        | Input w  -> ((comp.Id, comp.Label, w) :: inputs, outputs)
-        | Output w -> (inputs, (comp.Id, comp.Label, w) :: outputs)
-        | _ -> (inputs, outputs)
-    )
+    (graph : SimulationGraph)
+    : SimulationIO list * SimulationIO list =
+        (([], []), graph) ||> Map.fold (fun (inputs, outputs) compId comp ->
+    match comp.Type with
+    | Input w  -> ((comp.Id, comp.Label) :: inputs, outputs)
+    | Output w -> (inputs, (comp.Id, comp.Label) :: outputs)
+    | _ -> (inputs, outputs)
+        )
