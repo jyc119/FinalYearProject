@@ -794,7 +794,6 @@ let getWaveformSpecifications
     |> Array.map (fun wSpec -> wSpec.WId,wSpec)
     |> Map.ofArray
 
-
     
 
 

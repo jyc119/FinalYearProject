@@ -190,7 +190,7 @@ module CommonTypes
     //==========================================//
 
     /// Specify the type of a port in a Component.
-    type PortType = Input | Output
+    type PortType = Output
 
     (*
     Note on Ports. Ports are used throughout Issie to represent I/Os of components.
@@ -361,7 +361,6 @@ module CommonTypes
             Id : string
             Type : ComponentType
             Label : string // All components have a label that may be empty.
-            InputPorts : Port list // position on this list determines inputPortNumber
             OutputPorts : Port list // position in this lits determines OutputPortNumber
             X : float
             Y : float
@@ -373,8 +372,8 @@ module CommonTypes
         /// Id uniquely identifies connection globally and is used by library.
         type LegacyConnection = {
             Id : string
-            Source : Port
-            Target : Port
+            OutputPort1 : Port
+            OutputPort : Port
             Vertices : (float * float) list
         }
 
@@ -389,7 +388,6 @@ module CommonTypes
         Id : string
         Type : ComponentType
         Label : string // All components have a label that may be empty.
-        InputPorts : Port list // position on this list determines inputPortNumber
         OutputPorts : Port list // position in this lits determines OutputPortNumber
         X : float
         Y : float
@@ -402,8 +400,8 @@ module CommonTypes
     /// Id uniquely identifies connection globally and is used by library.
     type Connection = {
         Id : string
-        Source : Port
-        Target : Port
+        OutputPort1 : Port
+        OutputPort : Port
         Vertices : (float * float * bool) list
         Voltage: float option
     }
@@ -425,8 +423,8 @@ module CommonTypes
         let convertConnection (c:LegacyCanvas.LegacyConnection) : Connection =
             {
                 Id=c.Id; 
-                Source=c.Source;
-                Target=c.Target;
+                OutputPort1=c.OutputPort1;
+                OutputPort=c.OutputPort;
                 Vertices = 
                     c.Vertices
                     |> List.map (function 
@@ -440,7 +438,6 @@ module CommonTypes
                 Id = comp.Id
                 Type = comp.Type
                 Label = comp.Label // All components have a label that may be empty.
-                InputPorts = comp.InputPorts // position on this list determines inputPortNumber
                 OutputPorts = comp.OutputPorts // position in this lits determines OutputPortNumber
                 X = comp.X
                 Y = comp.Y
@@ -513,19 +510,7 @@ module CommonTypes
     /// InputPortId and OutputPortID wrap the hash to distinguish component
     /// inputs and outputs some times (e.g. in simulation)
     [<Erase>]
-    type InputPortId      = | InputPortId of string
-
-    /// SHA hash unique to a component port - common between JS and F#.
-    /// Connection ports and connected component ports have the same port Id
-    /// InputPortId and OutputPortID wrap the hash to distinguish component
-    /// inputs and outputs some times (e.g. in simulation)
-    [<Erase>]
     type OutputPortId     = | OutputPortId of string
-
-    /// Port numbers are sequential unique with port lists.
-    /// Inputs and Outputs are both numberd from 0 up.
-    [<Erase>]
-    type InputPortNumber  = | InputPortNumber of int
 
     /// Port numbers are sequential unique with port lists.
     /// Inputs and Outputs are both numberd from 0 up.
@@ -534,7 +519,6 @@ module CommonTypes
 
     (*---------------------------Types for wave Simulation----------------------------------------*)
 
-    
     type MoreWaveData =
         | RamWaveData of addr: uint32 * ramPath: ComponentId list * label:string
         | ExtraData of ramPath: ComponentId list * label:string
@@ -543,21 +527,12 @@ module CommonTypes
     // removed layout info and connections as separate entities. However, connection Ids are
     // available as fileds in components for interface to the Diagram conmponents
 
-    /// The driven (output) side of a connection.
-    /// This is stored with a NLComponent output port number.
-    /// Note that one output port can drive multiple NLTargets.
-    type NLTarget = {
-        TargetCompId: ComponentId
-        InputPort: InputPortNumber
-        TargetConnId: ConnectionId
-        }
-
     /// The driving (input) side of a connection.
     /// This is stored with a NLComponent input port number
-    type NLSource = {
-        SourceCompId: ComponentId
+    type NLOutput = {
+        OutputCompId: ComponentId
         OutputPort: OutputPortNumber
-        SourceConnId: ConnectionId
+        OutputConnId: ConnectionId
         }
 
     /// Components with inputs and outputs directly referencing other components.
@@ -569,10 +544,7 @@ module CommonTypes
         Label : string
         // List of input port numbers, and single mapped driving output port
         // and component.
-        Inputs : Map<InputPortNumber, NLSource option>
-        // Mapping from each output port number to all of the input ports and
-        // Components connected to that port.
-        Outputs : Map<OutputPortNumber, NLTarget list>
+        Outputs : Map<OutputPortNumber, NLOutput option>
      }
 
     /// Circuit topology with connections abstracted away.
@@ -589,8 +561,8 @@ module CommonTypes
     type NetGroup = { 
         driverComp: NetListComponent
         driverPort: OutputPortNumber
-        driverNet: NLTarget list
-        connectedNets: NLTarget list array }
+        driverNet: NLOutput list
+        connectedNets: NLOutput list array }
 
     /// Info saved by Wave Sim.
     /// This info is not necessarilu uptodate with deletions or additions in the Diagram.
@@ -602,7 +574,7 @@ module CommonTypes
         LastClk: uint32
         DisplayedPortIds: string array
     }
-
+ 
     (*--------------------------------------------------------------------------------------------------*)
 
     /// Static data describing a schematic sheet loaded as a custom component.

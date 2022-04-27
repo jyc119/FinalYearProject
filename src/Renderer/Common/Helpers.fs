@@ -226,8 +226,7 @@ let getNetList ((comps,conns) : CanvasState) =
         |> List.find (fun p1 -> p1.Id = p.Id)
         |> (fun p -> match p.PortNumber with Some n -> n | None -> failwithf "Missing input port number on %A" p.HostId)
         |> OutputPortNumber
-       
-   
+
     let getInputPortNumber (p:Port) = 
         id2Ins[ComponentId p.HostId]
         |> List.find (fun p1 -> p1.Id = p.Id)
