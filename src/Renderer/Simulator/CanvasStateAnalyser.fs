@@ -402,30 +402,6 @@ let checkCustomComponentsOk ((comps,_): CanvasState) (sheets: LoadedComponent li
 /// Checks that all connections have consistent widths.
 /// This function relies on the bus inferer, but also makes sure that all widths
 /// can be inferred.
-let private checkConnectionsWidths
-        (canvasState : CanvasState)
-        : SimulationError option =
-    let convertConnId (ConnectionId cId) = ConnectionId cId
-    let convertError (err : WidthInferError) : SimulationError = {
-        Msg = err.Msg
-        InDependency = None
-        ConnectionsAffected = err.ConnectionsAffected |> List.map convertConnId
-        ComponentsAffected = []
-    }
-    match inferConnectionsWidth canvasState with
-    | Error err -> Some <| convertError err
-    | Ok connWidths ->
-        let faulty = connWidths |> Map.filter (fun _ width -> Option.isNone width)
-        match faulty.IsEmpty with
-        | true -> None // All good.
-        | _ -> Some {
-            Msg = "Could not infer all connections widths."
-            InDependency = None
-            ConnectionsAffected =
-                faulty |> Map.toList |> List.map (fun (cId, _) -> convertConnId cId)
-            ComponentsAffected = []
-        }
-
 
 /// check component labels are all unique and do not include protected values (CLK)
 let checkComponentNamesAreOk ((comps,conns): CanvasState) =
@@ -470,7 +446,6 @@ let analyseState
         checkPortsAreConnectedProperly state
         checkIOLabels state
         checkCustomComponentsOk state ldComps
-        checkConnectionsWidths state
         checkComponentNamesAreOk state
     ]
     |> List.tryFind Option.isSome

@@ -6,7 +6,7 @@ module BusWidthInferer
 
 open CommonTypes
 open Helpers
-
+(*
 // 1. Initialise Map<ConnectionId, int option> for all connections, to None
 //    (None means width not inferred yet).
 // 2. Extract Input Components.
@@ -492,3 +492,4 @@ let inferConnectionsWidth
             )
         )
     |> TimeHelpers.instrumentInterval "widthInference" start
+*)
