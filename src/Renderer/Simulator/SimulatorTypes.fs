@@ -113,15 +113,14 @@ and OutputChange = {
 /// - Id: to feed values into the simulationGraph.
 /// - Label: to display a nice form to the user.
 /// - Width: to feed the right values into the simulation.
-type SimulationIO = ComponentId * ComponentLabel * int
+type SimulationIO = ComponentId * ComponentLabel
 
 /// - Top level data tracking a simulation
 type SimulationData = {
     FastSim: FastSimulation
     Graph : SimulationGraph
     // For each input/output, keep its Id and Label to easily access it.
-    Inputs : SimulationIO list
-    Outputs : SimulationIO list
+    Component: SimulationIO list
     // Whether the graph contains synchronous logic.
     IsSynchronous : bool
     // The base that should be used to display numbers in the simulation.

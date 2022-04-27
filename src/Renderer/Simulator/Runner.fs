@@ -337,10 +337,10 @@ let extractSimulationIOs
         match inputs.TryFind <| InputPortNumber 0 with
         | None -> failwith "what? IO bit not set"
         | Some bit -> bit
-    ([], simulationIOs) ||> List.fold (fun result (ioId, ioLabel, width) ->
+    ([], simulationIOs) ||> List.fold (fun result (ioId, ioLabel) ->
         match graph.TryFind ioId with
         | None -> failwithf "what? Could not find io node: %A" (ioId, ioLabel)
-        | Some comp -> ((ioId, ioLabel, width), extractWireData comp.Inputs) :: result
+        | Some comp -> ((ioId, ioLabel), extractWireData comp.Inputs) :: result
     )
 
 /// Simlar to extractSimulationIOs, but do not fail if a bit is not set, just
@@ -351,24 +351,22 @@ let extractIncompleteSimulationIOs
         : (SimulationIO * WireData) list =
     let extractWireData (inputs : Map<InputPortNumber, WireData>) : WireData option =
         inputs.TryFind <| InputPortNumber 0
-    ([], simulationIOs) ||> List.fold (fun result (ioId, ioLabel, width) ->
+    ([], simulationIOs) ||> List.fold (fun result (ioId, ioLabel) ->
         match graph.TryFind ioId with
-        | None -> failwithf "what? Could not find io node: %A" (ioId, ioLabel, width)
+        | None -> failwithf "what? Could not find io node: %A" (ioId, ioLabel)
         | Some comp -> match extractWireData comp.Inputs with
                        | None -> result
-                       | Some wireData -> ((ioId, ioLabel, width), wireData) :: result
+                       | Some wireData -> ((ioId, ioLabel), wireData) :: result
     )
 
 /// Get ComponentIds, ComponentLabels and wire widths of all input and output
 /// nodes.
 let getSimulationIOs
         (components : Component list)
-        : SimulationIO list * SimulationIO list =
-    (([], []), components) ||> List.fold (fun (inputs, outputs) comp ->
+        : SimulationIO list =
+    ([], components) ||> List.fold (fun every comp ->
         match comp.Type with
-        | Input w  -> ((ComponentId comp.Id, ComponentLabel comp.Label, w) :: inputs, outputs)
-        | Output w -> (inputs, (ComponentId comp.Id, ComponentLabel comp.Label, w) :: outputs)
-        | _ -> (inputs, outputs)
+        | _ -> ((ComponentId comp.Id, ComponentLabel comp.Label) :: every)
     )
 
 /// Get ComponentIds, ComponentLabels and wire widths of all input and output
@@ -378,7 +376,7 @@ let getSimulationIOsFromGraph
         : SimulationIO list * SimulationIO list =
     (([], []), graph) ||> Map.fold (fun (inputs, outputs) compId comp ->
         match comp.Type with
-        | Input w  -> ((comp.Id, comp.Label, w) :: inputs, outputs)
-        | Output w -> (inputs, (comp.Id, comp.Label, w) :: outputs)
+        | Input w  -> ((comp.Id, comp.Label) :: inputs, outputs)
+        | Output w -> (inputs, (comp.Id, comp.Label) :: outputs)
         | _ -> (inputs, outputs)
     )

@@ -215,6 +215,7 @@ let private portNumberToLabel (InputPortNumber pNumber) (inputLabels : string li
 #endif
     inputLabels[pNumber]
 
+(*
 /// Extract simulation input values as map.
 let private extractInputValuesAsMap graph graphInputs inputLabels : Map<InputPortNumber, WireData> =
     extractIncompleteSimulationIOs graphInputs graph
@@ -230,7 +231,7 @@ let private extractOutputValuesAsMap graph graphOutputs outputLabels : Map<Outpu
         fun ((_, ComponentLabel label, _), wireData) ->
             OutputPortNumber <| labelToPortNumber label outputLabels, wireData)
     |> Map.ofList
-
+*)
 /// Check that the outputs of a custom component have the same keys every time.
 /// This should be the case as we always use the same extraction function, so
 /// this function provides an extra guarantee that can probably be removed if

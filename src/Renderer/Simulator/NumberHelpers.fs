@@ -109,6 +109,16 @@ let convertWireDataToInt (bits : WireData) : int64 =
     convert bits 0
 
 
+/// Extract value from map
+let extractValueFromMap map = 
+    map
+    |> Map.values
+    |> Seq.toList
+
+/// Second element of a three element tuple
+let secondElement (_,c,_) = c
+
+
 let convertInt64ToFastData (width:int) (n:int64) =
     let n' = uint64 n
     let dat = 

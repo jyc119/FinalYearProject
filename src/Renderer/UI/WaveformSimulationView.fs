@@ -723,10 +723,10 @@ let startWaveSim compIds rState (simData: SimulatorTypes.SimulationData) model (
     let rState = Extractor.extractReducedState (comps,conns)
     // subfunction to generate popup over waveeditor screen if there are undriven input connections
     let inputWarningPopup (simData:SimulatorTypes.SimulationData) dispatch =
-        if simData.Inputs <> [] then
+        if simData.Component <> [] then
             let inputs = 
-                simData.Inputs
-                |> List.map (fun (_,ComponentLabel lab,_) -> lab)
+                simData.Component
+                |> List.map (fun (_,ComponentLabel lab) -> lab)
                 |> String.concat ","
             let popup = Notifications.warningPropsNotification (sprintf "Inputs (%s) will be set to 0." inputs)
             dispatch <| SetPropertiesNotification popup

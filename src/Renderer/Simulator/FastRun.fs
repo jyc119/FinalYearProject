@@ -421,11 +421,11 @@ let extractFastSimulationIOs
     (simulationData: SimulationData)
     : (SimulationIO * WireData) list =
     let fs = simulationData.FastSim
-    let inputs = simulationData.Inputs
+    //let inputs = simulationData.Inputs
 
     simIOs
     |> List.map
-        (fun ((cid, label, width) as io) ->
+        (fun ((cid, label) as io) ->
             let wd = extractFastSimulationOutput fs simulationData.ClockTickNumber (cid, []) (OutputPortNumber 0)
             //printfn $"Extrcating: {io} --- {wd}"
             io, wd)
