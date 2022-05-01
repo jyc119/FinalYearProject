@@ -1,7 +1,6 @@
 ﻿module FastRun
 open CommonTypes
 open TimeHelpers
-open Helpers
 open SimulatorTypes
 open SynchronousUtils
 open NumberHelpers
