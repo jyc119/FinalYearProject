@@ -415,53 +415,6 @@ let simulationClockChangeAction dispatch simData (dialog:PopupDialogData) =
 
 
 let private viewSimulationData (step: int) (simData : SimulationData) model dispatch =
-    (*
-    let hasMultiBitOutputs =
-        simData.Component|> List.filter (fun (_,_,w) -> w > 1) |> List.isEmpty |> not
-    let maybeBaseSelector =
-        match hasMultiBitOutputs with
-        | false -> div [] []
-        | true -> baseSelector simData.NumberBase (changeBase dispatch)
-    let maybeClockTickBtn =
-        let step = simData.ClockTickNumber
-        match simData.IsSynchronous with
-        | false -> div [] []
-        | true ->
-            div [] [
-                Button.button [
-                    Button.Color IsSuccess
-                    Button.OnClick (fun _ ->
-                        let isDisabled (dialogData:PopupDialogData) =
-                            match dialogData.Int with
-                            | Some n -> n <= step
-                            | None -> true
-                        dialogPopup 
-                            "Advance Simulation"
-                            (simulationClockChangePopup simData dispatch)
-                            "Goto Tick"
-                            (simulationClockChangeAction dispatch simData)
-                            isDisabled
-                            dispatch)
-                        ] [ str "Goto" ]
-                str " "
-                str " "
-                Button.button [
-                    Button.Color IsSuccess
-                    Button.OnClick (fun _ ->
-                        if SimulationRunner.simTrace <> None then
-                            printfn "*********************Incrementing clock from simulator button******************************"
-                            printfn "-------------------------------------------------------------------------------------------"
-                        //let graph = feedClockTick simData.Graph
-                        FastRun.runFastSimulation (simData.ClockTickNumber+1) simData.FastSim 
-                        dispatch <| SetSimulationGraph(simData.Graph, simData.FastSim)                    
-                        if SimulationRunner.simTrace <> None then
-                            printfn "-------------------------------------------------------------------------------------------"
-                            printfn "*******************************************************************************************"
-                        IncrementSimulationClockTick 1 |> dispatch
-                    )
-                ] [ str <| sprintf "Clock Tick %d" simData.ClockTickNumber ]
-            ]
-    *)
     let maybeStatefulComponents() =
         let stateful = 
             FastRun.extractStatefulComponents simData.ClockTickNumber simData.FastSim
