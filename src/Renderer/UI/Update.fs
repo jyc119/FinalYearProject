@@ -253,8 +253,10 @@ let update (msg : Msg) oldModel =
         {model with ExitDialog = status}, Cmd.none*)
     | Sheet sMsg ->
         match sMsg, model.PopupViewFunc with
+        (*
         | SheetT.ToggleNet canvas, _ -> 
             model, Cmd.ofMsg (Sheet (SheetT.SelectWires (getNetSelection canvas model)))
+        *)
         | SheetT.KeyPress _, Some _ -> 
             // do not allow keys to affect Sheet when popup is on.
             model, Cmd.none
@@ -446,32 +448,6 @@ let update (msg : Msg) oldModel =
         {model with IsLoading = b}, cmd
     | InitiateWaveSimulation (view, paras)  -> 
         updateCurrentWSMod (fun ws -> setEditorNextView view paras ws) model, Cmd.ofMsg FinishUICmd
-    //TODO
-    | WaveSimulateNow ->
-        // do the simulation for WaveSim and generate new SVGs
-        printfn "Starting...!"
-        match getCurrentWSMod model, getCurrentWSModNextView model  with
-        | Some wsMod, Some (pars, nView) -> 
-            let checkCursor = wsMod.SimParams.CursorTime <> pars.CursorTime
-            let pars' = adjustPars wsMod pars wsMod.SimParams.LastScrollPos
-            // does the actual simulation and SVG generation, if needed
-            let wsMod' = 
-                simulateAndMakeWaves model wsMod pars'
-                |> (fun ws -> {ws with WSViewState=nView; WSTransition = None})
-                |> setEditorView nView
-            model
-            |> setWSMod wsMod'
-            |> (fun model -> 
-                {model with CheckWaveformScrollPosition=checkCursor}, 
-                Cmd.ofMsg (Sheet(SheetT.SetSpinner false))) //turn off spinner after wavesim is loaded
-        | Some _, None -> 
-            // This case may happen if WaveSimulateNow commands are stacked up due to 
-            // repeated view function calls before the WaveSimNow trigger message is processed
-            // Only the first one will actually do anything. TODO: eliminate extra calls?
-            model, Cmd.none
-        | _ -> 
-            failwith "SetSimInProgress dispatched when getCurrFileWSMod is None"
-
     | SetLastSimulatedCanvasState cS ->
         { model with LastSimulatedCanvasState = cS }, Cmd.none
     | UpdateScrollPos b ->

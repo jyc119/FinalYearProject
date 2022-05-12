@@ -123,9 +123,6 @@ let private viewRightTab model dispatch =
             Heading.h4 [] [ str "Simulation" ]
             SimulationView.viewSimulation model dispatch
         ]
-    | WaveSim -> 
-        div [ Style [Width "100%"; Height "calc(100% - 48px)"; MarginTop "15px" ] ]
-            ( WaveformSimulationView.viewWaveSim model dispatch )
 
 /// determine whether moving the mouse drags the bar or not
 let inline setDragMode (modeIsOn:bool) (model:Model) dispatch =
@@ -181,19 +178,6 @@ let displayView model dispatch =
 //    let y' = sd.SheetTop+sd.SheetY
     let wsModelOpt = getCurrentWSMod model
 
-    /// Feed changed viewer width from draggable bar back to Viewer parameters TODO
-    let inline setViewerWidthInWaveSim w =
-        match currWaveSimModel model with
-        | Some wSMod when w > maxUsedViewerWidth wSMod && wSMod.WSViewState = WSViewerOpen ->
-            match wsModelOpt with
-            | Some ws ->
-                let simProgressState = 
-                    {ws.SimParams with LastClkTime = ws.SimParams.LastClkTime + 10u}
-                dispatch <| InitiateWaveSimulation(WSViewerOpen, simProgressState)
-            | _ -> ()
-        | _ -> ()
-
- 
     /// used only to make the divider bar draggable
     let inline processMouseMove (ev: Browser.Types.MouseEvent) =
         //printfn "X=%d, buttons=%d, mode=%A, width=%A, " (int ev.clientX) (int ev.buttons) model.DragMode model.ViewerWidth
@@ -207,7 +191,6 @@ let displayView model dispatch =
                 |> max minViewerWidth
                 |> min (windowX - minEditorWidth)
             dispatch <| SetViewerWidth w 
-            setViewerWidthInWaveSim w
             dispatch <| SetDragMode (DragModeOn (int ev.clientX))
         | DragModeOn _, _ ->  
             dispatch <| SetDragMode DragModeOff
@@ -235,7 +218,6 @@ let displayView model dispatch =
         PopupView.viewPopup model dispatch 
         // Top bar with buttons and menus: some subfunctions are fed in here as parameters because the
         // main top bar function is early in compile order
-        FileMenuView.viewTopMenu model WaveSimHelpers.fileMenuViewActions WaveformSimulationView.WaveformButtonFunc dispatch
 
         if model.PopupDialogData.Progress = None then
             Sheet.view model.Sheet headerHeight (canvasVisibleStyleList model) sheetDispatch
