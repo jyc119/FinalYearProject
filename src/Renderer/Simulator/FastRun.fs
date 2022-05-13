@@ -8,7 +8,7 @@ open FastCreate
 open FastReduce
 
 
-
+(*
 //-------------------------------------------------------------------------------------------------------//
 //-----------Functions to Determine Component Reduction Order, and to Run the Fast Simulation------------//
 //-------------------------------------------------------------------------------------------------------//
@@ -463,3 +463,4 @@ let extractViewers
         (fun (fid,fc) ->
             let width = Option.get fc.OutputWidth[0]
             getFLabel fs fid, width, extractFastSimulationOutput fs simulationData.ClockTickNumber fid (OutputPortNumber 0))
+*)

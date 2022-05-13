@@ -71,7 +71,7 @@ let verilogOutput (vType: Verilog.VMode) (model: Model) (dispatch: Msg -> Unit) 
         | _ -> () // do nothing if no project is loaded
 *)
 //----------------------------View level simulation helpers------------------------------------//
-
+(*
 type SimCache = {
     Name: string
     StoredState: CanvasState
@@ -149,7 +149,7 @@ let makeSimData model =
         ||> prepareSimulationMemoized project.OpenFileName
         |> Some
         |> TimeHelpers.instrumentInterval "MakeSimData" start
-
+*)
 let changeBase dispatch numBase = numBase |> SetSimulationBase |> dispatch
 
 /// A line that can be used for an input, an output, or a state.
@@ -462,7 +462,7 @@ let simulationClockChangeAction dispatch simData (dialog:PopupDialogData) =
 
 *)
 
-let private viewSimulationData (step: int) (simData : SimulationData) (state: (Component list * Connection list)) model dispatch =
+let private viewSimulationData (state: (Component list * Connection list)) model dispatch =
     (*      
     let maybeStatefulComponents() =
         let stateful = 
@@ -531,6 +531,7 @@ let viewSimulation model dispatch =
         match state, model.CurrentProj with
         | _, None -> failwith "what? Cannot start a simulation without a project"
         | canvasState, Some project ->
+            (*
             let otherComponents =
                 project.LoadedComponents
                 |> List.filter (fun comp -> comp.Name <> project.OpenFileName)
@@ -543,7 +544,8 @@ let viewSimulation model dispatch =
                   printfn $"ERROR:{simError}"
                   SetSimErrorFeedback simError model dispatch
                   Error simError
-            |> StartSimulation
+            *)
+            StartSimulation
             |> dispatch
             let sheetName = project.OpenFileName
             match Map.tryFind sheetName (fst model.WaveSim) with
@@ -554,18 +556,19 @@ let viewSimulation model dispatch =
             | None -> ()
     let test = model.CurrentStepSimulationStep
     match model.CurrentStepSimulationStep with
-    | None ->
-        let simRes = makeSimData model
-        let isSync = match simRes with | Some( Ok {IsSynchronous=true},_) | _ -> false
+    | false ->
+        //let simRes = makeSimData model
+        //let isSync = match simRes with | Some( Ok {IsSynchronous=true},_) | _ -> false
         let buttonColor, buttonText = 
-            match simRes with
-            | None -> IColor.IsWhite, ""
-            | Some (Ok _, _) -> IsSuccess, "Start Simulation"
-            | Some (Error _, _) -> IsWarning, "See Problems"
+            //match simRes with
+            //| None -> IColor.IsWhite, ""
+            //| Some (Ok _, _) -> 
+            IsSuccess, "Start Simulation"
+            //| Some (Error _, _) -> IsWarning, "See Problems"
         div [] [
             str "Simulate simple logic using this tab."
             br []
-            str (if isSync then "You can also use the Waveforms >> button to view waveforms" else "")
+            //str (if isSync then "You can also use the Waveforms >> button to view waveforms" else "")
             br []; br []
             Button.button
                 [ 
@@ -575,10 +578,13 @@ let viewSimulation model dispatch =
                 [ str buttonText ]
         ]
     
-    | Some sim ->
-        let body = match sim with
+    | true ->
+        let body = (*
+                    match sim with
                     | Error simError -> viewSimulationError simError
-                    | Ok simData -> viewSimulationData simData.ClockTickNumber simData state model dispatch
+                    | Ok simData -> 
+                    *)
+                    viewSimulationData state model dispatch
         let endSimulation _ =
             dispatch CloseSimulationNotification // Close error notifications.
             dispatch <| Sheet (SheetT.ResetSelection) // Remove highlights.

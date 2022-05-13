@@ -4,7 +4,7 @@ open TimeHelpers
 open SimulatorTypes
 open SynchronousUtils
 open NumberHelpers
-
+(*
 
 //------------------------------------------------------------------------------//
 //------------Functions To Create Fast Simulation Data Structures---------------//
@@ -486,4 +486,4 @@ let linkFastComponents (g: GatherData) (f: FastSimulation) =
     reLinkIOLabels f
     instrumentTime "linkFastComponents" start
     f
-
+*)

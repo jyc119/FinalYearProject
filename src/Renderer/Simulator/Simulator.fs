@@ -24,7 +24,7 @@ open SimulationGraphAnalyser
 
 /// Builds the graph and simulates it with all inputs zeroed.
 
-
+(*
 let rec prepareSimulation
         (diagramName : string)
         (canvasState : CanvasState)
@@ -72,7 +72,7 @@ let rec prepareSimulation
                 |> Result.map (fun sd ->
                     //Fast.compareFastWithGraph sd |> ignore
                     sd)
-
+*)
 
 
 /// Expose the feedSimulationInput function from SimulationRunner.

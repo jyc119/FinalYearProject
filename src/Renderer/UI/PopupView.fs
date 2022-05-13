@@ -647,22 +647,24 @@ let progressPopup (legend: Model -> PopupProgress -> ReactElement) (model: Model
         dispatch <| SetPopupProgress None
     buildPopup pp.Title body foot close extraStyle dispatch model.PopupDialogData
     
-
+(*
 let simulationLegend (model:Model) (pp: PopupProgress) =
     match model.CurrentStepSimulationStep with
     | Some (Ok simData) ->
         let speed = pp.Speed
         str <| $"simulation speed: %6.0f{speed} component-clocks / ms"
     | _ -> div [] []
-
+*)
 
 /// Display popup, if any is present.
 /// A progress popup, if present, overrides any other active popup.
 let viewPopup model dispatch =
     match model.PopupDialogData.Progress, model.PopupViewFunc with
     | None, None -> div [] []
+    (*
     | Some amount, _ ->
         progressPopup simulationLegend model dispatch
+    *)
     | None, Some popup -> popup dispatch model.PopupDialogData 
 
 

@@ -266,7 +266,7 @@ type Msg =
     | Sheet of DrawModelType.SheetT.Msg
     | JSDiagramMsg of JSDiagramMsg
     | KeyboardShortcutMsg of KeyboardShortcutMsg
-    | StartSimulation of Result<SimulationData, SimulationError>
+    | StartSimulation 
     | SetWSMod of WaveSimModel
     | UpdateWSModel of (WaveSimModel -> WaveSimModel)
     | SetWSModAndSheet of (WaveSimModel*string)
@@ -393,7 +393,7 @@ type Model = {
     // component currently selected in properties dialog
     SelectedComponent : Component option // None if no component is selected.
     // used during step simulation: simgraph for current clock tick
-    CurrentStepSimulationStep : Result<SimulationData,SimulationError> option // None if no simulation is running.
+    CurrentStepSimulationStep : bool //Result<SimulationData,SimulationError> option // None if no simulation is running.
     // which of the tabbed panes is currentlky visible
     RightPaneTabVisible : RightTab
     // components and connections which are highlighted

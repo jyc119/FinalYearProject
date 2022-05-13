@@ -2,7 +2,7 @@
 open CommonTypes
 open SimulatorTypes
 open NumberHelpers
-
+(*
 //------------------------------------------------------------------------------//
 //-----------------------------Fast Reduction of Components---------------------//
 //------------------------------------------------------------------------------//
@@ -231,6 +231,6 @@ let fastReduce (maxArraySize: int) (numStep: int) (isClockedReduction: bool) (co
         //let bits = comp.InputLinks[0][simStep]
         //printfn "Reducing IOLabel %A" comp.SimComponent.Label
         put0 bits
-
+*)
 
 

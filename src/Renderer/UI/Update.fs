@@ -24,6 +24,7 @@ open DrawModelType
 //---------------------------------------------------------------------------------------------//
 
 /// subfunction used in model update function
+(*
 let private getSimulationDataOrFail model msg =
     match model.CurrentStepSimulationStep with
     | None -> failwithf "what? Getting simulation data when no simulation is running: %s" msg
@@ -31,7 +32,7 @@ let private getSimulationDataOrFail model msg =
         match sim with
         | Error _ -> failwithf "what? Getting simulation data when could not start because of error: %s" msg
         | Ok simData -> simData
-
+*)
 
 
 let verilogOutputPage sheet fPath  =
@@ -250,8 +251,8 @@ let update (msg : Msg) oldModel =
     | SetViewerWidth w -> {model with WaveSimViewerWidth = w}, Cmd.none
     | ReloadSelectedComponent width -> {model with LastUsedDialogWidth=width}, Cmd.none
     | ReloadSelectedAnalogComponent value -> {model with LastResistance=value}, Cmd.none
-    | StartSimulation simData -> 
-        { model with CurrentStepSimulationStep = Some simData }, 
+    | StartSimulation -> 
+        { model with CurrentStepSimulationStep = true}, 
         Cmd.batch [
             Cmd.ofMsg (Sheet (SheetT.SetWaveSimMode false)); 
             // hack to make sure wavesim highlighting is reset - but step simulation error highlighting is not.
@@ -279,6 +280,7 @@ let update (msg : Msg) oldModel =
         { model with WaveSim = fst model.WaveSim, err}, Cmd.none
     | AddWaveSimFile (fileName, wSMod') ->
         { model with WaveSim = Map.add fileName wSMod' (fst model.WaveSim), snd model.WaveSim}, Cmd.none
+    (*
     | SetSimulationGraph (graph, fastSim) ->
         let simData = getSimulationDataOrFail model "SetSimulationGraph"
         { model with CurrentStepSimulationStep = { simData with Graph = graph ; FastSim = fastSim} |> Ok |> Some }, Cmd.none
@@ -288,7 +290,8 @@ let update (msg : Msg) oldModel =
     | IncrementSimulationClockTick n ->
         let simData = getSimulationDataOrFail model "IncrementSimulationClockTick"
         { model with CurrentStepSimulationStep = { simData with ClockTickNumber = simData.ClockTickNumber + n } |> Ok |> Some }, Cmd.none
-    | EndSimulation -> { model with CurrentStepSimulationStep = None }, Cmd.none
+    *)
+    | EndSimulation -> { model with CurrentStepSimulationStep = false }, Cmd.none
     | EndWaveSim -> { model with WaveSim = (Map.empty, None) }, Cmd.none
     | ChangeRightTab newTab -> 
         let inferMsg = JSDiagramMsg <| InferWidths()
