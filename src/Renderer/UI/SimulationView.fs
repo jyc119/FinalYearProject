@@ -32,6 +32,7 @@ open DrawModelType
 /// save verilog file
 /// TODO: the simulation error display here is shared with step simulation and also waveform simulation -
 /// maybe it should be a subfunction.
+(*
 let verilogOutput (vType: Verilog.VMode) (model: Model) (dispatch: Msg -> Unit) =
     printfn "Verilog output"
     match FileMenuView.updateProjectFromCanvas model dispatch, model.Sheet.GetCanvasState() with
@@ -68,7 +69,7 @@ let verilogOutput (vType: Verilog.VMode) (model: Model) (dispatch: Msg -> Unit) 
                        |> StartSimulation
                        |> dispatch)
         | _ -> () // do nothing if no project is loaded
-
+*)
 //----------------------------View level simulation helpers------------------------------------//
 
 type SimCache = {
@@ -91,7 +92,7 @@ let simCacheInit name = {
         ClockTickNumber = 0
         }
     }
-        
+
 /// Used to store last canvas state and its simulation
 let mutable simCache: SimCache = simCacheInit ""
 
@@ -104,6 +105,8 @@ let mutable simCache: SimCache = simCacheInit ""
 /// 3. Therefore we need only compare current sheet canvasState with its
 /// initial value. This is compared using extractReducedState to make a copy that has geometry info removed 
 /// from components and connections.
+
+
 let rec prepareSimulationMemoized
         (diagramName : string)
         (canvasState : CanvasState)
@@ -127,8 +130,9 @@ let rec prepareSimulationMemoized
                 StoredResult = simResult
                 }
             simResult, rState
-   
+ 
 
+ 
 /// Start simulating the current Diagram.
 /// Return SimulationData that can be used to extend the simulation
 /// as needed, or error if simulation fails.
@@ -166,10 +170,48 @@ let private makeIOLabel label width =
     | 1 -> label
     | w -> sprintf "%s (%d bits)" label w
 
-let private combineIndexList (list1:ComponentLabel list) (list2: ComponentType list) = 
+let private combineIndexList (list1:string list) (list2: ComponentType list) = 
     list1 
     |> List.mapi (fun i x -> (x, list2[i]))
 
+/// return output port data from simulation
+let rec extractFastSimulationOutput
+    (fs: FastSimulation)
+    (step: int)
+    ((cid, ap): ComponentId * ComponentId list)
+    (opn: OutputPortNumber) : WireData =
+    
+   let (OutputPortNumber n) = opn
+   match Map.tryFind (cid, ap) fs.FComps with
+   | Some fc ->
+        //printfn $"Extracting port {opn} from {fc.FullName} in step {step}"
+        match Array.tryItem (step % fs.MaxArraySize) fc.Outputs[n].Step with
+        | None -> failwithf $"What? extracting output {n} in step {step} from {fc.FullName} failed with clockTick={fs.ClockTick}"
+        | Some fd -> fd
+        |> (fun fd -> 
+                if fd.Width=0 then failwithf $"Can't find valid data in step {step}:index{step % fs.MaxArraySize} from {fc.FullName} with clockTick={fs.ClockTick}"
+                fd |> fastToWire)
+   | None ->
+        // if it is a custom component output extract from the corresponding Output FastComponent
+        match Map.tryFind ((cid, ap), opn) fs.G.CustomOutputLookup with
+        | Some (cid, ap) -> extractFastSimulationOutput fs step (cid, ap) (OutputPortNumber 0)
+        | None -> failwithf "What? extracting component data failed - can't find component from id"
+
+/// Extract top-level inputs or outputs with names and wire widths. Used by legacy code.
+let extractFastSimulationIOs
+    (simIOs: SimulationIO list)
+    (simulationData: SimulationData)
+    : (SimulationIO * WireData) list =
+    let fs = simulationData.FastSim
+    //let inputs = simulationData.Inputs
+
+    simIOs
+    |> List.map
+        (fun ((cid, label) as io) ->
+            let wd = extractFastSimulationOutput fs simulationData.ClockTickNumber (cid, []) (OutputPortNumber 0)
+            //printfn $"Extrcating: {io} --- {wd}"
+            io, wd)
+(*
 let private viewSimulationInputs
         (simulationData : SimulationData)
         (inputs : (SimulationIO * WireData) list)
@@ -190,6 +232,26 @@ let private viewSimulationInputs
             ]
         splittedLine (str <| makeIOLabel (string inputLabel) 1) valueHandle
     div [] <| List.map makeInputLine componentLabellist
+*)
+let private viewAnalogInputs (state : (Component list * Connection list)) dispatch = 
+    let componentList = (fst state)
+                        |> List.map (fun x -> x.Type)
+    let labelList = (fst state)
+                    |> List.map (fun x -> x.Label)
+    let componentLabellist = combineIndexList labelList componentList
+    let makeInputLine (inputLabel : string, component: ComponentType) =
+        let value = 
+            match component with
+            | Resistor x | CurrentSource x | VoltageSource x -> x
+            | _ -> 4.8
+        let valueHandle =
+            Input.number [
+                Input.IsReadOnly true
+                Input.DefaultValue <| sprintf "%f" value
+                Input.Props [simulationNumberStyle]
+            ]
+        splittedLine (str <| makeIOLabel inputLabel 1) valueHandle
+    div [] <| List.map makeInputLine componentLabellist
 
 let private staticBitButton bit =
     Button.button [
@@ -209,21 +271,7 @@ let private staticNumberBox numBase bits =
         Input.Props [simulationNumberStyle]
     ]
 
-(*
-let private viewSimulationOutputs numBase (simOutputs : (SimulationIO * WireData) list) =
-    let makeOutputLine ((ComponentId _, ComponentLabel outputLabel, width), wireData) =
-#if ASSERTS
-        assertThat (List.length wireData = width)
-        <| sprintf "Inconsistent wireData length in viewSimulationOutput for %s: expcted %d but got %d" outputLabel width wireData.Length
-#endif
-        let valueHandle =
-            match wireData with
-            | [] -> failwith "what? Empty wireData while creating a line in simulation output."
-            | [bit] -> staticBitButton bit
-            | bits -> staticNumberBox numBase bits
-        splittedLine (str <| makeIOLabel outputLabel width) valueHandle
-    div [] <| List.map makeOutputLine simOutputs
-*)
+
 let private viewViewers numBase (simViewers : ((string*string) * int * WireData) list) =
     let makeViewerOutputLine ((label,fullName), width, wireData) =
 #if ASSERTS
@@ -318,12 +366,12 @@ let private simulationClockChangePopup (simData: SimulationData) (dispatch: Msg 
             ]
 
         ]
-
+(*
 let simulateWithTime steps simData =
     let startTime = getTimeMs()
     FastRun.runFastSimulation (steps + simData.ClockTickNumber) simData.FastSim 
     getTimeMs() - startTime
-
+*)
 let cmd block =
     Elmish.Cmd.OfAsyncWith.perform block
 
@@ -335,7 +383,7 @@ let doBatchOfMsgsAsynch (msgs: seq<Msg>) =
     |> Elmish.Cmd.ofMsg
 
 
-
+(*
 let simulateWithProgressBar (simProg: SimulationProgress) (model:Model) =
     match model.CurrentStepSimulationStep, model.PopupDialogData.Progress with
     | Some (Ok simData), Some barData ->
@@ -360,9 +408,9 @@ let simulateWithProgressBar (simProg: SimulationProgress) (model:Model) =
         model, doBatchOfMsgsAsynch messages       
     | _ -> 
         model, Elmish.Cmd.ofMsg (SetPopupProgress None)
+*)    
     
-    
-
+(*
 let simulationClockChangeAction dispatch simData (dialog:PopupDialogData) =
     let clock = 
         match dialog.Int with
@@ -412,56 +460,10 @@ let simulationClockChangeAction dispatch simData (dialog:PopupDialogData) =
         |> ExecCmdAsynch
         |> dispatch
 
+*)
 
-
-let private viewSimulationData (step: int) (simData : SimulationData) model dispatch =
-    (*
-    let hasMultiBitOutputs =
-        simData.Component|> List.filter (fun (_,_,w) -> w > 1) |> List.isEmpty |> not
-    let maybeBaseSelector =
-        match hasMultiBitOutputs with
-        | false -> div [] []
-        | true -> baseSelector simData.NumberBase (changeBase dispatch)
-    let maybeClockTickBtn =
-        let step = simData.ClockTickNumber
-        match simData.IsSynchronous with
-        | false -> div [] []
-        | true ->
-            div [] [
-                Button.button [
-                    Button.Color IsSuccess
-                    Button.OnClick (fun _ ->
-                        let isDisabled (dialogData:PopupDialogData) =
-                            match dialogData.Int with
-                            | Some n -> n <= step
-                            | None -> true
-                        dialogPopup 
-                            "Advance Simulation"
-                            (simulationClockChangePopup simData dispatch)
-                            "Goto Tick"
-                            (simulationClockChangeAction dispatch simData)
-                            isDisabled
-                            dispatch)
-                        ] [ str "Goto" ]
-                str " "
-                str " "
-                Button.button [
-                    Button.Color IsSuccess
-                    Button.OnClick (fun _ ->
-                        if SimulationRunner.simTrace <> None then
-                            printfn "*********************Incrementing clock from simulator button******************************"
-                            printfn "-------------------------------------------------------------------------------------------"
-                        //let graph = feedClockTick simData.Graph
-                        FastRun.runFastSimulation (simData.ClockTickNumber+1) simData.FastSim 
-                        dispatch <| SetSimulationGraph(simData.Graph, simData.FastSim)                    
-                        if SimulationRunner.simTrace <> None then
-                            printfn "-------------------------------------------------------------------------------------------"
-                            printfn "*******************************************************************************************"
-                        IncrementSimulationClockTick 1 |> dispatch
-                    )
-                ] [ str <| sprintf "Clock Tick %d" simData.ClockTickNumber ]
-            ]
-    *)
+let private viewSimulationData (step: int) (simData : SimulationData) (state: (Component list * Connection list)) model dispatch =
+    (*      
     let maybeStatefulComponents() =
         let stateful = 
             FastRun.extractStatefulComponents simData.ClockTickNumber simData.FastSim
@@ -472,6 +474,7 @@ let private viewSimulationData (step: int) (simData : SimulationData) model disp
             Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Stateful components" ]
             viewStatefulComponents step stateful simData.NumberBase model dispatch
         ]
+    *)
     let questionIcon = str "\u003F"
 
     let tip tipTxt txt =
@@ -499,12 +502,11 @@ let private viewSimulationData (step: int) (simData : SimulationData) model disp
     div [] [
 
         Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Inputs" ]
-        viewSimulationInputs
-            simData
-            (FastRun.extractFastSimulationIOs simData.Component simData)
+        viewAnalogInputs
+            state
             dispatch
 
-        maybeStatefulComponents()
+        //maybeStatefulComponents()
     ]
 
 let SetSimErrorFeedback (simError:SimulatorTypes.SimulationError) (model:Model) (dispatch: Msg -> Unit) =
@@ -550,6 +552,7 @@ let viewSimulation model dispatch =
                 dispatch <| SetWSMod {wSModel with InitWaveSimGraph=None; WSViewState=WSClosed; WSTransition = None}
                 dispatch <| SetWaveSimIsOutOfDate true
             | None -> ()
+    let test = model.CurrentStepSimulationStep
     match model.CurrentStepSimulationStep with
     | None ->
         let simRes = makeSimData model
@@ -571,10 +574,11 @@ let viewSimulation model dispatch =
                 ]
                 [ str buttonText ]
         ]
+    
     | Some sim ->
         let body = match sim with
-                   | Error simError -> viewSimulationError simError
-                   | Ok simData -> viewSimulationData simData.ClockTickNumber simData model dispatch
+                    | Error simError -> viewSimulationError simError
+                    | Ok simData -> viewSimulationData simData.ClockTickNumber simData state model dispatch
         let endSimulation _ =
             dispatch CloseSimulationNotification // Close error notifications.
             dispatch <| Sheet (SheetT.ResetSelection) // Remove highlights.
@@ -586,7 +590,7 @@ let viewSimulation model dispatch =
                 [ str "End simulation" ]
             br []; br []
             str "The simulation uses the diagram as it was at the moment of
-                 pressing the \"Start simulation\" button."
+                    pressing the \"Start simulation\" button."
             hr []
             body
         ]

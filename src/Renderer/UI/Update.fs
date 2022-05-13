@@ -82,23 +82,7 @@ let getMenuView (act: MenuCommand) (model: Model) (dispatch: Msg -> Unit) =
     | MenuNewFile -> 
         FileMenuView.addFileToProject model dispatch
     | MenuExit ->
-        FileMenuView.doActionWithSaveFileDialog "Exit ISSIE" CloseApp model dispatch ()
-    | MenuVerilogOutput ->
-        mapOverProject () model (fun p ->
-            let sheet = p.OpenFileName
-            let fPath = FilesIO.pathJoin [|p.ProjectPath ; sheet|]
-            PopupView.choicePopup
-                "Verilog Output"
-                (verilogOutputPage sheet fPath)
-                "Write Synthesis Verilog"
-                "Write Simulation Verilog"
-                (fun forSim _ -> 
-                    match forSim with
-                    | true -> SimulationView.verilogOutput Verilog.ForSynthesis model dispatch
-                    | false -> SimulationView.verilogOutput Verilog.ForSimulation model dispatch
-                    dispatch ClosePopup)
-                dispatch)
-            
+         FileMenuView.doActionWithSaveFileDialog "Exit ISSIE" CloseApp model dispatch ()            
     | _ -> ()
     model
 
@@ -373,9 +357,10 @@ let update (msg : Msg) oldModel =
         { model with PopupDialogData = {model.PopupDialogData with Progress = progOpt} }, Cmd.none
     | UpdatePopupProgress updateFn ->
         { model with PopupDialogData = {model.PopupDialogData with Progress = Option.map updateFn model.PopupDialogData.Progress} }, Cmd.none
-
+    (*
     | SimulateWithProgressBar simPars ->
         SimulationView.simulateWithProgressBar simPars model
+    *)
     | SetSelectedComponentMemoryLocation (addr,data) ->
         {model with SelectedComponent = updateComponentMemory addr data model.SelectedComponent}, Cmd.none
     | CloseDiagramNotification ->
