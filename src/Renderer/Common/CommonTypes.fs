@@ -190,7 +190,7 @@ module CommonTypes
     //==========================================//
 
     /// Specify the type of a port in a Component.
-    type PortType = Input | Output
+    type PortType = Output
 
     (*
     Note on Ports. Ports are used throughout Issie to represent I/Os of components.
@@ -361,7 +361,6 @@ module CommonTypes
             Id : string
             Type : ComponentType
             Label : string // All components have a label that may be empty.
-            InputPorts : Port list // position on this list determines inputPortNumber
             OutputPorts : Port list // position in this lits determines OutputPortNumber
             X : float
             Y : float
@@ -373,8 +372,8 @@ module CommonTypes
         /// Id uniquely identifies connection globally and is used by library.
         type LegacyConnection = {
             Id : string
-            Source : Port
-            Target : Port
+            Port1 : Port
+            Port2 : Port
             Vertices : (float * float) list
         }
 
@@ -389,7 +388,6 @@ module CommonTypes
         Id : string
         Type : ComponentType
         Label : string // All components have a label that may be empty.
-        InputPorts : Port list // position on this list determines inputPortNumber
         OutputPorts : Port list // position in this lits determines OutputPortNumber
         X : float
         Y : float
@@ -402,8 +400,8 @@ module CommonTypes
     /// Id uniquely identifies connection globally and is used by library.
     type Connection = {
         Id : string
-        Source : Port
-        Target : Port
+        Port1 : Port
+        Port2 : Port
         Vertices : (float * float * bool) list
         Voltage: float option
     }
@@ -425,8 +423,8 @@ module CommonTypes
         let convertConnection (c:LegacyCanvas.LegacyConnection) : Connection =
             {
                 Id=c.Id; 
-                Source=c.Source;
-                Target=c.Target;
+                Port1=c.Port1;
+                Port2=c.Port2;
                 Vertices = 
                     c.Vertices
                     |> List.map (function 
@@ -440,7 +438,6 @@ module CommonTypes
                 Id = comp.Id
                 Type = comp.Type
                 Label = comp.Label // All components have a label that may be empty.
-                InputPorts = comp.InputPorts // position on this list determines inputPortNumber
                 OutputPorts = comp.OutputPorts // position in this lits determines OutputPortNumber
                 X = comp.X
                 Y = comp.Y
