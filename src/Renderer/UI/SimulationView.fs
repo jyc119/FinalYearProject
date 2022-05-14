@@ -27,49 +27,6 @@ open Simulator
 open Sheet.SheetInterface
 open DrawModelType
 
-
-
-/// save verilog file
-/// TODO: the simulation error display here is shared with step simulation and also waveform simulation -
-/// maybe it should be a subfunction.
-(*
-let verilogOutput (vType: Verilog.VMode) (model: Model) (dispatch: Msg -> Unit) =
-    printfn "Verilog output"
-    match FileMenuView.updateProjectFromCanvas model dispatch, model.Sheet.GetCanvasState() with
-        | Some proj, state ->
-            match model.UIState with  //TODO should this be its own UI operation?
-            | Some _ ->
-                () // do nothing if in middle of I/O operation
-            | None ->
-                prepareSimulation proj.OpenFileName (state) proj.LoadedComponents 
-                |> (function 
-                    | Ok sim -> 
-                        let path = FilesIO.pathJoin [| proj.ProjectPath; proj.OpenFileName + ".v" |]
-                        printfn "writing %s" proj.ProjectPath
-                        try 
-                            FilesIO.writeFile path (Verilog.getVerilog vType sim.FastSim)
-                        with
-                        | e -> 
-                            printfn $"Error in Verilog output: {e.Message}"
-                            Error e.Message
-                        |> Notifications.displayAlertOnError dispatch
-                        dispatch <| ChangeRightTab Simulation
-                        let note = successSimulationNotification $"verilog output written to file {path}"
-                        dispatch  <| SetSimulationNotification note
-                    | Error simError ->
-                       printfn $"Error in simulation prevents verilog output {simError.Msg}"
-                       dispatch <| ChangeRightTab Simulation
-                       if simError.InDependency.IsNone then
-                           // Highlight the affected components and connection only if
-                           // the error is in the current diagram and not in a
-                           // dependency.
-                           (simError.ComponentsAffected, simError.ConnectionsAffected)
-                           |> SetHighlighted |> dispatch
-                       Error simError
-                       |> StartSimulation
-                       |> dispatch)
-        | _ -> () // do nothing if no project is loaded
-*)
 //----------------------------View level simulation helpers------------------------------------//
 (*
 type SimCache = {
@@ -211,28 +168,7 @@ let extractFastSimulationIOs
             let wd = extractFastSimulationOutput fs simulationData.ClockTickNumber (cid, []) (OutputPortNumber 0)
             //printfn $"Extrcating: {io} --- {wd}"
             io, wd)
-(*
-let private viewSimulationInputs
-        (simulationData : SimulationData)
-        (inputs : (SimulationIO * WireData) list)
-        dispatch =
-    let componentList = List.map (fun x -> x.Type) (extractValueFromMap simulationData.Graph)
-    let labelList = List.map snd (List.map fst inputs)
-    let componentLabellist = combineIndexList labelList componentList
-    let makeInputLine (inputLabel : ComponentLabel, component: ComponentType) =
-        let value = 
-            match component with
-            | Resistor x | CurrentSource x | VoltageSource x -> x
-            | _ -> 4.8
-        let valueHandle =
-            Input.number [
-                Input.IsReadOnly true
-                Input.DefaultValue <| sprintf "%f" value
-                Input.Props [simulationNumberStyle]
-            ]
-        splittedLine (str <| makeIOLabel (string inputLabel) 1) valueHandle
-    div [] <| List.map makeInputLine componentLabellist
-*)
+
 let private viewAnalogInputs (state : (Component list * Connection list)) dispatch = 
     let componentList = (fst state)
                         |> List.map (fun x -> x.Type)
@@ -252,74 +188,6 @@ let private viewAnalogInputs (state : (Component list * Connection list)) dispat
             ]
         splittedLine (str <| makeIOLabel inputLabel 1) valueHandle
     div [] <| List.map makeInputLine componentLabellist
-
-let private staticBitButton bit =
-    Button.button [
-        Button.Props [ simulationBitStyle ]
-        //Button.Color IsPrimary
-        (match bit with Zero -> Button.Color IsGreyLighter | One -> Button.Color IsPrimary)
-        Button.IsHovered false
-        Button.Disabled true
-    ] [ str <| bitToString bit ]
-
-let private staticNumberBox numBase bits =
-    let width = List.length bits
-    let value = viewFilledNum width numBase <| convertWireDataToInt bits
-    Input.text [
-        Input.IsReadOnly true
-        Input.Value value
-        Input.Props [simulationNumberStyle]
-    ]
-
-
-let private viewViewers numBase (simViewers : ((string*string) * int * WireData) list) =
-    let makeViewerOutputLine ((label,fullName), width, wireData) =
-#if ASSERTS
-        assertThat (List.length wireData = width)
-        <| sprintf "Inconsistent wireData length in viewViewer for %s: expcted %d but got %d" label width wireData.Length
-#endif
-        let valueHandle =
-            match wireData with
-            | [] -> failwith "what? Empty wireData while creating a line in simulation output."
-            | [bit] -> staticBitButton bit
-            | bits -> staticNumberBox numBase bits
-        let addToolTip tip react = 
-            div [ 
-                HTMLAttr.ClassName $"{Tooltip.ClassName} has-tooltip-right"
-                Tooltip.dataTooltip tip
-            ] [react]
-        let line = 
-            str <| makeIOLabel label width
-            |> (fun r -> if fullName <> "" then addToolTip fullName r else r)
-        splittedLine line valueHandle
-    div [] <| List.map makeViewerOutputLine simViewers
-
-let private viewStatefulComponents step comps numBase model dispatch =
-    let getWithDefault (lab:string) = if lab = "" then "no-label" else lab
-    let makeStateLine ((fc,state) : FastComponent*SimulationComponentState) =
-        let label = getWithDefault fc.FullName
-        match state with
-        | RegisterState fd when fd.Width = 1 ->
-            let bit = if fd = SimulatorTypes.fastDataZero then Zero else One
-            let label = sprintf "DFF: %s" <| label
-            [ splittedLine (str label) (staticBitButton bit) ]
-        | RegisterState bits ->
-            let label = sprintf "Register: %s (%d bits)" label bits.Width
-            [ splittedLine (str label) (staticNumberBox numBase (bits |> convertFastDataToWireData)) ]
-        | RamState mem ->
-            let label = sprintf "RAM: %s" <| label
-            let initialMem compType = match compType with | _ -> failwithf "what? viewStatefulComponents expected RAM component but got: %A" compType
-            let viewDiffBtn =
-                Button.button [
-                    Button.Props [ simulationBitStyle ]
-                    Button.Color IsPrimary
-                    Button.OnClick (fun _ ->
-                        openMemoryDiffViewer (initialMem fc.FType) mem model dispatch
-                    )
-                ] [ str "View" ]
-            [ splittedLine (str label) viewDiffBtn ]
-        | _ -> []
-    div [] (List.collect makeStateLine comps )
 
 let viewSimulationError (simError : SimulationError) =
     let error = 
@@ -381,86 +249,6 @@ let doBatchOfMsgsAsynch (msgs: seq<Msg>) =
     |> Elmish.Cmd.batch
     |> ExecCmdAsynch
     |> Elmish.Cmd.ofMsg
-
-
-(*
-let simulateWithProgressBar (simProg: SimulationProgress) (model:Model) =
-    match model.CurrentStepSimulationStep, model.PopupDialogData.Progress with
-    | Some (Ok simData), Some barData ->
-        let nComps = float simData.FastSim.FComps.Count
-        let oldClock = simData.FastSim.ClockTick
-        let clock = min simProg.FinalClock (simProg.ClocksPerChunk + oldClock)
-        let t1 = getTimeMs()
-        FastRun.runFastSimulation clock simData.FastSim 
-        printfn $"clokctick after runFastSim{clock} from {oldClock} is {simData.FastSim.ClockTick}"
-        let t2 = getTimeMs()
-        let speed = if t2 = t1 then 0. else (float clock - float oldClock) * nComps / (t2 - t1)
-        let messages =
-            if clock - oldClock < simProg.ClocksPerChunk then [   
-                SetSimulationGraph(simData.Graph, simData.FastSim)
-                IncrementSimulationClockTick (clock - oldClock); 
-                SetPopupProgress None ]
-            else [
-                SetSimulationGraph(simData.Graph, simData.FastSim)
-                IncrementSimulationClockTick simProg.ClocksPerChunk
-                UpdatePopupProgress (fun barData -> {barData with Value = clock - simProg.InitialClock; Speed = speed})
-                SimulateWithProgressBar simProg ]
-        model, doBatchOfMsgsAsynch messages       
-    | _ -> 
-        model, Elmish.Cmd.ofMsg (SetPopupProgress None)
-*)    
-    
-(*
-let simulationClockChangeAction dispatch simData (dialog:PopupDialogData) =
-    let clock = 
-        match dialog.Int with
-        | None -> failwithf "What - must have some number from dialog"
-        | Some clock -> clock
-    let initClock = simData.ClockTickNumber
-    let steps = clock - initClock
-    let numComps = simData.FastSim.FComps.Count
-    let initChunk = min steps (20000/(numComps + 1))
-    let initTime = getTimeMs()
-    let estimatedTime = (float steps / float initChunk) * (simulateWithTime initChunk simData + 0.0000001)
-    let chunkTime = min 2000. (estimatedTime / 5.)
-    let chunk = int <| float steps * chunkTime / estimatedTime
-    if steps > 2*initChunk && estimatedTime > 500. then 
-        printfn "test1"
-        dispatch <| SetPopupProgress 
-            (Some {
-                Speed = float (numComps * steps) / estimatedTime
-                Value=initChunk; 
-                Max=steps; 
-                Title= "running simulation..."
-                })
-        [
-            SetSimulationGraph(simData.Graph, simData.FastSim)
-            IncrementSimulationClockTick (initChunk)
-            ClosePopup
-            SimulateWithProgressBar {
-                FinalClock = clock; 
-                InitialClock = initChunk + initClock; 
-                ClocksPerChunk = chunk 
-                }
-        ]
-        |> Seq.map Elmish.Cmd.ofMsg 
-        |> Elmish.Cmd.batch
-        |> ExecCmdAsynch
-        |> dispatch
-    else
-        FastRun.runFastSimulation clock simData.FastSim 
-        printfn $"test2 clock={clock}, clokcticknumber= {simData.ClockTickNumber}, {simData.FastSim.ClockTick}"
-        [
-            SetSimulationGraph(simData.Graph, simData.FastSim)
-            IncrementSimulationClockTick (clock - simData.ClockTickNumber)
-            ClosePopup
-        ]
-        |> Seq.map Elmish.Cmd.ofMsg 
-        |> Elmish.Cmd.batch
-        |> ExecCmdAsynch
-        |> dispatch
-
-*)
 
 let private viewSimulationData (state: (Component list * Connection list)) model dispatch =
     (*      
