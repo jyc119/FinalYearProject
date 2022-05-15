@@ -505,25 +505,26 @@ module CommonTypes
     [<Erase>]
     type ComponentLabel   = | ComponentLabel of string
 
+    (*
     /// SHA hash unique to a component port - common between JS and F#.
     /// Connection ports and connected component ports have the same port Id
     /// InputPortId and OutputPortID wrap the hash to distinguish component
     /// inputs and outputs some times (e.g. in simulation)
     [<Erase>]
     type InputPortId      = | InputPortId of string
-
+    *)
     /// SHA hash unique to a component port - common between JS and F#.
     /// Connection ports and connected component ports have the same port Id
     /// InputPortId and OutputPortID wrap the hash to distinguish component
     /// inputs and outputs some times (e.g. in simulation)
     [<Erase>]
     type OutputPortId     = | OutputPortId of string
-
+    (*
     /// Port numbers are sequential unique with port lists.
     /// Inputs and Outputs are both numberd from 0 up.
     [<Erase>]
     type InputPortNumber  = | InputPortNumber of int
-
+    *)
     /// Port numbers are sequential unique with port lists.
     /// Inputs and Outputs are both numberd from 0 up.
     [<Erase>]
@@ -545,7 +546,7 @@ module CommonTypes
     /// Note that one output port can drive multiple NLTargets.
     type NLTarget = {
         TargetCompId: ComponentId
-        InputPort: InputPortNumber
+        Port: OutputPortNumber
         TargetConnId: ConnectionId
         }
 
@@ -553,7 +554,7 @@ module CommonTypes
     /// This is stored with a NLComponent input port number
     type NLSource = {
         SourceCompId: ComponentId
-        OutputPort: OutputPortNumber
+        Port: OutputPortNumber
         SourceConnId: ConnectionId
         }
 
@@ -566,7 +567,7 @@ module CommonTypes
         Label : string
         // List of input port numbers, and single mapped driving output port
         // and component.
-        Inputs : Map<InputPortNumber, NLSource option>
+        // Inputs : Map<InputPortNumber, NLSource option>
         // Mapping from each output port number to all of the input ports and
         // Components connected to that port.
         Outputs : Map<OutputPortNumber, NLTarget list>

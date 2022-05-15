@@ -272,7 +272,7 @@ let getRamInfoToDisplay wSMod (path: ComponentId list) =
             lab, formatMemory dat
         | _ -> lab, []
     | _ -> "",[]
-*)    
+   
 
 
 
@@ -306,7 +306,7 @@ let private getReloadableNetGroups (model: Model) (netList: NetList) =
         |> Array.filter ((<>) [])
         |> Array.map (getNetGroup netList)
     | None -> [||] *)
-
+*)
 (*
 /// advance SimulationData by 1 clock cycle
 let private clkAdvance (sD: SimulationData) =
@@ -333,7 +333,7 @@ let extractSimData simData nCycles =
          let s' = clkAdvance s
          (s',s'))
     |> fst
-*)
+
 /// get NLSource option from ComponentId and InputPortNumber
 let private drivingOutput (netList: NetList) compId inPortN =
     netList[compId].Inputs[inPortN]
@@ -362,7 +362,7 @@ let private simWireData2Wire wireData =
         |> (fun r -> r, weight * (bigint 2))) (bigint 1)
     |> fst
     |> List.sum
-   
+*)   
 (*
 /// extract current value of the given array of SourceGroup
 let getSimTime (waves: WaveformSpec array) (simData: SimulationData) =
