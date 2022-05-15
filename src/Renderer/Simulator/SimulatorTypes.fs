@@ -743,7 +743,7 @@ let standardOrderWaves prevDispNames isWanted (waves: Map<string,WaveformSpec>) 
         |> Array.filter (fun wn -> isWanted wn && not <| Array.contains wn prev')
         |> Array.sortBy (fun name -> match waves[name].WType with | ViewerWaveform _ -> 0 | _ -> 1)
     Array.append prev' others
-
+(*
 let getWaveformSpecifications 
         (netGroup2Label: SimulationData -> NetList -> NetGroup -> string) 
         (sd: SimulationData) 
@@ -756,7 +756,7 @@ let getWaveformSpecifications
         fcL
         |> Array.filter (fun fc -> match fc.FType with Viewer _ -> true | _ -> false)
    
-
+    
     /// NetList is a simplified version of circuit with connections and layout info removed.
     /// Component ports are connected directly
     /// connection ids are preserved so we can reference connections on diagram
@@ -772,7 +772,7 @@ let getWaveformSpecifications
     /// replaced by corresponding selectors on busses. Names are tagged with labels or IO connectors
     /// It is easy to change these names to make them more human readable.
     let nameOf ng  = netGroup2Label sd netList ng
-
+    
     // findName (via netGroup2Label) will possibly not generate unique names for each netgroup
     // Names are defined via waveSimModel.AllPorts which adds to each name
     // an optional unique numeric suffic (.2 etc). These suffixes are stripped from names
@@ -793,7 +793,7 @@ let getWaveformSpecifications
     |> Array.concat
     |> Array.map (fun wSpec -> wSpec.WId,wSpec)
     |> Map.ofArray
-
+*)
 
     
 

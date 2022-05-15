@@ -190,7 +190,7 @@ let getMemData (address: int64) (memData: Memory1) =
 
 //--------------------Helper Functions-------------------------------//
 //-------------------------------------------------------------------//
-
+(*
 let getNetList ((comps,conns) : CanvasState) =
     let id2X f =
         comps
@@ -298,7 +298,7 @@ let testMatch (diffX:float) (diffY:float)  normRot=
         // Edge case that should never happen
         | _ -> [s; 0; 0; 0; 0; 0; s]
     lengthList()
-
+*)
 
 
     

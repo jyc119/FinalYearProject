@@ -548,11 +548,11 @@ let getSheetWaveCanvasState (model:Model) =
     getSheetWaveSimOpt model
     |> Option.map (fun (ws:WaveSimModel) -> ws.LastCanvasState)
     |> Option.defaultValue None
-
+(*
 let getSheetWaveNetList (model:Model) =
     getSheetWaveCanvasState model
     |> Option.map Helpers.getNetList
-   
+*)   
 
 //----------------------Print functions-----------------------------//
 //------------------------------------------------------------------//

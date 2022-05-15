@@ -90,13 +90,13 @@ let n2StringOfRadix (hasRadixPrefix: bool) (n: bigint) (nBits: uint32) (rad: Num
 /// Get an option of the reduced canvas state, with geometry eliminated, good for electrical
 /// circuit comparisons
 let getReducedCanvState model = extractReducedState <| model.Sheet.GetCanvasState ()
-    
+(*    
 /// get NetList from WaveSimModel
 let wsModel2netList wsModel =
     match wsModel.LastCanvasState with
     | Some canvState -> Helpers.getNetList canvState
     | None -> Map.empty
-
+*)
 // Look up netgroup (= waveform) name from WaveData and netgroup
 // If Netgroup is not in AllNetGroups return "ERROR"
 let waveNameOf (ws:WaveSimModel) (wave: WaveformSpec) =
@@ -339,7 +339,7 @@ let private drivingOutput (netList: NetList) compId inPortN =
     netList[compId].Inputs[inPortN]
 
 
-
+(*
 /// get array of available NLSource in current canvas state
 let availableNetGroups (model: Model) =
     match getSheetWaveSimOpt model with
@@ -349,7 +349,7 @@ let availableNetGroups (model: Model) =
         |> Option.defaultValue ([],[])
         |> Helpers.getNetList
         |> makeAllNetGroups
-
+*)
 
 
 /// get instantaneous value of a port
