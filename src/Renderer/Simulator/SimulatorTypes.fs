@@ -744,7 +744,7 @@ let standardOrderWaves prevDispNames isWanted (waves: Map<string,WaveformSpec>) 
         |> Array.filter (fun wn -> isWanted wn && not <| Array.contains wn prev')
         |> Array.sortBy (fun name -> match waves[name].WType with | ViewerWaveform _ -> 0 | _ -> 1)
     Array.append prev' others
-
+(*
 let getWaveformSpecifications 
         (netGroup2Label: SimulationData -> NetList -> NetGroup -> string) 
         (sd: SimulationData) 
@@ -756,7 +756,7 @@ let getWaveformSpecifications
     let viewers = 
         fcL
         |> Array.filter (fun fc -> match fc.FType with Viewer _ -> true | _ -> false)
-   
+  
 
     /// NetList is a simplified version of circuit with connections and layout info removed.
     /// Component ports are connected directly
@@ -794,7 +794,7 @@ let getWaveformSpecifications
     |> Array.concat
     |> Array.map (fun wSpec -> wSpec.WId,wSpec)
     |> Map.ofArray
-
+*)
 
     
 

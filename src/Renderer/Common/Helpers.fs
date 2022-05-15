@@ -190,14 +190,14 @@ let getMemData (address: int64) (memData: Memory1) =
 
 //--------------------Helper Functions-------------------------------//
 //-------------------------------------------------------------------//
-
+(*
 let getNetList ((comps,conns) : CanvasState) =
     let id2X f =
         comps
         |> List.map f
         |> Map.ofList
     let id2Outs = id2X (fun (c:Component) -> ComponentId c.Id,c.OutputPorts)
-    let id2Ins = id2X (fun (c:Component) -> ComponentId c.Id,c.InputPorts)
+    //let id2Ins = id2X (fun (c:Component) -> ComponentId c.Id,c.InputPorts)
     let id2Comp = id2X (fun (c:Component) -> ComponentId c.Id,c)
 
     let getPortInts sel initV ports = 
@@ -215,7 +215,7 @@ let getNetList ((comps,conns) : CanvasState) =
                 Id = ComponentId comp.Id
                 Type = comp.Type
                 Label = comp.Label
-                Inputs =  getPortInts InputPortNumber None comp.InputPorts 
+                //Inputs =  getPortInts InputPortNumber None comp.InputPorts 
                 Outputs = getPortInts OutputPortNumber [] comp.OutputPorts
             })
         |> List.map (fun comp -> comp.Id,comp)
@@ -227,23 +227,23 @@ let getNetList ((comps,conns) : CanvasState) =
         |> (fun p -> match p.PortNumber with Some n -> n | None -> failwithf "Missing input port number on %A" p.HostId)
         |> OutputPortNumber
        
-   
+   (*
     let getInputPortNumber (p:Port) = 
         id2Ins[ComponentId p.HostId]
         |> List.find (fun p1 -> p1.Id = p.Id)
         |> (fun p -> match p.PortNumber with Some n -> n | None -> failwithf "Missing input port number on %A" p.HostId)
         |> InputPortNumber
-    
+    *)
     let updateNComp compId updateFn (nets:NetList) =
         Map.add compId (updateFn nets[compId]) nets
-
+    (*
     let updateInputPorts pNum src (comp:NetListComponent) =
         { comp with Inputs = Map.add pNum (Some src) comp.Inputs}
-
+   
     let updateInputsComp compId pNum src nets =
         let uFn = updateInputPorts pNum src
         updateNComp compId uFn nets
-
+    *)
     let updateOutputPorts pNum tgt (comp:NetListComponent) =
         {comp with Outputs = Map.add pNum (tgt :: comp.Outputs[pNum]) comp.Outputs}
 
@@ -253,14 +253,14 @@ let getNetList ((comps,conns) : CanvasState) =
         
     let target (conn:Connection) =
         {
-            TargetCompId = ComponentId conn.Target.HostId
-            InputPort = getInputPortNumber conn.Target
+            TargetCompId = ComponentId conn.Port1.HostId
+            Port = getOutputPortNumber conn.Port1
             TargetConnId = ConnectionId conn.Id
         }
     let source (conn:Connection) =
         {
-            SourceCompId = ComponentId conn.Source.HostId
-            OutputPort = getOutputPortNumber conn.Source
+            SourceCompId = ComponentId conn.Port2.HostId
+            Port = getOutputPortNumber conn.Port2
             SourceConnId = ConnectionId conn.Id
         }
 
@@ -270,8 +270,8 @@ let getNetList ((comps,conns) : CanvasState) =
         let tComp = id2Comp[tgt.TargetCompId]
         let sComp = id2Comp[src.SourceCompId]
         nets
-        |> updateOutputsComp (ComponentId sComp.Id) src.OutputPort tgt
-        |> updateInputsComp (ComponentId tComp.Id)tgt.InputPort src
+        |> updateOutputsComp (ComponentId sComp.Id) src.Port tgt
+        //|> updateInputsComp (ComponentId tComp.Id)tgt.InputPort src
 
     (initNets, conns) ||> List.fold addConnectionsToNets
 
@@ -298,7 +298,7 @@ let testMatch (diffX:float) (diffY:float)  normRot=
         // Edge case that should never happen
         | _ -> [s; 0; 0; 0; 0; 0; s]
     lengthList()
-
+*)
 
 
     

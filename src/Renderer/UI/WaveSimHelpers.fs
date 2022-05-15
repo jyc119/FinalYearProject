@@ -90,13 +90,13 @@ let n2StringOfRadix (hasRadixPrefix: bool) (n: bigint) (nBits: uint32) (rad: Num
 /// Get an option of the reduced canvas state, with geometry eliminated, good for electrical
 /// circuit comparisons
 let getReducedCanvState model = extractReducedState <| model.Sheet.GetCanvasState ()
-    
+(*    
 /// get NetList from WaveSimModel
 let wsModel2netList wsModel =
     match wsModel.LastCanvasState with
     | Some canvState -> Helpers.getNetList canvState
     | None -> Map.empty
-
+*)
 // Look up netgroup (= waveform) name from WaveData and netgroup
 // If Netgroup is not in AllNetGroups return "ERROR"
 let waveNameOf (ws:WaveSimModel) (wave: WaveformSpec) =
