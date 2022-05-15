@@ -42,7 +42,7 @@ module Constants =
 //------------------------ Helper functions ------------------------//
 //------------------------------------------------------------------//
 
-let inline inputPortStr (InputPortId s) = s
+//let inline inputPortStr (InputPortId s) = s
 let inline outputPortStr (OutputPortId s) = s
 
 let inline invertRotation (rot: RotationType) =
@@ -207,7 +207,7 @@ let initPortOrientation (comp: Component) =
     let defaultportOrder = 
         (Map.empty, [Left; Right; Top; Bottom])
         ||> List.fold (fun currMap edge -> Map.add edge [] currMap)
-
+    (*
     let inputMaps : PortMaps =
         ({Order=defaultportOrder; Orientation=Map.empty}, comp.InputPorts)
         ||> List.fold (fun maps port -> addPortToMaps Left maps port.Id)
@@ -215,7 +215,14 @@ let initPortOrientation (comp: Component) =
     let res = 
         (inputMaps, (List.rev comp.OutputPorts))
         ||> List.fold (fun maps port -> addPortToMaps Right maps port.Id)
-    res
+    *)
+    let result = 
+        ({Order=defaultportOrder; Orientation=Map.empty}, comp.OutputPorts)
+        ||> List.fold(fun maps port -> 
+                          if maps.Order = defaultportOrder then addPortToMaps Left maps port.Id
+                          else addPortToMaps Right maps port.Id)
+
+    result
 
 
 
@@ -233,14 +240,15 @@ let getCustomCompArgs (x:CustomComponentType) (label:string) =
 
 /// obtain map from port IDs to port names for Custom Component.
 /// for other components types this returns empty map
+(*
 let getCustomPortIdMap (comp: Component)  =
         let label = comp.Label
         match comp.Type with
         | Custom customType ->
             let (n, nout, h, w) = getCustomCompArgs customType label
-            let inputPorts = comp.InputPorts
+            //let inputPorts = comp.InputPorts
             let outputPorts = comp.OutputPorts
-            let inputPortIdLabels = List.zip inputPorts customType.InputLabels
+            //let inputPortIdLabels = List.zip inputPorts customType.InputLabels
             let outputPortIdLabels = List.zip outputPorts customType.OutputLabels
 
             let inputMap =
@@ -252,7 +260,7 @@ let getCustomPortIdMap (comp: Component)  =
 
             finalMap
         | _ -> Map.empty
-
+*)
 
 let makeMapsConsistent (portIdMap: Map<string,string>) (sym: Symbol) =
     let edgeToAddTo = Right // TODO - choose Left or Right based on inpit or output
@@ -271,6 +279,7 @@ let makeMapsConsistent (portIdMap: Map<string,string>) (sym: Symbol) =
 let autoScaleHAndW (sym:Symbol) : Symbol =
     //height same as before, just take max of left and right
         match sym.Component.Type with
+        (*
         | Custom comp ->
                 let portIdMap = getCustomPortIdMap sym.Component
                 let portMaps = makeMapsConsistent portIdMap sym
@@ -300,7 +309,7 @@ let autoScaleHAndW (sym:Symbol) : Symbol =
                 {sym with
                     PortMaps = portMaps
                     Component = {sym.Component with H= float scaledH; W = float scaledW}}
-
+        *)
         | _ -> sym
 
 
@@ -308,7 +317,7 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
     let defaultSTransform = {Rotation = Degree0; flipped = false}
     // function that helps avoid dublicate code by initialising parameters that are the same for all component types and takes as argument the others
     let makeComponent' (n, nout, h, w) label : Component=
-        let inputPorts = portLists n id PortType.Input
+        //let inputPorts = portLists n id PortType.Input
         let outputPorts = portLists nout id PortType.Output
         let comptype' =
             match comptype with
@@ -318,7 +327,6 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
             Id = id 
             Type = comptype' 
             Label = label 
-            InputPorts = inputPorts
             OutputPorts  = outputPorts
             X  = pos.X - float w / 2.0
             Y = pos.Y - float h / 2.0
@@ -388,8 +396,7 @@ let addToPortModel (model: Model) (sym: Symbol) =
     let addOnePort (currentPorts: Map<string, Port>) (port: Port) =
         Map.add port.Id port currentPorts
     
-    let addedInputPorts = (model.Ports, sym.Component.InputPorts) ||> List.fold addOnePort
-    (addedInputPorts, sym.Component.OutputPorts) ||> List.fold addOnePort
+    (model.Ports, sym.Component.OutputPorts) ||> List.fold addOnePort
 
 //-----------------------------------------GET PORT POSITION---------------------------------------------------
 // Function that calculates the positions of the ports 
@@ -652,8 +659,8 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
     // Put everything together 
 
     (drawPorts comp.OutputPorts showOutputPorts symbol)
-    |> List.append (drawPorts comp.InputPorts showInputPorts symbol)
-    |> List.append (drawPortsText (comp.InputPorts @ comp.OutputPorts) (portNames comp.Type) symbol)
+    //|> List.append (drawPorts comp.InputPorts showInputPorts symbol)
+    |> List.append (drawPortsText (comp.OutputPorts) (portNames comp.Type) symbol)
     |> List.append (addText {X = float w/2.; Y = float h/2. - 7.} (getComponentLegend comp.Type) "middle" "bold" "14px")
     |> List.append (addComponentLabel comp transform)
     |> List.append (createSymbol)
@@ -661,8 +668,8 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
 let init () = 
     { 
         Symbols = Map.empty; CopiedSymbols = Map.empty
-        Ports = Map.empty ; InputPortsConnected= Set.empty
-        OutputPortsConnected = Map.empty;
+        Ports = Map.empty ; ArePortsConnected= Set.empty
+        NumberPortsConnected = Map.empty;
     }, Cmd.none
 
 //----------------------------View Function for Symbols----------------------------//
@@ -784,13 +791,13 @@ let inline getCompId (model: Model) (portId: string) =
 /// Returns the string of a PortId
 let inline getPortIdStr (portId: PortId) = 
     match portId with
-    | InputId (InputPortId id) -> id
+    //| InputId (InputPortId id) -> id
     | OutputId (OutputPortId id) -> id
-
+(*
 let inline getInputPortIdStr (portId: InputPortId) = 
     match portId with
     | InputPortId s -> s
-
+*)
 let inline getOutputPortIdStr (portId: OutputPortId) = 
     match portId with
     | OutputPortId s -> s
@@ -801,10 +808,10 @@ let inline getPortOrientation (model: Model)  (portId: PortId) : Edge =
     let port = model.Ports[portIdStr]
     let sId = ComponentId port.HostId
     model.Symbols[sId].PortMaps.Orientation[portIdStr]
-
+(*
 let inline getInputPortOrientation (model: Model) (portId: InputPortId): Edge =
     getPortOrientation model (InputId portId)
-
+*)
 let inline getOutputPortOrientation (model: Model) (portId: OutputPortId): Edge =
     getPortOrientation model (OutputId portId)
 
@@ -824,21 +831,21 @@ let getPortLocation (defPos: XYPos option) (model: Model) (portId : string) : XY
         printfn $"Can't find port or symbol: Port='{portOpt}', Symbol='{symOpt}"
         pos       
     | _ -> failwithf $"Can't find port or symbol: Port='{portOpt}', Symbol='{symOpt}"
-
+(*
 /// Returns the location of an input port based on their portId
 let inline getInputPortLocation defPos (model:Model) (portId: InputPortId)  = 
     let id = getPortIdStr (InputId portId)
     getPortLocation defPos model id
-
+*)
 /// Returns the location of an output port based on their portId
 let inline getOutputPortLocation defPos (model:Model) (portId : OutputPortId) =
     let id = getPortIdStr (OutputId portId)
     getPortLocation defPos model id
 
 /// Returns the locations of a given input port and output port based on their portId
-let inline getTwoPortLocations (model: Model) (inputPortId: InputPortId ) (outputPortId: OutputPortId) =
-    (getInputPortLocation None model inputPortId, getOutputPortLocation None model outputPortId)
-
+let inline getTwoPortLocations (model: Model) (Port1Id: OutputPortId ) (Port2Id: OutputPortId) =
+    (getOutputPortLocation None model Port1Id, getOutputPortLocation None model Port2Id)
+(*
 ///Returns the input port positions of the specified symbols in model
 let getInputPortsLocationMap (model: Model) (symbols: Symbol list)  = 
     let getSymbolInputPortsLoc sym =
@@ -848,7 +855,7 @@ let getInputPortsLocationMap (model: Model) (symbols: Symbol list)  =
     symbols
     |> List.collect getSymbolInputPortsLoc
     |> Map.ofList
-
+*)
 /// Returns the output port positions of the specified symbols in model
 let getOutputPortsLocationMap (model: Model) (symbols: Symbol list)  =
     let getSymbolOutputPortsLoc sym =
@@ -868,8 +875,8 @@ let getPortLocations (model: Model) (symbolIds: ComponentId list) =
         |> Map.toList
         |> List.map snd
         
-    let getInputPortMap = getInputPortsLocationMap model symbols
+    //let getInputPortMap = getInputPortsLocationMap model symbols
     let getOutputPortMap = getOutputPortsLocationMap model symbols
        
-    getInputPortMap , getOutputPortMap 
+    getOutputPortMap 
  

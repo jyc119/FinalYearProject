@@ -45,14 +45,14 @@ let generateLabel (model: Model) (compType: ComponentType) : string =
 
 /// Initialises and returns the PortMaps of a pasted symbol
 let initCopiedPorts (oldSymbol:Symbol) (newComp: Component): PortMaps =
-    let inPortIds = List.map (fun (p:Port) -> p.Id)  newComp.InputPorts
+    //let inPortIds = List.map (fun (p:Port) -> p.Id)  newComp.InputPorts
     let outPortIds = List.map (fun (p:Port) -> p.Id) newComp.OutputPorts
-    let oldInPortIds =  
-        List.map (fun (p:Port) -> p.Id) oldSymbol.Component.InputPorts
+    //let oldInPortIds =  
+    //    List.map (fun (p:Port) -> p.Id) oldSymbol.Component.InputPorts
     let oldOutPortIds =
         List.map (fun (p:Port) -> p.Id) oldSymbol.Component.OutputPorts
     let equivPortIds = 
-        List.zip oldInPortIds inPortIds @ List.zip oldOutPortIds outPortIds
+        List.zip oldOutPortIds outPortIds
         |> Map.ofList
     let portOrientation = 
         (Map.empty,oldSymbol.PortMaps.Orientation)
@@ -138,14 +138,11 @@ let tryGetPastedEl copiedIds pastedIds target =
     | _ -> None
 
 /// Returns a tuple of the list of input ports of a given input symbol, and list of output ports of a given output symbol
-let getPortIds (input: Symbol) (output: Symbol) : (string list * string list)=
-    let inPortIds = 
-        input.Component.InputPorts
-        |> List.map (fun port -> port.Id)
+let getPortIds (input: Symbol) (output: Symbol) : (string list)=
     let outPortIds =
         output.Component.OutputPorts
         |> List.map (fun port -> port.Id)
-    inPortIds, outPortIds
+    outPortIds
 
 /// Given a tuple of options, returns an Some (v1, v2) if both tuple elements are some, else None
 let mergeOptions =
@@ -162,7 +159,7 @@ let getCopiedSymbol model portId =
 /// ComponentIds at same index in both list 1 and list 2 need to be of the same ComponentType.
 /// CompIds1 need to be in model.CopiedSymbols.
 /// Assumes ports are in the same order in equivalent symbols
-let getEquivalentCopiedPorts (model: Model) (copiedIds) (pastedIds) (InputPortId copiedInputPort, OutputPortId copiedOutputPort) =
+let getEquivalentCopiedPorts (model: Model) (copiedIds) (pastedIds) (OutputPortId copiedInputPort, OutputPortId copiedOutputPort) =
     let findEquivalentPorts compId1 compId2 =
         let copiedComponent = model.CopiedSymbols[compId1].Component
         let pastedComponent = model.Symbols[compId2].Component // TODO: These can be different for an output gate for some reason.
@@ -177,7 +174,7 @@ let getEquivalentCopiedPorts (model: Model) (copiedIds) (pastedIds) (InputPortId
                     Some pastedPorts[portIndex].Id // Get the equivalent port in pastedPorts. Assumes ports at the same index are the same (should be the case unless copy pasting went wrong).
                 | _ -> None
         
-        let pastedInputPortId = tryFindEquivalentPort copiedComponent.InputPorts pastedComponent.InputPorts copiedInputPort
+        let pastedInputPortId = tryFindEquivalentPort copiedComponent.OutputPorts pastedComponent.OutputPorts copiedInputPort
         let pastedOutputPortId = tryFindEquivalentPort copiedComponent.OutputPorts pastedComponent.OutputPorts copiedOutputPort
     
         pastedInputPortId, pastedOutputPortId
