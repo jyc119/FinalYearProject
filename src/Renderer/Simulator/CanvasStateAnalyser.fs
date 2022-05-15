@@ -37,22 +37,23 @@ type MapData =
          Components : Component list
          LabComp : Component list
          LabGroup : Map<string,Component list>
-         LabInputPorts:  Port list
+         //LabInputPorts:  Port list
          LabOutputPorts: Port list
          LabTargetConns: Connection list
          OtherTargetConns: Connection list
          LabSourceConns: Connection list
          OtherSourceConns: Connection list
-         OtherInputPorts: Port list
+         //OtherInputPorts: Port list
          OtherOutputPorts: Port list
          ToComp: Map<ComponentId,Component>
-         ToInputPort: Map<InputPortId,Port>
+         //ToInputPort: Map<InputPortId,Port>
          ToOutputPort: Map<OutputPortId, Port>
      }
+(*
 let private getAllInputPortIds (components : Component list) : (InputPortId * ComponentId) list =
     components |> List.collect
         (fun comp -> comp.InputPorts |> List.map (fun port -> InputPortId port.Id, ComponentId comp.Id))
-
+*)
 /// Return all the Ids of all ouput ports across all components.
 /// Return also the ComponentId which may be used in error messages.
 let private getAllOutputPortIds (components : Component list) : (OutputPortId * ComponentId) list =
@@ -71,35 +72,37 @@ let private genMaps ((comps,conns):CanvasState) =
         |> List.map (fun co -> ComponentId co.Id, co)
         |> Map.ofList
 
-    let targetIsLabel (c: Connection) = idToComp[ComponentId c.Target.HostId].Type = IOLabel
-    let sourceIsLabel (c: Connection) = idToComp[ComponentId c.Source.HostId].Type = IOLabel
+    let port1IsLabel (c: Connection) = idToComp[ComponentId c.Port1.HostId].Type = IOLabel // Checks if target type is input-output label
+    let port2IsLabel (c: Connection) = idToComp[ComponentId c.Port2.HostId].Type = IOLabel // Checks if Source type is input-output label
     let splitBy pred lst =
         (([],[]), lst) ||> List.fold (fun (is, isNot) x -> 
                 if pred x then (x :: is, isNot) else (is,x::isNot))
 
-    let labTargetConns,otherTargetConns = splitBy targetIsLabel conns
-    let labSourceConns, otherSourceConns = splitBy sourceIsLabel conns
+    let labTargetConns,otherTargetConns = splitBy port1IsLabel conns
+    let labSourceConns, otherSourceConns = splitBy port2IsLabel conns
 
     let normalise (p:Port) = {p with PortNumber=None}
     let normaliseL (pL: Port list) = List.map normalise pL
 
-
+    (*
     let idToInputPort = 
         comps 
         |> List.collect (fun co -> co.InputPorts)
         |> List.map (fun po -> InputPortId po.Id, normalise po)
         |> Map.ofList
-
+    *)
     let idToOutputPort =
         comps 
         |> List.collect (fun co -> co.OutputPorts)
         |> List.map (fun po -> OutputPortId po.Id, normalise po)
         |> Map.ofList
 
+    (*
     let otherInputPorts = 
         comps 
         |> List.filter (fun co -> co.Type <> IOLabel)
         |> List.collect (fun co -> normaliseL co.InputPorts)
+    *)
 
     let otherOutputPorts = 
         comps
@@ -109,11 +112,11 @@ let private genMaps ((comps,conns):CanvasState) =
     let labGroup = 
         List.groupBy (fun (co:Component) -> co.Label) labComps
         |> Map.ofList
-
+    (*
     let labInputPorts = 
         labComps 
         |> List.collect (fun co -> normaliseL co.InputPorts)
-        
+    *)       
     let labOutputPorts =
         labComps 
         |> List.collect (fun co -> normaliseL co.OutputPorts)
@@ -122,17 +125,17 @@ let private genMaps ((comps,conns):CanvasState) =
         Components = comps
         LabComp = labComps
         LabGroup = labGroup
-        OtherInputPorts = otherInputPorts
+        //OtherInputPorts = otherInputPorts
         OtherOutputPorts = otherOutputPorts
-        LabInputPorts = labInputPorts
+        //LabInputPorts = labInputPorts
         LabOutputPorts = labOutputPorts
         ToComp = idToComp
-        ToInputPort = idToInputPort
+        //ToInputPort = idToInputPort
         ToOutputPort = idToOutputPort
         LabTargetConns = labTargetConns
-        LabSourceConns = labSourceConns
-        OtherTargetConns = otherTargetConns
-        OtherSourceConns = otherSourceConns
+        LabSourceConns = labSourceConns //
+        OtherTargetConns = otherTargetConns //
+        OtherSourceConns = otherSourceConns //
     }
     
     
@@ -144,56 +147,66 @@ let private genMaps ((comps,conns):CanvasState) =
 /// 4- all output ports in a component are actually output ports,
 /// 5- all ports on components have a port number,
 /// 6- all ports on connection do not have a port number.
+
+(*
+Analog Simulation
+1 - all ports on components have a port number,
+2 - all ports on connection do not have a port number.
+*)
+
 /// These conditions should always hold, unless there are bugs in the code (i.e.
 /// no user behaviour should be able to trigger such errors).
 /// The costruction of the Simulation graph assumes that these rules hold.
 /// TODO: should they crash the program then?
 let private checkPortTypesAreConsistent (canvasState : CanvasState) : SimulationError option =
-    let rec checkComponentPorts (ports : Port list) (correctType : PortType) =
+    let rec checkComponentPorts (ports : Port list)  =
         match ports with
         | [] -> None
         | port :: _ when port.PortNumber = None -> Some {
-            Msg = sprintf "%A port appears to not have a port number" correctType
+            Msg = sprintf "Output port appears to not have a port number"
             InDependency = None
             ComponentsAffected = [ComponentId port.HostId]
             ConnectionsAffected = [] }
+        (*
         | port :: _ when port.PortType <> correctType -> Some {
             Msg = sprintf "%A port %d appears to be an %A port" correctType (Option.get port.PortNumber) port.PortType
             InDependency = None
             ComponentsAffected = [ComponentId port.HostId]
             ConnectionsAffected = [] }
+        *)
         | _ :: ports' ->
-            checkComponentPorts ports' correctType
+            checkComponentPorts ports'
     /// Check conditions 3, 4, 5
     let rec checkComponentsPorts (components : Component list) =
         match components with
         | [] -> None
         | comp :: components' ->
-            match checkComponentPorts comp.InputPorts PortType.Input,
-                  checkComponentPorts comp.OutputPorts PortType.Output with
-            | Some err, _ | _, Some err -> Some err
-            | None, None -> checkComponentsPorts components' // Check next.
+            match checkComponentPorts comp.OutputPorts with
+            | Some err -> Some err
+            | None -> checkComponentsPorts components' // Check next.
 
     let checkConnectionPort (port : Port) (correctType : PortType) (connId : string) =
-        match port.PortType = correctType, port.PortNumber with
+        match port.PortNumber with
+        (*
         | false, _ -> Some {
             Msg = sprintf "%A port appears to be an %A port" correctType port.PortType
             InDependency = None
             ComponentsAffected = [ComponentId port.HostId]
             ConnectionsAffected = [ConnectionId connId] }
-        | _, Some pNumber -> Some {
-            Msg = sprintf "%A port appears to have a port number: %d" correctType pNumber
+        *)
+        | Some pNumber -> Some {
+            Msg = sprintf "Output port appears to have a port number: %d" pNumber
             InDependency = None
             ComponentsAffected = [ComponentId port.HostId]
             ConnectionsAffected = [ConnectionId connId] }
-        | true, None -> None // All right.
+        | None -> None // All right.
     /// Check conditions 1, 2, 6
     let rec checkConnectionsPorts (connections : Connection list) =
         match connections with
         | [] -> None
         | conn :: connections' ->
-            match checkConnectionPort conn.Source PortType.Output conn.Id,
-                  checkConnectionPort conn.Target PortType.Input conn.Id with
+            match checkConnectionPort conn.Port1 PortType.Output conn.Id,
+                  checkConnectionPort conn.Port2 PortType.Output conn.Id with
             | Some err, _ | _, Some err -> Some err
             | None, None -> checkConnectionsPorts connections' // Check next.
 
@@ -202,6 +215,7 @@ let private checkPortTypesAreConsistent (canvasState : CanvasState) : Simulation
           checkConnectionsPorts connections with
     | Some err, _ | _, Some err -> Some err
     | None, None -> None // All right.
+
 
 /// Apply condition on every element of the map (tailored to this specific
 /// problem).
@@ -251,6 +265,7 @@ let private checkCounts (conns : Connection list) connMap bins binMap cond errMs
     let totals = countPortsConnections conns connMap bins binMap 
     checkEvery totals cond errMsg
 
+(*
 let private checkConns (conns : Connection list) (m : MapData) : SimulationError option =
     let compOfPort p = m.ToComp[ComponentId p.HostId]
     conns
@@ -270,7 +285,7 @@ let private checkConns (conns : Connection list) (m : MapData) : SimulationError
                 ConnectionsAffected = [ConnectionId conn.Id] 
                 }   )      
         )
-         
+ *)        
         
     
 
@@ -283,17 +298,17 @@ let private checkPortsAreConnectedProperly
     let m = genMaps canvasState
     let conns = m.Connections
     let portMap (p:Port) = [m.ToComp[ComponentId p.HostId]]
-    let inPIdMap pid = m.ToInputPort[InputPortId pid]
+    //let inPIdMap pid = m.ToInputPort[InputPortId pid]
     let labMap (lab:string) = m.LabGroup[lab]
     let l2Pid (lst: Port list) = lst |> List.map (fun x -> x.Id)
 
     [
-
+        (*
         checkCounts m.OtherTargetConns (fun conn -> conn.Target.Id) (l2Pid m.OtherInputPorts) (inPIdMap >> portMap) ((=) 1) (
                 "Every component input port must be connected: but no connection was found",
                 "A component input port must have precisely one driving component, but %d \
                 were found. If you want to merge wires together use a MergeWires component, not direct connection")
-
+        
         checkCounts m.LabTargetConns (fun conn -> m.ToComp[ComponentId conn.Target.HostId].Label) (m.LabGroup |> Map.toList |> List.map fst)  labMap ((=) 1) (
                 "A set of labelled wires must be driven (on the input of one of the labels): but no such driver was found",
                 "A set of labelled wires must have precisely one driving component, but %d \
@@ -301,13 +316,17 @@ let private checkPortsAreConnectedProperly
                 If you are driving two labels from the same component delete one of them: \
                 a set of labels with the same name are all connected together and only one \
                 label in each same-name set must be driven.")
-
-        checkCounts m.OtherSourceConns (fun conn -> conn.Source) m.OtherOutputPorts portMap ((<) 0) (
+        *)
+        checkCounts m.OtherSourceConns (fun conn -> conn.Port1) m.OtherOutputPorts portMap ((<) 0) (
                 "A component output port must have at least one connection. If the component output \
                 is meant to be disconnected you can add a wire label to stop this error", "%d")
 
+        checkCounts m.OtherSourceConns (fun conn -> conn.Port2) m.OtherOutputPorts portMap ((<) 0) (
+            "A component output port must have at least one connection. If the component output \
+            is meant to be disconnected you can add a wire label to stop this error", "%d")
 
-        checkConns conns m 
+
+        //checkConns conns m 
                 
 
 
