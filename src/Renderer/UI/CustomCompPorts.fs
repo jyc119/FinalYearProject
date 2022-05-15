@@ -295,11 +295,11 @@ let deleteIncompleteConnections ((comps,conns): CanvasState) =
     let okPorts = 
         Array.ofList comps
         |> Array.collect (fun comp ->
-            Array.append (arrayOfIds comp.InputPorts) (arrayOfIds comp.OutputPorts))
+            (arrayOfIds comp.OutputPorts))
         |> Set
     let conns' = List.filter (fun (conn:Connection) -> 
-        Set.contains conn.Source.Id okPorts && 
-        Set.contains conn.Target.Id okPorts) conns
+        Set.contains conn.Port1.Id okPorts && 
+        Set.contains conn.Port2.Id okPorts) conns
     if conns <> conns' then
         printfn "%d Connections deleted" (conns.Length - conns'.Length)
     comps,conns'
@@ -333,6 +333,7 @@ let changeInstance (comp:Component) (change: PortChange) =
 
     let updateInfo (dir: IODirection) (f: PortInfo -> PortInfo) (comp: Component)=
         match dir with
+        (*
         | InputIO ->
             let labels,ct = 
                 match comp.Type with 
@@ -341,6 +342,7 @@ let changeInstance (comp:Component) (change: PortChange) =
             let ports = comp.InputPorts
             let (labels,ports) = f (labels,ports)
             {comp with InputPorts = ports; Type = Custom {ct with InputLabels = labels }}
+        *)
         | OutputIO ->
             let labels,ct = 
                 match comp.Type with 
@@ -371,7 +373,9 @@ let changeInstance (comp:Component) (change: PortChange) =
                     Id = JSHelpers.uuid ()
                     PortNumber = Some ports.Length // next available number
                     HostId = comp.Id
-                    PortType = match dir with | InputIO -> PortType.Input | OutputIO -> PortType.Output
+                    PortType = match dir with 
+                               //| InputIO -> PortType.Input 
+                               | OutputIO -> PortType.Output
                 }
             let ports = ports @ [newPort]
             labels,ports
@@ -430,10 +434,12 @@ let updateInstance (newSig: Signature) (sheet:string,cid:string,oldSig:Signature
                     let oldSig = ct.InputLabels, ct.OutputLabels
                     let newIn,newOut = newSig
                     let oldIn,oldOut = oldSig
-                    let newInPorts = reorderPorts newIn oldIn comp.InputPorts
+                    //let newInPorts = reorderPorts newIn oldIn comp.InputPorts
                     let newOutPorts = reorderPorts newOut oldOut comp.OutputPorts
                     let ct' = {ct with InputLabels = fst newSig; OutputLabels = snd newSig}
-                    {comp with Type = Custom ct'; InputPorts=newInPorts; OutputPorts=newOutPorts}
+                    {comp with Type = Custom ct'; 
+                               //InputPorts=newInPorts; 
+                               OutputPorts=newOutPorts}
 
                 else
                     printfn "What? Signatures do not match after changes are made"
