@@ -214,7 +214,7 @@ let inline inMiddleOf a x b =
 let inline inMiddleOrEndOf a x b = 
     let e = Constants.modernCirclePositionTolerance
     a - e < x && x < b + e
-   
+(*   
 let inline getSourcePort (model:Model) (wire:Wire) =
     let portId = Symbol.outputPortStr wire.OutputPort
     let port = model.Symbol.Ports[portId]
@@ -236,7 +236,7 @@ let inline getTargetSymbol (model:Model) (wire:Wire) =
     let port = model.Symbol.Ports[portId]
     let symbol = model.Symbol.Symbols[ComponentId port.HostId]
     symbol
-
+*)
 
 
 //-------------------------------Implementation code----------------------------//
@@ -457,11 +457,11 @@ let segmentsToIssieVertices (segList:Segment list) (wire:Wire) =
 /// between our implementation and Issie.
 let extractConnection (wModel : Model) (cId : ConnectionId) : Connection =
     let conn = wModel.Wires[cId]
-    let ConnectionId strId, InputPortId strInputPort, OutputPortId strOutputPort = conn.WId, conn.InputPort, conn.OutputPort
+    let ConnectionId strId, OutputPortId Port1, OutputPortId Port2 = conn.WId, conn.Port1, conn.Port2
     {
         Id = strId
-        Source = { Symbol.getPort wModel.Symbol strOutputPort with PortNumber = None } // None for connections 
-        Target = { Symbol.getPort wModel.Symbol strInputPort with PortNumber = None } // None for connections 
+        Port1 = { Symbol.getPort wModel.Symbol Port1 with PortNumber = None } // None for connections 
+        Port2 = { Symbol.getPort wModel.Symbol Port2 with PortNumber = None } // None for connections 
         Vertices = segmentsToIssieVertices conn.Segments conn
         Voltage = None
     }
@@ -493,7 +493,7 @@ type WireRenderProps =
         OutputPortEdge : Edge
         OutputPortLocation: XYPos
         DisplayType : WireType
-        TriangleEdge : Edge
+        //TriangleEdge : Edge
         InputPortLocation: XYPos
     }
 
@@ -716,10 +716,10 @@ let view (model : Model) (dispatch : Dispatch<Msg>) =
     TimeHelpers.instrumentTime "WirePropsSort" start
     let rStart = TimeHelpers.getTimeMs()
     let wireProps wire =
-        let outPortId = Symbol.getOutputPortIdStr wire.OutputPort
+        let outPortId = Symbol.getOutputPortIdStr wire.Port1    
         let outputPortLocation = Symbol.getPortLocation None model.Symbol outPortId
-        let outputPortEdge = Symbol.getOutputPortOrientation model.Symbol wire.OutputPort 
-        let stringInId = Symbol.getInputPortIdStr wire.InputPort
+        let outputPortEdge = Symbol.getOutputPortOrientation model.Symbol wire.Port1
+        let stringInId = Symbol.getOutputPortIdStr wire.Port2
         let inputPortLocation = Symbol.getPortLocation None model.Symbol stringInId 
         let strokeWidthP =
             match wire.Width with
@@ -734,7 +734,7 @@ let view (model : Model) (dispatch : Dispatch<Msg>) =
             OutputPortEdge = outputPortEdge
             OutputPortLocation = outputPortLocation
             DisplayType = model.Type
-            TriangleEdge = Symbol.getInputPortOrientation model.Symbol wire.InputPort
+            //TriangleEdge = Symbol.getInputPortOrientation model.Symbol wire.InputPort
             InputPortLocation = inputPortLocation
         }
         
@@ -749,6 +749,7 @@ let view (model : Model) (dispatch : Dispatch<Msg>) =
                     | Radial -> renderRadialWire props
                     | Jump -> renderJumpWire props
                     | Modern -> renderModernWire props
+                (*
                 let polygon = {
                     defaultPolygon with
                         Fill = "black"
@@ -760,8 +761,9 @@ let view (model : Model) (dispatch : Dispatch<Msg>) =
                     | CommonTypes.Bottom -> $"{x},{y},{x+2.},{y+4.},{x-2.},{y+4.}"
                     | CommonTypes.Right -> $"{x},{y},{x+4.},{y+2.},{x+4.},{y-2.}"
                     | CommonTypes.Left -> $"{x},{y},{x-4.},{y+2.},{x-4.},{y-2.}"
-
-                g [] [ makePolygon str polygon ; wireReact ]           
+                *)
+                g [] [ //makePolygon str polygon ; 
+                      wireReact ]           
             , "Wire"
             , equalsButFunctions
         )

@@ -136,11 +136,11 @@ let getWireList (model: Model) =
 /// Returns the IDs of the wires in the model connected to a list of components given by compIds
 let getConnectedWires model compIds =
     let containsPorts wire =
-        let inputPorts, outputPorts =
+        let outputPorts =
             Symbol.getPortLocations model.Symbol compIds
 
-        Map.containsKey wire.InputPort inputPorts
-        || Map.containsKey wire.OutputPort outputPorts
+        Map.containsKey wire.Port1 outputPorts
+        || Map.containsKey wire.Port2 outputPorts
 
     model
     |> getWireList
@@ -162,23 +162,23 @@ let getFilteredIdList condition wireLst =
 let filterWiresByCompMoved (model: Model) (compIds: list<ComponentId>) =
     let wireList = getWireList model
 
-    let inputPorts, outputPorts =
+    let outputPorts =
         Symbol.getPortLocations model.Symbol compIds
-
-    let containsInputPort wire =
-        Map.containsKey wire.InputPort inputPorts
-
-    let containsOutputPort wire =
-        Map.containsKey wire.OutputPort outputPorts
+    
+    let containsPort1 wire =
+        Map.containsKey wire.Port1 outputPorts
+    
+    let containsPort2 wire =
+        Map.containsKey wire.Port2 outputPorts
 
     let containsBothPort wire =
-        containsInputPort wire && containsOutputPort wire
+        containsPort1 wire && containsPort2 wire
 
     let inputWires =
-        wireList |> getFilteredIdList containsInputPort
+        wireList |> getFilteredIdList containsPort1
 
     let outputWires =
-        wireList |> getFilteredIdList containsOutputPort
+        wireList |> getFilteredIdList containsPort2
 
     let fullyConnected =
         wireList |> getFilteredIdList containsBothPort
@@ -358,21 +358,21 @@ let rec rotateSegments (target: Edge) (wire: {| edge: Edge; segments: Segment li
 
 /// Returns a newly autorouted version of a wire for the given model
 let autoroute (model: Model) (wire: Wire) : Wire =
-    let destPos, startPos =
-        Symbol.getTwoPortLocations (model.Symbol) (wire.InputPort) (wire.OutputPort)
+    let Pos1, Pos2 =
+        Symbol.getTwoPortLocations (model.Symbol) (wire.Port1) (wire.Port2)
 
-    let destEdge =
-        Symbol.getInputPortOrientation model.Symbol wire.InputPort
+    let Port1Edge =
+        Symbol.getOutputPortOrientation model.Symbol wire.Port1
 
-    let startEdge =
-        Symbol.getOutputPortOrientation model.Symbol wire.OutputPort
+    let Port2Edge =
+        Symbol.getOutputPortOrientation model.Symbol wire.Port2
 
-    let startPort = genPortInfo startEdge startPos
-    let destPort = genPortInfo destEdge destPos
+    let Port1 = genPortInfo Port1Edge Pos1
+    let Port2 = genPortInfo Port2Edge Pos2
     
     // Normalise the routing problem to reduce the number of cases in makeInitialSegmentsList
     let normalisedStart, normalisedEnd = 
-        rotateStartDest CommonTypes.Right (startPort, destPort)
+        rotateStartDest CommonTypes.Right (Port1, Port2)
 
     let initialSegments =
         makeInitialSegmentsList wire.WId normalisedStart.Position normalisedEnd.Position normalisedEnd.Edge
@@ -380,15 +380,15 @@ let autoroute (model: Model) (wire: Wire) : Wire =
     let segments =
         {| edge = CommonTypes.Right
            segments = initialSegments |}
-        |> rotateSegments startEdge // Rotate the segments back to original orientation
+        |> rotateSegments Port1Edge // Rotate the segments back to original orientation
         |> (fun wire -> wire.segments)
 
     { wire with
           Segments = segments
-          InitialOrientation = getOrientation startEdge
-          EndOrientation = getOrientation destEdge
-          StartPos = startPos
-          EndPos = destPos }
+          InitialOrientation = getOrientation Port1Edge
+          EndOrientation = getOrientation Port2Edge
+          StartPos = Pos1
+          EndPos = Pos2 }
 
 //--------------------------------------------------------------------------------//
 
