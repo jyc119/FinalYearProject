@@ -11,7 +11,7 @@ open CommonTypes
 open Helpers
 open SimulatorTypes
 open SynchronousUtils
-
+(*
 let mutable simTrace = None //Some ["adder40";"4bitbusmux20";"dff430"]
 
 
@@ -130,7 +130,7 @@ and private feedReducerOutput
             )
     )
 
-(*
+
 let clockedComps (graph:SimulationGraph) =
     graph 
     |> Map.toArray
@@ -273,7 +273,7 @@ let feedClockTick (graph : SimulationGraph) : SimulationGraph =
     calculateStateChanges graph
     ||> propagateStateChanges
     |> checkPropagation
-*)
+
 /// Feed zero to a simulation input.
 /// This function is supposed to be used with Components of type Input.
 let feedSimulationInput graph inputId wireData =
@@ -380,3 +380,4 @@ let getSimulationIOsFromGraph
         | Output w -> (inputs, (comp.Id, comp.Label) :: outputs)
         | _ -> (inputs, outputs)
     )
+*)
