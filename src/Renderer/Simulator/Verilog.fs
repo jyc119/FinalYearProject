@@ -8,6 +8,7 @@ open FastRun
 open Helpers
 open NumberHelpers
 
+(*
 type VMode = ForSynthesis | ForSimulation
 
 
@@ -524,3 +525,4 @@ let getVerilog (vType: VMode) (fs: FastSimulation) =
     |> Array.map (String.concat "")
     |> String.concat "\n"
    
+*)
