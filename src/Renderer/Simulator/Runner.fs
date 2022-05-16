@@ -130,7 +130,7 @@ and private feedReducerOutput
             )
     )
 
-
+(*
 let clockedComps (graph:SimulationGraph) =
     graph 
     |> Map.toArray
@@ -273,7 +273,7 @@ let feedClockTick (graph : SimulationGraph) : SimulationGraph =
     calculateStateChanges graph
     ||> propagateStateChanges
     |> checkPropagation
-
+*)
 /// Feed zero to a simulation input.
 /// This function is supposed to be used with Components of type Input.
 let feedSimulationInput graph inputId wireData =

@@ -11,7 +11,7 @@ module SimulationGraphAnalyser
 open CommonTypes
 open SimulatorTypes
 open SynchronousUtils
-
+(*
 type private DfsType =
     // No cycle detected in the subtree. Return the new visited set and keep
     // on exploring.
@@ -224,3 +224,4 @@ let analyseSimulationGraph
         |> function
         | Ok _ -> None
         | Error err -> Some err
+*)
