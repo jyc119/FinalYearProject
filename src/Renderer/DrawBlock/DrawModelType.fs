@@ -248,7 +248,7 @@ module SheetT =
         | MovingLabel
         | DragAndDrop
         | MovingWire of CommonTypes.ConnectionId // Sends mouse messages on to BusWire
-        | ConnectingInput of CommonTypes.OutputPortId // When trying to connect a wire from an input
+        //| ConnectingInput of CommonTypes.OutputPortId // When trying to connect a wire from an input
         | ConnectingOutput of CommonTypes.OutputPortId // When trying to connect a wire from an output
         | Scrolling // For Automatic Scrolling by moving mouse to edge to screen
         | Idle

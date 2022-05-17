@@ -314,7 +314,7 @@ let mDownUpdate (model: Model) (mMsg: MouseT) : Model * Cmd<Msg> =
         | Label compId ->
             {model with Action = InitialiseMovingLabel compId},
             Cmd.ofMsg DoNothing
-
+        (*
         | InputPort (portId, portLoc) ->
             if not model.Toggle then
                 {model with Action = ConnectingInput portId; ConnectPortsLine = portLoc, mMsg.Pos; TmpModel=Some model},
@@ -323,7 +323,7 @@ let mDownUpdate (model: Model) (mMsg: MouseT) : Model * Cmd<Msg> =
                 let  portIdstr = match portId with | InputPortId x -> x
                 {model with Action = MovingPort portIdstr}
                 , symbolCmd (SymbolT.MovePort (portIdstr, mMsg.Pos))
-
+        *)
         | OutputPort (portId, portLoc) ->
             if not model.Toggle then
                 {model with Action = ConnectingOutput portId; ConnectPortsLine = portLoc, mMsg.Pos; TmpModel=Some model},
@@ -440,9 +440,9 @@ let mDragUpdate (model: Model) (mMsg: MouseT) : Model * Cmd<Msg> =
         Cmd.batch [ symbolCmd (SymbolT.MoveLabel (movingCompId, mMsg.Pos - model.LastMousePos))
                     Cmd.ofMsg UpdateLabelBoundingBoxes ]
 
-    | ConnectingInput _ ->
+    | ConnectingOutput _ ->
         let nearbyComponents = findNearbyComponents model mMsg.Pos 50 
-        let _, nearbyOutputPorts = findNearbyPorts model
+        let nearbyOutputPorts = findNearbyPorts model
 
         let targetPort, drawLineTarget =
             match mouseOnPort nearbyOutputPorts mMsg.Pos 12.5 with
@@ -456,6 +456,7 @@ let mDragUpdate (model: Model) (mMsg: MouseT) : Model * Cmd<Msg> =
                     LastMousePos = mMsg.Pos
                     ScrollingLastMousePos = {Pos=mMsg.Pos;Move=mMsg.Movement}}
         , Cmd.ofMsg CheckAutomaticScrolling
+    (*
     | ConnectingOutput _ ->
         let nearbyComponents = findNearbyComponents model mMsg.Pos 50
         let nearbyInputPorts, _ = findNearbyPorts model
@@ -472,7 +473,7 @@ let mDragUpdate (model: Model) (mMsg: MouseT) : Model * Cmd<Msg> =
                     LastMousePos = mMsg.Pos
                     ScrollingLastMousePos = {Pos=mMsg.Pos;Move=mMsg.Movement} }
         , Cmd.ofMsg CheckAutomaticScrolling
-
+    *)
     | MovingPort portId->
         model, symbolCmd (SymbolT.MovePort (portId, mMsg.Pos))
     | _ -> model, Cmd.none
@@ -546,13 +547,14 @@ let mUpUpdate (model: Model) (mMsg: MouseT) : Model * Cmd<Msg> = // mMsg is curr
                         symbolCmd (SymbolT.SelectSymbols (model.SelectedComponents))
                         wireCmd (BusWireT.UpdateWires (model.SelectedComponents, model.LastValidPos - mMsg.Pos))
                         wireCmd (BusWireT.MakeJumps movingWires) ]
-    | ConnectingInput inputPortId ->
+    | ConnectingOutput inputPortId ->
         let cmd, undoList ,redoList =
             if model.TargetPortId <> "" // If a target has been found, connect a wire
             then wireCmd (BusWireT.AddWire (inputPortId, (OutputPortId model.TargetPortId))),
                            appendUndoList model.UndoList newModel, []
             else Cmd.none , model.UndoList , model.RedoList
         {model with Action = Idle; TargetPortId = ""; UndoList = undoList ; RedoList = redoList ; AutomaticScrolling = false }, cmd
+    (*
     | ConnectingOutput outputPortId ->
         let cmd , undoList , redoList =
             if model.TargetPortId <> "" // If a target has been found, connect a wire
@@ -560,6 +562,7 @@ let mUpUpdate (model: Model) (mMsg: MouseT) : Model * Cmd<Msg> = // mMsg is curr
                            appendUndoList model.UndoList newModel , []
             else Cmd.none , model.UndoList , model.RedoList
         { model with Action = Idle; TargetPortId = ""; UndoList = undoList ; RedoList = redoList ; AutomaticScrolling = false  }, cmd
+    *)
     | MovingPort portId ->
         let symbol = Symbol.getCompId model.Wire.Symbol portId
         {model with Action = Idle},
@@ -833,7 +836,7 @@ let update (msg : Msg) (model : Model): Model*Cmd<Msg> =
                 | DragAndDrop ->
                     mMoveUpdate { model with AutomaticScrolling = true } 
                                 { Pos = newMPos; Op = Move;  Movement = {X=0.;Y=0.}; ShiftKeyDown=false}
-                | MovingSymbols | ConnectingInput _ | ConnectingOutput _ | Selecting ->
+                | MovingSymbols | (*ConnectingInput _*) ConnectingOutput _ | Selecting ->
                     mDragUpdate { model with AutomaticScrolling = true } 
                                 { Pos = newMPos; Op = Drag; Movement = {X=0.;Y=0.}; ShiftKeyDown = false}
                 | _ ->

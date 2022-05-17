@@ -299,32 +299,29 @@ let mouseOnPort portList (pos: XYPos) (margin: float) =
 
 /// Returns the ports of all model.NearbyComponents
 let findNearbyPorts (model: Model) =
-    let inputPortsMap, outputPortsMap = Symbol.getPortLocations model.Wire.Symbol model.NearbyComponents
+    let outputPortsMap = Symbol.getPortLocations model.Wire.Symbol model.NearbyComponents
 
-    (inputPortsMap, outputPortsMap) ||> (fun x y -> (Map.toList x), (Map.toList y))
+    (outputPortsMap) |> (fun x -> (Map.toList x))
 
 /// Returns what is located at pos
 /// Priority Order: InputPort -> OutputPort -> Component -> Label -> Wire -> Component -> Canvas
 let mouseOn (model: Model) (pos: XYPos) : MouseOn =
 
-    let inputPorts, outputPorts = findNearbyPorts model
+    let outputPorts = findNearbyPorts model
 
-    match mouseOnPort inputPorts pos 2.5 with
-    | Some (portId, portLoc) -> InputPort (portId, portLoc)
+    match mouseOnPort outputPorts pos 2.5 with
+    | Some (portId, portLoc) -> OutputPort (portId, portLoc)
     | None ->
-        match mouseOnPort outputPorts pos 2.5 with
-        | Some (portId, portLoc) -> OutputPort (portId, portLoc)
+        match insideBox model.LabelBoundingBoxes pos with
+        | Some compId -> 
+            Label compId
         | None ->
-            match insideBox model.LabelBoundingBoxes pos with
-            | Some compId -> 
-                Label compId
+            match BusWireUpdate.getClickedWire model.Wire pos (5./model.Zoom) with
+            | Some connId -> Connection connId
             | None ->
-                match BusWireUpdate.getClickedWire model.Wire pos (5./model.Zoom) with
-                | Some connId -> Connection connId
-                | None ->
-                    match insideBox model.BoundingBoxes pos with
-                    | Some compId -> Component compId
-                    | None -> Canvas
+                match insideBox model.BoundingBoxes pos with
+                | Some compId -> Component compId
+                | None -> Canvas
 
 
 let notIntersectingComponents (model: Model) (box1: BoundingBox) (inputId: CommonTypes.ComponentId) =
@@ -468,7 +465,7 @@ let view (model:Model) (headerHeight: float) (style) (dispatch : Msg -> unit) =
     match model.Action with // Display differently depending on what state Sheet is in
     | Selecting ->
         displaySvgWithZoom model headerHeight style ( displayElements @ [ dragToSelectBox ] ) dispatch
-    | ConnectingInput _ | ConnectingOutput _ ->
+    | ConnectingOutput _ ->
         displaySvgWithZoom model headerHeight style ( displayElements @ connectingPortsWire ) dispatch
     | MovingSymbols | DragAndDrop ->
         displaySvgWithZoom model headerHeight style ( displayElements @ snapIndicatorLineX @ snapIndicatorLineY ) dispatch

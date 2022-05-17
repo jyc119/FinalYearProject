@@ -13,7 +13,7 @@ open NumberHelpers
 open CommonTypes
 open SimulatorTypes
 open CanvasStateAnalyser
-
+(*
 /// Assert that the FData only contain a single bit, and return such bit.
 let inline extractBit (fd: FData) : uint32 =
 #if ASSERTS
@@ -231,3 +231,4 @@ let runCanvasStateChecksAndBuildGraph
     match analyseState canvasState loadedComponents with
     | Some err -> Error err
     | None -> Ok <| buildSimulationGraph canvasState
+*)
