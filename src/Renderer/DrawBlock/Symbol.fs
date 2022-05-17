@@ -349,8 +349,8 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         | ComponentType.Viewer a -> (  1 , 0, gS ,  gS) 
         | ComponentType.IOLabel  ->(  1 , 1, gS ,  2*gS) 
         | Constant1 (a, b,_)  -> (  0 , 1, gS ,  2*gS) 
-        | Resistor _ -> (1 , 1 , 2*gS , 3*gS)
-        | CurrentSource _ | VoltageSource _ -> (1 , 1 , 2*gS , 2*gS)
+        | Resistor _ -> (1 , 2 , 2*gS , 3*gS)
+        | CurrentSource _ | VoltageSource _ -> (1 , 2 , 2*gS , 2*gS)
         | Custom cct -> getCustomCompArgs cct label
                 
     makeComponent' args label
