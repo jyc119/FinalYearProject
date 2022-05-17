@@ -8,7 +8,7 @@ module SynchronousUtils
 
 open CommonTypes
 open SimulatorTypes
-
+(*
 /// Tells wether a component is clocked or not. Note that Custom components may
 /// be clocked (cannot tell without recursively analysing them), so they are
 /// considered synchronous.
@@ -280,3 +280,4 @@ let calculateCustomComponentsCombinatorialPaths
         (graph : SimulationGraph)
         : CustomCompsCombPaths option =
     exploreNestedComponents graph diagramName Set.empty Map.empty
+*)

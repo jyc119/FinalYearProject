@@ -12,7 +12,7 @@ open SimulatorTypes
 open SimulationRunner
 open SimulationBuilder
 open Helpers
-
+(*
 /// Map a dependency name to its simulation graph.
 type private DependencyMap = Map<string, SimulationGraph>
 
@@ -318,3 +318,4 @@ let mergeDependencies
     | Ok dependencyMap ->
         // Recursively replace the dependencies, in a top down fashion.
         Ok <| merger graph dependencyMap
+*)

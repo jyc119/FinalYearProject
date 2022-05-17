@@ -74,7 +74,7 @@ let rec prepareSimulation
                     sd)
 *)
 
-
+(*
 /// Expose the feedSimulationInput function from SimulationRunner.
 let feedSimulationInput = SimulationRunner.feedSimulationInput
 
@@ -93,5 +93,5 @@ let extractStatefulComponents
     |> List.map snd
     |> List.filter (fun comp -> comp.State <> NoState)
     // TODO: recursively search custom components?
-
+*)
 

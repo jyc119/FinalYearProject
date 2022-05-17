@@ -11,7 +11,7 @@ open CommonTypes
 open Helpers
 open SimulatorTypes
 open SynchronousUtils
-
+(*
 let mutable simTrace = None //Some ["adder40";"4bitbusmux20";"dff430"]
 
 
@@ -380,3 +380,4 @@ let getSimulationIOsFromGraph
         | Output w -> (inputs, (comp.Id, comp.Label) :: outputs)
         | _ -> (inputs, outputs)
     )
+*)
