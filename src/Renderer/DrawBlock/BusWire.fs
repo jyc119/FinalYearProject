@@ -475,13 +475,14 @@ let segmentsToIssieVertices (segList:Segment list) (wire:Wire) =
 /// between our implementation and Issie.
 let extractConnection (wModel : Model) (cId : ConnectionId) : Connection =
     let conn = wModel.Wires[cId]
-    let ConnectionId strId, OutputPortId Port1, OutputPortId Port2 = conn.WId, conn.Port1, conn.Port2
+    let ConnectionId strId, OutputPortId Port1, OutputPortId Port2, label = conn.WId, conn.Port1, conn.Port2, conn.Label
     {
         Id = strId
+        Label = label
         Port1 = { Symbol.getPort wModel.Symbol Port1 with PortNumber = None } // None for connections 
         Port2 = { Symbol.getPort wModel.Symbol Port2 with PortNumber = None } // None for connections 
         Vertices = segmentsToIssieVertices conn.Segments conn
-        Voltage = None
+        Voltage = Some 10
     }
 
 /// This function is given a list of ConnectionId and it

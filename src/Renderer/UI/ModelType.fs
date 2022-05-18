@@ -383,7 +383,7 @@ type Model = {
     LastDetailedSavedState: CanvasState
     // components and connections currently selected
 
-    CurrentSelected: Component list * Connection list
+    CurrentSelected: Component list * Wire list
     // component ids and connection ids previously selected (used to detect changes)
     LastSelectedIds: string list * string list
     // last used bus width in bits - used as default in next component create dialog

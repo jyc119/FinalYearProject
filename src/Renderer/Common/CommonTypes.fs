@@ -372,6 +372,7 @@ module CommonTypes
         /// Id uniquely identifies connection globally and is used by library.
         type LegacyConnection = {
             Id : string
+            Label : string
             Port1 : Port
             Port2 : Port
             Vertices : (float * float) list
@@ -400,6 +401,7 @@ module CommonTypes
     /// Id uniquely identifies connection globally and is used by library.
     type Connection = {
         Id : string
+        Label: string
         Port1 : Port
         Port2 : Port
         Vertices : (float * float * bool) list
@@ -423,6 +425,7 @@ module CommonTypes
         let convertConnection (c:LegacyCanvas.LegacyConnection) : Connection =
             {
                 Id=c.Id; 
+                Label = c.Label
                 Port1=c.Port1;
                 Port2=c.Port2;
                 Vertices = 

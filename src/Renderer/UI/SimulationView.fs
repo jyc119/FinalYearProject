@@ -127,7 +127,11 @@ let private makeIOLabel label width =
     | 1 -> label
     | w -> sprintf "%s (%d bits)" label w
 
-let private combineIndexList (list1:string list) (list2: ComponentType list) = 
+let private combineComponentIndexList (list1:string list) (list2: ComponentType list) = 
+    list1 
+    |> List.mapi (fun i x -> (x, list2[i]))
+
+let private combineVoltageIndexList (list1:string list) (list2: float option list) = 
     list1 
     |> List.mapi (fun i x -> (x, list2[i]))
 
@@ -174,7 +178,7 @@ let private viewAnalogInputs (state : (Component list * Connection list)) dispat
                         |> List.map (fun x -> x.Type)
     let labelList = (fst state)
                     |> List.map (fun x -> x.Label)
-    let componentLabellist = combineIndexList labelList componentList
+    let componentLabellist = combineComponentIndexList labelList componentList
     let makeInputLine (inputLabel : string, component: ComponentType) =
         let value = 
             match component with
@@ -188,6 +192,28 @@ let private viewAnalogInputs (state : (Component list * Connection list)) dispat
             ]
         splittedLine (str <| makeIOLabel inputLabel 1) valueHandle
     div [] <| List.map makeInputLine componentLabellist
+
+let private viewVoltages (conn : Connection list) dispatch = 
+    let labelList = conn
+                    |> List.map (fun x -> x.Label)
+    
+    let voltageList = conn
+                      |> List.map (fun x -> x.Voltage)
+    let voltageLabellist = combineVoltageIndexList labelList voltageList
+    let makeInputLine(inputLabel : string, voltage: float option) = 
+        let value = 
+            match voltage with
+            | Some x -> x
+            | None -> 0
+
+        let valueHandle =
+            Input.number [
+                Input.IsReadOnly true
+                Input.DefaultValue <| sprintf "%f" value
+                Input.Props [simulationNumberStyle]
+            ]
+        splittedLine (str <| makeIOLabel inputLabel 1) valueHandle
+    div [] <| List.map makeInputLine voltageLabellist
 
 let viewSimulationError (simError : SimulationError) =
     let error = 
@@ -293,7 +319,10 @@ let private viewSimulationData (state: (Component list * Connection list)) model
         viewAnalogInputs
             state
             dispatch
-
+        Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Voltages" ]
+        viewVoltages
+            (snd state)
+            dispatch
         //maybeStatefulComponents()
     ]
 
