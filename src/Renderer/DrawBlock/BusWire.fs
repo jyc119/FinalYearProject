@@ -56,7 +56,7 @@ module Constants =
     let componentLabelStyle: Text = {defaultText with TextAnchor = "start"; FontSize = $"{labelFontSizeInPixels}px"; FontFamily = "monospace"}
 
     /// Offset between label position and symbol. This is also used as a margin for the label bounding box.
-    let componentLabelOffsetDistance: float = 10. // offset from symbol outline, otehr parameters scale correctly
+    let componentLabelOffsetDistance: float = 100. // offset from symbol outline, otehr parameters scale correctly
     
     /// Height of label text - used to determine where to print labels
     let componentLabelHeight: float = labelFontSizeInPixels
@@ -371,7 +371,7 @@ let makeInitialWireVerticesList (wireStartPos : XYPos) (wireEndPos : XYPos) (por
                     {X = xEnd-nubLength; Y = yEnd}; 
                     {X = xEnd-nubLength; Y = yEnd}; //Length 0 vertical
                     {X = xEnd; Y = yEnd}] //Stick horizontal
-        | false, false -> 
+    | false, false -> 
             match portOrientation with
             | CommonTypes.Top ->  [{X = xStart; Y = yStart};
                     {X = xStart+nubLength; Y = yStart}; //Stick horizontal
@@ -687,7 +687,11 @@ let renderJumpSegment (a:ASegment) : string list=
         [$"L {ePos.X} {ePos.Y}"]
     | jLst, false -> 
         makeJumpPathAttr jLst sPos.X
-       
+(*
+let addJumpWireLabel (props:WireRenderProps) = 
+    match props.InputPortEdge, props.OutputPortEdge with
+    | Left, Left 
+*)       
 ///Function used to render a single wire if the display type is jump
 let renderJumpWire props = 
     let absSegments = getAbsSegments props.Wire
@@ -708,28 +712,24 @@ let renderJumpWire props =
             |> List.map (fun c -> 
                 let c' = c - symbol.Pos
                 makeCircle (c'.X) (c'.Y) {defaultCircle with R=3.})*)
-        
+
         let segmentLengths = 
             absSegments
             |> List.map(fun x -> x.Segment.Length)
-        let longestSegment = 
+        let segmentIndex = 
             segmentLengths
-            |> List.max
-        let longestSegmentList = 
-            absSegments
-            |> List.filter(fun x -> x.Segment.Length = longestSegment)
+            |> List.map(fun x -> if x<0 then -x else x)
+            |> List.mapi (fun i v -> i, v)
+            |> List.maxBy snd
+            |> fst
         let longestSegment = 
-            longestSegmentList[0]
+            absSegments[segmentIndex]
     
         let coordinate = match longestSegment.Start.X = longestSegment.End.X with
                           | true -> {X = longestSegment.Start.X ; Y = (longestSegment.Start.Y + longestSegment.End.Y) / 2.0}
                           | false -> {X = (longestSegment.Start.X + longestSegment.End.X) / 2.0; Y = longestSegment.Start.Y}
-        let labelCoordinates = coordinate + {X=margin;Y=margin}
         //let coordinate = props.OutputPortLocation + {X=margin;Y=margin}
-        (*
-        let coordinates = match props.InputPortEdge, props.OutputPortEdge with
-                          | Left, Left -> 
-        *)
+
         addStyledText 
             {style with DominantBaseline="hanging"} 
             (coordinate) 
