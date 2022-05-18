@@ -177,6 +177,7 @@ module BusWireT =
             EndPos : XYPos
             InitialOrientation : Orientation
             EndOrientation : Orientation
+            Label : string
         }
     
     

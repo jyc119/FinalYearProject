@@ -4,6 +4,7 @@ open CommonTypes
 open Elmish
 open DrawHelpers
 open DrawModelType.SymbolT
+open System.Text.RegularExpressions
 open DrawModelType.BusWireT
 open BusWire
 
@@ -20,6 +21,30 @@ let init () =
         Notifications = None
         Type = Jump
     } , Cmd.none
+
+//------BusWire Labels-------//
+
+/// Returns the number of the component label (i.e. the number 1 from IN1 or ADDER16.1)
+let getWireLabelNumber (str : string) = 
+    let index = Regex.Match(str, @"\d+$")
+    match index with
+    | null -> 0
+    | _ -> int index.Value
+
+/// Generates the label number for compType (i.e. the number 1 in IN1 or ADDER16.1) in a string format
+let generateWireLabelNumber listWires =
+
+    if List.isEmpty listWires then 1 
+    else listWires
+        |> List.map (fun wire -> getWireLabelNumber wire.Label)
+        |> List.max
+        |> (+) 1
+    |> string
+
+/// Generates the label for a component type
+let generateWireLabel (model: Model) : string =
+    let listWires = List.map snd (Map.toList model.Wires) 
+    "V" + (generateWireLabelNumber listWires)
 
 //-------------------------segmentIntersectsBoundingBox---------------------------------//
 
@@ -841,11 +866,13 @@ let update (msg : Msg) (model : Model) : Model*Cmd<Msg> =
         // the new wires (extarcted as connections) are not added back into Issie model. 
         // This happens on save or when starting a simulation (I think)
         let wireId = ConnectionId(JSHelpers.uuid())
+        let wireLabel = generateWireLabel model
         let newWire = 
             {
                 WId = wireId
                 Port1 = port1Id
                 Port2 = port2Id
+                Label = wireLabel
                 Color = HighLightColor.DarkSlateGrey
                 Width = 1
                 Segments = []
@@ -991,6 +1018,7 @@ let update (msg : Msg) (model : Model) : Model*Cmd<Msg> =
                 let port1Id = OutputPortId conn.Port1.Id
                 let port2Id = OutputPortId conn.Port2.Id
                 let connId = ConnectionId conn.Id
+                let wireLabel = model.Wires[ConnectionId conn.Id].Label
                 let getVertex (x,y,_) = (x,y)
                 let segments = issieVerticesToSegments connId conn.Vertices
                 let makeWirePosMatchSymbol inOut (wire:Wire) =
@@ -1021,6 +1049,7 @@ let update (msg : Msg) (model : Model) : Model*Cmd<Msg> =
                     WId = ConnectionId conn.Id
                     Port1 = port1Id
                     Port2 = port2Id
+                    Label = wireLabel
                     Color = HighLightColor.DarkSlateGrey
                     Width = 1
                     Segments = segments

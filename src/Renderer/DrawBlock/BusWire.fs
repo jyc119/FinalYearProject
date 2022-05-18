@@ -45,7 +45,25 @@ module Constants =
             UserSelect = UserSelectOptions.None;
             DominantBaseline = "middle";
         }
+    
+    [<Literal>]
+    let gridSize = 30 
 
+    /// How large are component labels
+    let labelFontSizeInPixels:float = 30. // otehr parameters scale correctly with this
+
+    /// Due to a bug in TextMetrics we are restricted to monospace font, bold or normal, if we need accurate font width
+    let componentLabelStyle: Text = {defaultText with TextAnchor = "start"; FontSize = $"{labelFontSizeInPixels}px"; FontFamily = "monospace"}
+
+    /// Offset between label position and symbol. This is also used as a margin for the label bounding box.
+    let componentLabelOffsetDistance: float = 10. // offset from symbol outline, otehr parameters scale correctly
+    
+    /// Height of label text - used to determine where to print labels
+    let componentLabelHeight: float = labelFontSizeInPixels
+
+    /// Small manual correction added to claculated position for placing labels.
+    /// Used to make labels equidistant on all sides of symbol.
+    let labelCorrection = {X= 0.; Y= 2.}
 
 
 
@@ -475,6 +493,11 @@ let extractConnections (wModel : Model) : list<Connection> =
     |> Map.toList
     |> List.map (fun (key, _) -> extractConnection wModel key)
 
+//-----------Drawing Helper Functions---------------
+
+let private addStyledText (style:Text) (pos: XYPos) (name: string) = 
+    makeText pos.X pos.Y name style
+
 //-----------------------------------------------------------------------------------------//
 //----------------------------------Rendering Functions------------------------------------//
 //-----------------------------------------------------------------------------------------//
@@ -491,6 +514,7 @@ type WireRenderProps =
         ColorP: HighLightColor
         StrokeWidthP: float
         OutputPortEdge : Edge
+        InputPortEdge : Edge
         OutputPortLocation: XYPos
         DisplayType : WireType
         //TriangleEdge : Edge
@@ -670,6 +694,47 @@ let renderJumpWire props =
     let firstVertex = absSegments.Head.Start
     let colour = props.ColorP.Text()
 
+    /// to deal with the label
+    let addWireLabel = 
+        // we are restricted to monospace font for labels to calc size.
+        // bold and normal fonts work equally well, as do colors.
+        let weight = Constants.componentLabelStyle.FontWeight // bold or normal
+        let fill = Constants.componentLabelStyle.Fill // color
+        let style = {Constants.componentLabelStyle with FontWeight = weight; Fill = fill}
+        let margin = Constants.componentLabelOffsetDistance
+        // uncomment this to display label bounding box corners for testing new fonts etc.
+        (*let corners = 
+            [box.TopLeft; box.TopLeft+dimW; box.TopLeft+dimH; box.TopLeft+dimW+dimH]
+            |> List.map (fun c -> 
+                let c' = c - symbol.Pos
+                makeCircle (c'.X) (c'.Y) {defaultCircle with R=3.})*)
+        
+        let segmentLengths = 
+            absSegments
+            |> List.map(fun x -> x.Segment.Length)
+        let longestSegment = 
+            segmentLengths
+            |> List.max
+        let longestSegmentList = 
+            absSegments
+            |> List.filter(fun x -> x.Segment.Length = longestSegment)
+        let longestSegment = 
+            longestSegmentList[0]
+    
+        let coordinate = match longestSegment.Start.X = longestSegment.End.X with
+                          | true -> {X = longestSegment.Start.X ; Y = (longestSegment.Start.Y + longestSegment.End.Y) / 2.0}
+                          | false -> {X = (longestSegment.Start.X + longestSegment.End.X) / 2.0; Y = longestSegment.Start.Y}
+        let labelCoordinates = coordinate + {X=margin;Y=margin}
+        //let coordinate = props.OutputPortLocation + {X=margin;Y=margin}
+        (*
+        let coordinates = match props.InputPortEdge, props.OutputPortEdge with
+                          | Left, Left -> 
+        *)
+        addStyledText 
+            {style with DominantBaseline="hanging"} 
+            (coordinate) 
+            props.Wire.Label ::  [] //corners uncomment this to display lavel bounding box corners.
+
     
     let renderedSegmentList : ReactElement List = 
         let pathPars:Path =
@@ -682,7 +747,7 @@ let renderJumpWire props =
         |> String.concat " "
         |> (fun attr -> [makeAnyPath firstVertex attr pathPars])
 
-    g [] ([ renderWireWidthText props] @ renderedSegmentList)
+    g [] ([ renderWireWidthText props] @ renderedSegmentList @ addWireLabel)
 
 ///Function used to render a single wire if the display type is radial
 let renderRadialWire props =
@@ -719,6 +784,7 @@ let view (model : Model) (dispatch : Dispatch<Msg>) =
         let outPortId = Symbol.getOutputPortIdStr wire.Port1    
         let outputPortLocation = Symbol.getPortLocation None model.Symbol outPortId
         let outputPortEdge = Symbol.getOutputPortOrientation model.Symbol wire.Port1
+        let inputPortEdge = Symbol.getOutputPortOrientation model.Symbol wire.Port2
         let stringInId = Symbol.getOutputPortIdStr wire.Port2
         let inputPortLocation = Symbol.getPortLocation None model.Symbol stringInId 
         let strokeWidthP =
@@ -732,6 +798,7 @@ let view (model : Model) (dispatch : Dispatch<Msg>) =
             ColorP = wire.Color
             StrokeWidthP = strokeWidthP 
             OutputPortEdge = outputPortEdge
+            InputPortEdge = inputPortEdge
             OutputPortLocation = outputPortLocation
             DisplayType = model.Type
             //TriangleEdge = Symbol.getInputPortOrientation model.Symbol wire.InputPort
