@@ -133,6 +133,7 @@ let getPrefix compType =
     match compType with
     | Resistor _ -> "R"
     | CurrentSource _ -> "CurrentSource"
+    | Ground -> "Ground"
     | VoltageSource _ -> "V"
     | Custom c ->
         c.Name.ToUpper() + (if c.Name |> Seq.last |> System.Char.IsDigit then "." else "")
@@ -149,7 +150,7 @@ let getComponentLegend (componentType:ComponentType) =
 // Input and Output names of the ports depending on their ComponentType
 let portNames (componentType:ComponentType)  = //(input port names, output port names)
     match componentType with
-    | Resistor _ | CurrentSource _ -> ([]@[])
+    | Resistor _ | CurrentSource _ | Ground -> ([]@[])
     | Custom x -> (List.map fst x.InputLabels)@ (List.map fst x.OutputLabels)
     | _ -> ([]@[])
    // |Demux8 -> (["IN"; "SEL"],["0"; "1"; "2" ; "3" ; "4" ; "5" ; "6" ; "7"])
@@ -351,6 +352,7 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         | Constant1 (a, b,_)  -> (  0 , 1, gS ,  2*gS) 
         | Resistor _ -> (1 , 2 , 2*gS , 3*gS)
         | CurrentSource _ | VoltageSource _ -> (1 , 2 , 2*gS , 2*gS)
+        | Ground -> (1 , 2 , 2*gS , 2*gS)
         | Custom cct -> getCustomCompArgs cct label
                 
     makeComponent' args label
@@ -615,6 +617,8 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
                 [|{X=0.2;Y=0.5};{X=0.8;Y=0.5};{X=0.7;Y=0.4};{X=0.8;Y=0.5};{X=0.9;Y=0.4};{X=0.8;Y=0.5}|]
             | Custom x when symbol.IsClocked = true -> 
                 [|{X=0;Y=H-13.};{X=8.;Y=H-7.};{X=0;Y=H-1.};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H};{X=0;Y=H}|]
+            | Ground ->
+                [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=0.5*H}|]
             | _ -> 
                 [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=H};{X=W;Y=0}|]
         rotatePoints originalPoints {X=W/2.;Y=H/2.} transform
@@ -653,8 +657,18 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
                 
     let createSymbol = 
         match comp.Type with
-        | CurrentSource _ -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 5 30 55 30 defaultLine; makeLine 45 20 55 30 defaultLine; makeLine 45 40 55 30 defaultLine]
-        | VoltageSource _ -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 40 30 55 30 defaultLine; makeLine 47.5 40 47.5 20 defaultLine; makeLine 12.5 40 12.5 20 defaultLine]
+        | CurrentSource _ -> 
+            match transform.Rotation with 
+            | Degree0 -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 15 30 55 30 defaultLine; makeLine 45 20 55 30 defaultLine; makeLine 45 40 55 30 defaultLine]
+            | Degree90 -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 30 15 30 55 defaultLine; makeLine 20 45 30 55 defaultLine; makeLine 40 45 30 55 defaultLine]
+            | Degree180 -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 45 30 5 30 defaultLine; makeLine 15 40 5 30 defaultLine; makeLine 15 20 5 30 defaultLine]
+            | Degree270 -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 30 45 30 5 defaultLine; makeLine 20 15 30 5 defaultLine; makeLine 40 15 30 5 defaultLine]
+        | VoltageSource _ -> 
+            match transform.Rotation with
+            | Degree0 -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 40 30 55 30 defaultLine; makeLine 47.5 40 47.5 20 defaultLine; makeLine 12.5 40 12.5 20 defaultLine]
+            | Degree90 -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 22.5 45 37.5 45 defaultLine; makeLine 30 35 30 55 defaultLine; makeLine 20 15 40 15 defaultLine ]
+            | Degree180 -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 45 40 45 20 defaultLine; makeLine 15 40 15 20 defaultLine; makeLine 5 30 25 30 defaultLine]
+            | Degree270 -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 20 50 40 50 defaultLine; makeLine 20 15 40 15 defaultLine; makeLine 30 25 30 5 defaultLine]
         | _ -> createBiColorPolygon points colour outlineColour opacity strokeWidth
    
     // Put everything together 

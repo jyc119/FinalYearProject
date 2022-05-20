@@ -312,6 +312,7 @@ module CommonTypes
         | Constant1 of Width: int * ConstValue: int64 * DialogTextValue: string
         | Resistor of float | CurrentSource of float | VoltageSource of float
         | Custom of CustomComponentType // schematic sheet used as component
+        | Ground
 
     /// get memory component type constructor
     /// NB only works with new-style memory components

@@ -819,10 +819,8 @@ let getSheetTrees (p:Project) =
         
 
 /// Display top menu.
-let viewTopMenu model messagesFunc simulateButtonFunc dispatch =
+let viewTopMenu model dispatch =
     let compIds = getComponentIds model
-    
-    messagesFunc model dispatch
 
     //printfn "FileView"
     let style = Style [ Width "100%" ; BorderBottom "2px solid lightgray"] //leftSectionWidth model
@@ -1011,10 +1009,12 @@ let viewTopMenu model messagesFunc simulateButtonFunc dispatch =
                                         dispatch <| Sheet(SheetT.DoNothing) //To update the savedsheetisoutofdate send a sheet message
                                         ) ]) [ str "Save" ] ] ]
                       Navbar.End.div []
+                          (*
                           [ 
                             Navbar.Item.div [] 
                                 [ simulateButtonFunc compIds model dispatch ] ]
                       Navbar.End.div []
+                      *)
                           [ Navbar.Item.div []
                                 [ Button.button 
                                     [ Button.OnClick(fun _ -> PopupView.viewInfoPopup dispatch) 

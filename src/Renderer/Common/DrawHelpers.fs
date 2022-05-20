@@ -111,7 +111,7 @@ let getMonospaceWidth (font: string) (txt: string) =
 /// Default line, change this one to create new lines
 let defaultLine = {
     Stroke = "Black"
-    StrokeWidth = "1px"
+    StrokeWidth = "2px"
     StrokeDashArray = "None"
 }
 

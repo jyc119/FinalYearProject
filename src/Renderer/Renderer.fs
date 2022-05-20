@@ -174,7 +174,7 @@ let editMenu dispatch =
         invisibleMenu.label <- Some "Edit"
         invisibleMenu.visible <- Some true
         invisibleMenu.submenu <-
-            [| // makeElmItem "Save Sheet" "CmdOrCtrl+S" (fun () -> ())
+            [| makeElmItem "Save Sheet" "CmdOrCtrl+S" (fun () -> ())
                makeElmItem "Copy" "CmdOrCtrl+C" (fun () -> dispatch SheetT.KeyboardMsg.CtrlC)
                makeElmItem "Paste" "CmdOrCtrl+V" (fun () -> dispatch SheetT.KeyboardMsg.CtrlV)
                menuSeparator

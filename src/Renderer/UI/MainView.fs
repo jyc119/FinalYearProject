@@ -218,6 +218,7 @@ let displayView model dispatch =
         PopupView.viewPopup model dispatch 
         // Top bar with buttons and menus: some subfunctions are fed in here as parameters because the
         // main top bar function is early in compile order
+        FileMenuView.viewTopMenu model dispatch
 
         if model.PopupDialogData.Progress = None then
             Sheet.view model.Sheet headerHeight (canvasVisibleStyleList model) sheetDispatch

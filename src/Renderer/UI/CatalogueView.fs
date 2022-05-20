@@ -283,6 +283,7 @@ let viewCatalogue model dispatch =
                     makeMenuGroup
                         "Linear Components"
                         [ catTip1 "Resistor"  (fun _ -> createAnalogComponentPopup true "Resistor" Resistor model dispatch) "Resistor"
+                          catTip1 "Ground" (fun _ -> createCompStdLabel Ground model dispatch) "Node is ground"
                           catTip1 "Current Source"  (fun _ -> createAnalogComponentPopup true "Current Source" CurrentSource model dispatch) "Current Source"
                           catTip1 "Voltage Source"  (fun _ -> createAnalogComponentPopup true "Voltage Source" VoltageSource model dispatch) "Voltage Source"]
                     //makeMenuGroup

@@ -3,6 +3,7 @@
 open CommonTypes
 open Elmish
 open DrawHelpers
+open Symbol
 open DrawModelType.SymbolT
 open System.Text.RegularExpressions
 open DrawModelType.BusWireT
@@ -44,6 +45,8 @@ let generateWireLabelNumber listWires =
 /// Generates the label for a component type
 let generateWireLabel (model: Model) : string =
     let listWires = List.map snd (Map.toList model.Wires) 
+    //let symbolModel = model.Symbol
+
     "V" + (generateWireLabelNumber listWires)
 
 //-------------------------segmentIntersectsBoundingBox---------------------------------//
@@ -866,6 +869,7 @@ let update (msg : Msg) (model : Model) : Model*Cmd<Msg> =
         // the new wires (extarcted as connections) are not added back into Issie model. 
         // This happens on save or when starting a simulation (I think)
         let wireId = ConnectionId(JSHelpers.uuid())
+        // let symbol1 = getSymbol model port1Id 
         let wireLabel = generateWireLabel model
         let newWire = 
             {
