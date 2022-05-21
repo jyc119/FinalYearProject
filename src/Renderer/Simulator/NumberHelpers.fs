@@ -224,3 +224,45 @@ let strToIntCheckWidth (width : int) (str : string)  : Result<int64, string> =
             | None -> Ok num
             | Some err -> Error err
         )
+
+//Converts float option to float value
+let convertSome x = 
+    match x with 
+    | Some x -> x
+
+//Converts the string list and float list to not include the nodes connected to ground
+let reduceStringFloatList (stringlist : string list) (floatlist : float option list) = 
+
+    let floats = 
+        floatlist
+        |> List.map convertSome
+
+    let indexList = 
+        let ooga = []
+        stringlist
+        |>List.mapi(fun i x -> if x = "" then
+                                List.append ooga [i]
+                                else List.append ooga [])
+        |>List.concat
+
+    let rec removeSpaceList list= 
+        match list with
+        | [] -> []
+        | hd::tl -> if hd = "" 
+                    then removeSpaceList tl
+                    else removeSpaceList tl @ [hd]
+
+    let finalFloatList = 
+        floats
+        |> List.mapi(fun i x -> (i,x))
+        |> List.map(fun x -> if List.contains (fst x) indexList
+                                then []
+                                else [snd x])
+        |> List.concat
+
+
+    let finalStringList = 
+        removeSpaceList stringlist
+        |> List.rev
+
+    (finalFloatList , finalStringList)

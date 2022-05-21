@@ -14,6 +14,10 @@ open SimulationRunner
 open DependencyMerger
 open SimulationGraphAnalyser
 
+open System
+open Extreme.Mathematics
+open Extreme.Mathematics.LinearAlgebra
+
 // Simulating a circuit has four phases (not precisely in order of execution):
 // 1. Building a simulation graph made of SimulationComponents.
 // 2. Merging all the necessary dependencies.
@@ -94,4 +98,10 @@ let extractStatefulComponents
     |> List.filter (fun comp -> comp.State <> NoState)
     // TODO: recursively search custom components?
 *)
+
+let buildMatrix (nodeNumber : int) : DenseMatrix<float> = 
+    Matrix.Create(nodeNumber, nodeNumber)
+
+let topLeftElement (matrix : DenseMatrix<float>) : float = 
+    matrix.[0,0]
 

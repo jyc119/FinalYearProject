@@ -131,7 +131,7 @@ let private combineComponentIndexList (list1:string list) (list2: ComponentType 
     list1 
     |> List.mapi (fun i x -> (x, list2[i]))
 
-let private combineVoltageIndexList (list1:string list) (list2: float option list) = 
+let private combineVoltageIndexList (list1:string list) (list2: float list) = 
     list1 
     |> List.mapi (fun i x -> (x, list2[i]))
 
@@ -199,17 +199,21 @@ let private viewVoltages (conn : Connection list) dispatch =
     
     let voltageList = conn
                       |> List.map (fun x -> x.Voltage)
-    let voltageLabellist = combineVoltageIndexList labelList voltageList
-    let makeInputLine(inputLabel : string, voltage: float option) = 
+
+    let newVoltageList , newLabelList = reduceStringFloatList labelList voltageList
+    let voltageLabellist = combineVoltageIndexList newLabelList newVoltageList
+
+    let makeInputLine(inputLabel : string, voltage: float) = 
+        (*
         let value = 
             match voltage with
             | Some x -> x
             | None -> 0
-
+        *)
         let valueHandle =
             Input.number [
                 Input.IsReadOnly true
-                Input.DefaultValue <| sprintf "%f" value
+                Input.DefaultValue <| sprintf "%f" voltage
                 Input.Props [simulationNumberStyle]
             ]
         splittedLine (str <| makeIOLabel inputLabel 1) valueHandle

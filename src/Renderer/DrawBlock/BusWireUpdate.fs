@@ -43,11 +43,11 @@ let generateWireLabelNumber listWires =
     |> string
 
 /// Generates the label for a component type
-let generateWireLabel (model: Model) : string =
+let generateWireLabel (model: Model) (sym1 : Symbol) (sym2 : Symbol) : string =
     let listWires = List.map snd (Map.toList model.Wires) 
-    //let symbolModel = model.Symbol
-
-    "V" + (generateWireLabelNumber listWires)
+    if (sym1.Component.Type = Ground || sym2.Component.Type = Ground)
+    then ""
+    else "V" + (generateWireLabelNumber listWires)
 
 //-------------------------segmentIntersectsBoundingBox---------------------------------//
 
@@ -869,8 +869,12 @@ let update (msg : Msg) (model : Model) : Model*Cmd<Msg> =
         // the new wires (extarcted as connections) are not added back into Issie model. 
         // This happens on save or when starting a simulation (I think)
         let wireId = ConnectionId(JSHelpers.uuid())
-        // let symbol1 = getSymbol model port1Id 
-        let wireLabel = generateWireLabel model
+        let port1String = getOutputPortIdStr port1Id
+        let port2String = getOutputPortIdStr port2Id
+        let symbol1 = getSymbol model.Symbol port1String
+        let symbol2 = getSymbol model.Symbol port2String
+        let wireLabel = generateWireLabel model symbol1 symbol2 
+
         let newWire = 
             {
                 WId = wireId
