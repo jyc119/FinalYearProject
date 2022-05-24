@@ -286,9 +286,9 @@ let viewCatalogue model dispatch =
                           catTip1 "Ground" (fun _ -> createCompStdLabel Ground model dispatch) "Node is ground"
                           catTip1 "Current Source"  (fun _ -> createAnalogComponentPopup true "Current Source" CurrentSource model dispatch) "Current Source"
                           catTip1 "Voltage Source"  (fun _ -> createAnalogComponentPopup true "Voltage Source" VoltageSource model dispatch) "Voltage Source"]
-                    //makeMenuGroup
-                        //"Non-Linear components"
-                        //[ catTip1 "CurrentSource"  (fun _ -> createCompStdLabel CurrentSource model dispatch) "Current ource"]
+                    makeMenuGroup
+                        "Non-Linear components"
+                        [ catTip1 "Diode"  (fun _ -> createCompStdLabel Diode model dispatch) "Diode"]
                     makeMenuGroupWithTip styles
                         "This project"
                         "Every design sheet is available for use in other sheets as a custom component: \

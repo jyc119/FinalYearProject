@@ -134,6 +134,7 @@ let getPrefix compType =
     | Resistor _ -> "R"
     | CurrentSource _ -> "CurrentSource"
     | Ground -> "Ground"
+    | Diode -> "Diode"
     | VoltageSource _ -> "V"
     | Custom c ->
         c.Name.ToUpper() + (if c.Name |> Seq.last |> System.Char.IsDigit then "." else "")
@@ -150,7 +151,7 @@ let getComponentLegend (componentType:ComponentType) =
 // Input and Output names of the ports depending on their ComponentType
 let portNames (componentType:ComponentType)  = //(input port names, output port names)
     match componentType with
-    | Resistor _ | CurrentSource _ | Ground -> ([]@[])
+    | Resistor _ | CurrentSource _ | Ground | Diode -> ([]@[])
     | Custom x -> (List.map fst x.InputLabels)@ (List.map fst x.OutputLabels)
     | _ -> ([]@[])
    // |Demux8 -> (["IN"; "SEL"],["0"; "1"; "2" ; "3" ; "4" ; "5" ; "6" ; "7"])
@@ -351,8 +352,7 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         | ComponentType.IOLabel  ->(  1 , 1, gS ,  2*gS) 
         | Constant1 (a, b,_)  -> (  0 , 1, gS ,  2*gS) 
         | Resistor _ -> (1 , 2 , 2*gS , 3*gS)
-        | CurrentSource _ | VoltageSource _ -> (1 , 2 , 2*gS , 2*gS)
-        | Ground -> (1 , 2 , 2*gS , 2*gS)
+        | CurrentSource _ | VoltageSource _ | Ground | Diode -> (1 , 2 , 2*gS , 2*gS)
         | Custom cct -> getCustomCompArgs cct label
                 
     makeComponent' args label
@@ -619,6 +619,8 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
                 [|{X=0;Y=H-13.};{X=8.;Y=H-7.};{X=0;Y=H-1.};{X=0;Y=0};{X=W;Y=0};{X=W;Y=H};{X=0;Y=H}|]
             | Ground ->
                 [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=0.5*H}|]
+            | Diode ->
+                [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=0.5*H};{X=W;Y=H};{X=W;Y=0};{X=W;Y=0.5*H}|]
             | _ -> 
                 [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=H};{X=W;Y=0}|]
         rotatePoints originalPoints {X=W/2.;Y=H/2.} transform

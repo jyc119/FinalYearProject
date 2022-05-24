@@ -197,14 +197,13 @@ let private viewAnalogInputs (state : (Component list * Connection list)) dispat
         splittedLine (str <| makeIOLabel inputLabel 1) valueHandle
     div [] <| List.map makeInputLine componentLabellist
 
-let private viewVoltages (conn : Connection list) dispatch = 
-    let labelList = conn
-                    |> List.map (fun x -> x.Label)
-    
-    let voltageList = conn
-                      |> List.map (fun x -> x.Voltage)
+let private viewVoltages (conn : Connection list) model dispatch = 
 
-    let newVoltageList , newLabelList = reduceStringFloatList labelList voltageList
+    let LinearSimulation model conn = 
+        
+    let getVoltageFromConnection (connection : Connection) = 
+        let port1Type = 
+            let symbol = connection.Port1.Id
     //let matrixElement = testingMatrix newVoltageList
     let voltageLabellist = combineVoltageIndexList newLabelList newVoltageList
 
@@ -357,6 +356,7 @@ let private viewSimulationData (state: (Component list * Connection list)) model
             dispatch
         Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Voltages" ]
         viewVoltages
+            model
             (snd state)
             dispatch
         Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Testing" ]

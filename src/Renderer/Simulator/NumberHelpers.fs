@@ -230,7 +230,7 @@ let convertSome x =
     match x with 
     | Some x -> x
 
-//Converts the string list and float list to not include the nodes connected to ground
+///Converts the string list and float list to not include the nodes connected to ground
 let reduceStringFloatList (stringlist : string list) (floatlist : float option list) = 
 
     let floats = 
@@ -266,3 +266,8 @@ let reduceStringFloatList (stringlist : string list) (floatlist : float option l
         |> List.rev
 
     (finalFloatList , finalStringList)
+
+/// Combines voltage and float list to a tuple list
+let combineVoltageIndexList (list1:string list) (list2: float list) = 
+    list1 
+    |> List.mapi (fun i x -> (x, list2[i]))

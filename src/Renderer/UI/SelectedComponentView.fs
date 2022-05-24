@@ -277,6 +277,7 @@ let private makeDescription (comp:Component) model dispatch =
         str "To prevent an unused output from giving an error."
         ]
     | Resistor _ -> div [] [ str "Resistor" ]
+    | Diode -> div [] [ str "Diode" ]
     | CurrentSource _ -> div [] [ str "Current Source" ]
     | VoltageSource _ -> div [] [ str "Voltage Source" ]
     | Custom custom ->

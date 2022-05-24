@@ -7,8 +7,9 @@
 module Simulator
 
 open CommonTypes
+open NumberHelpers
 open SimulatorTypes
-open SynchronousUtils
+
 open SimulationBuilder
 open SimulationRunner
 open DependencyMerger
@@ -16,9 +17,9 @@ open SimulationGraphAnalyser
 
 open System
 open System.IO
-//open Extreme.Mathematics
-//open Extreme.Mathematics.LinearAlgebra
-open FsAlg.Generic
+open Extreme.Mathematics
+open Extreme.Mathematics.LinearAlgebra
+//open FsAlg.Generic
 
 // Simulating a circuit has four phases (not precisely in order of execution):
 // 1. Building a simulation graph made of SimulationComponents.
@@ -132,5 +133,62 @@ let sr = new StreamReader(path)
 let reader = Console.WriteLine(sr.ReadToEnd())
 
 printfn "Really testing: %A" (reader)
-
 *)
+
+//---Helper Functions------
+/// Check if circuit contains nonlinear components
+let isNonLinearCircuit (components : Component list) : bool = 
+
+    let compTypes = 
+        components
+        |> List.map(fun x -> x.Type)
+
+    compTypes
+    |> List.contains Diode
+
+/// Check if ground is present in the list
+let isGroundPresent (components : Component list) : bool =
+
+    let compTypes = 
+        components
+        |> List.map(fun x -> x.Type)
+
+    compTypes
+    |> List.contains Ground
+
+///Make voltage and label list for simulation
+let makeVoltageLabelList (conn : Connection list) = 
+
+    let labelList = conn
+                    |> List.map (fun x -> x.Label)
+    
+    let voltageList = conn
+                      |> List.map (fun x -> x.Voltage)
+    
+    let newVoltageList , newLabelList = reduceStringFloatList labelList voltageList
+    //let matrixElement = testingMatrix newVoltageList
+
+    combineVoltageIndexList newLabelList newVoltageList
+
+//----Matrix helper functions---------
+
+/// Builds a nxn matrix with zero indexes
+let buildMatrix (nodeNumber : int) : DenseMatrix<float> = 
+    Matrix.Create(nodeNumber, nodeNumber)
+
+/// Obtain the top left element in the matrix
+let topLeftElement (matrix : DenseMatrix<float>) : float = 
+    matrix.[0,0]
+
+let getVoltageFromConnection (connection : Connection) = 
+    let port1Type = 
+        let symbol = connection.Port1.Id
+
+let insertDiagonals (matrix : DenseMatrix<float>) (nodes : Connection list) : DenseMatrix<float> = 
+
+
+/// From the number of nodes, build an nxn matrix
+let LinearSimulation (model: DrawModelType.Model) (voltageList : float list) =
+    let nodeNumber = List.length voltageList
+    let matrix = buildMatrix nodeNumber
+    topLeftElement matrix
