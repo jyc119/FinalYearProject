@@ -24,6 +24,7 @@ open CommonTypes
 open SimulatorTypes
 open Extractor
 open Simulator
+open Symbol
 open Sheet.SheetInterface
 open DrawModelType
 
@@ -198,14 +199,26 @@ let private viewAnalogInputs (state : (Component list * Connection list)) dispat
     div [] <| List.map makeInputLine componentLabellist
 
 let private viewVoltages (conn : Connection list) model dispatch = 
-
-    let LinearSimulation model conn = 
         
-    let getVoltageFromConnection (connection : Connection) = 
-        let port1Type = 
-            let symbol = connection.Port1.Id
+    let getDiagonalVoltage (connection : Connection) : float = 
+        let symbol1 , symbol2 = 
+            getSymbol model connection.Port1.Id , getSymbol model connection.Port2.Id
+        let portType1 , portType2 = 
+            symbol1.Component.Type , symbol2.Component.Type
+
+        match portType1,portType2 with
+        | Resistor x , Resistor y -> 1.0/x + 1.0/y
+        | Resistor x , _ | _ , Resistor x -> 1.0/x
+        |  _ -> 0
+
+    let voltages = 
+        conn
+        |> List.map getDiagonalVoltage
+        |> List.map (fun x -> Some x)
+        
+
     //let matrixElement = testingMatrix newVoltageList
-    let voltageLabellist = combineVoltageIndexList newLabelList newVoltageList
+    let voltageLabellist = makeVoltageLabelList conn voltages
 
     let makeInputLine(inputLabel : string, voltage: float) = 
         (*

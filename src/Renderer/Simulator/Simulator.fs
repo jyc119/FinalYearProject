@@ -157,13 +157,10 @@ let isGroundPresent (components : Component list) : bool =
     |> List.contains Ground
 
 ///Make voltage and label list for simulation
-let makeVoltageLabelList (conn : Connection list) = 
+let makeVoltageLabelList (conn : Connection list) (voltageList : float option list) = 
 
     let labelList = conn
                     |> List.map (fun x -> x.Label)
-    
-    let voltageList = conn
-                      |> List.map (fun x -> x.Voltage)
     
     let newVoltageList , newLabelList = reduceStringFloatList labelList voltageList
     //let matrixElement = testingMatrix newVoltageList
@@ -178,17 +175,30 @@ let buildMatrix (nodeNumber : int) : DenseMatrix<float> =
 
 /// Obtain the top left element in the matrix
 let topLeftElement (matrix : DenseMatrix<float>) : float = 
-    matrix.[0,0]
+    matrix.[0,0]    
 
-let getVoltageFromConnection (connection : Connection) = 
-    let port1Type = 
-        let symbol = connection.Port1.Id
+/// Takes the voltage list and input it at position [n,n]
+let insertDiagonals (nodeNumber : int) (voltageList : float option list) : DenseMatrix<float> = 
 
-let insertDiagonals (matrix : DenseMatrix<float>) (nodes : Connection list) : DenseMatrix<float> = 
+    let matrix = buildMatrix nodeNumber
 
+    let voltages = 
+        voltageList
+        |> List.map convertSome
+    
 
+    for i in 0..(nodeNumber-1) do
+        matrix.[i,i] <- voltages[i]
+
+    matrix
+
+let insertNonDiagonals (matrix : DenseMatrix<float>) = 
+    
+
+(*
 /// From the number of nodes, build an nxn matrix
 let LinearSimulation (model: DrawModelType.Model) (voltageList : float list) =
     let nodeNumber = List.length voltageList
     let matrix = buildMatrix nodeNumber
     topLeftElement matrix
+*)
