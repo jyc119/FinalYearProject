@@ -27,6 +27,10 @@ open Simulator
 open Sheet.SheetInterface
 open DrawModelType
 
+open Extreme.Mathematics
+open Extreme.Mathematics.LinearAlgebra
+//open MathNet.Numerics.LinearAlgebra
+
 //----------------------------View level simulation helpers------------------------------------//
 (*
 type SimCache = {
@@ -201,6 +205,7 @@ let private viewVoltages (conn : Connection list) dispatch =
                       |> List.map (fun x -> x.Voltage)
 
     let newVoltageList , newLabelList = reduceStringFloatList labelList voltageList
+    //let matrixElement = testingMatrix newVoltageList
     let voltageLabellist = combineVoltageIndexList newLabelList newVoltageList
 
     let makeInputLine(inputLabel : string, voltage: float) = 
@@ -280,6 +285,33 @@ let doBatchOfMsgsAsynch (msgs: seq<Msg>) =
     |> ExecCmdAsynch
     |> Elmish.Cmd.ofMsg
 
+//let oogabooga (nodeNumber : int) : DenseMatrix<float> = 
+ //   Matrix.Create(nodeNumber,nodeNumber) 
+(*
+let siu (matrix : DenseMatrix<float>) : float = 
+    matrix.[0,0]
+*)
+let monka (voltageList : float list) : float =
+    let nodeNumber = List.length voltageList
+    float(nodeNumber)
+(*
+let really = 
+    let aLU : DenseMatrix<float> = 
+        Matrix.Create(2,2)
+    aLU.[0,0]
+*)
+//ooga
+let testingValueHandle = 
+
+    //let wrong = Simulator.value
+    let something = monka [2.34;4.1]
+    let ooga = 2
+    Input.number [
+        Input.IsReadOnly true
+        Input.DefaultValue <| sprintf "%f" something
+        Input.Props [simulationNumberStyle]
+    ]
+
 let private viewSimulationData (state: (Component list * Connection list)) model dispatch =
     (*      
     let maybeStatefulComponents() =
@@ -327,6 +359,8 @@ let private viewSimulationData (state: (Component list * Connection list)) model
         viewVoltages
             (snd state)
             dispatch
+        Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Testing" ]
+        splittedLine (str <| makeIOLabel "Testing" 1) testingValueHandle
         //maybeStatefulComponents()
     ]
 

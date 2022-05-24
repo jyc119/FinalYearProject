@@ -15,8 +15,10 @@ open DependencyMerger
 open SimulationGraphAnalyser
 
 open System
-open Extreme.Mathematics
-open Extreme.Mathematics.LinearAlgebra
+open System.IO
+//open Extreme.Mathematics
+//open Extreme.Mathematics.LinearAlgebra
+open FsAlg.Generic
 
 // Simulating a circuit has four phases (not precisely in order of execution):
 // 1. Building a simulation graph made of SimulationComponents.
@@ -98,10 +100,37 @@ let extractStatefulComponents
     |> List.filter (fun comp -> comp.State <> NoState)
     // TODO: recursively search custom components?
 *)
-
+(*
 let buildMatrix (nodeNumber : int) : DenseMatrix<float> = 
     Matrix.Create(nodeNumber, nodeNumber)
 
 let topLeftElement (matrix : DenseMatrix<float>) : float = 
     matrix.[0,0]
 
+let testingMatrix (voltageList : float list) =
+    let nodeNumber = List.length voltageList
+    let matrix = buildMatrix nodeNumber
+    topLeftElement matrix
+
+let value = testingMatrix [2.3;4.4]
+
+
+let path = "D:\HLP\Testing\myTest.txt"
+
+let main =
+    let x = ["ooga";"booga"]
+    //let y = List.map System.Math.Sqrt x
+     
+    let xprecision = 3
+    let yprecision = 5
+     
+    let (file : StreamWriter) = System.IO.File.CreateText(path)
+    let line = sprintf "%s"
+    List.iter (fun x -> file.WriteLine (line x)) x
+
+let sr = new StreamReader(path)
+let reader = Console.WriteLine(sr.ReadToEnd())
+
+printfn "Really testing: %A" (reader)
+
+*)

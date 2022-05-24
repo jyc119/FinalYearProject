@@ -18,6 +18,8 @@ open Fable.SimpleJson
 open JSHelpers
 open Sheet.SheetInterface
 open DrawModelType
+open Extreme.Mathematics
+open Extreme.Mathematics.LinearAlgebra
 
 
 let isMac = Node.Api.``process``.platform = Node.Base.Darwin

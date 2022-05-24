@@ -69,6 +69,8 @@
     <Compile Include="Renderer.fs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Extreme.Numerics" Version="8.1.6" />
+    <PackageReference Include="FsAlg" Version="0.5.13" />
     <PackageReference Include="FSharp.Core" Version="6.0.1" />
   </ItemGroup>
   <!-- Dependencies -->
