@@ -190,6 +190,7 @@ module BusWireT =
         {
             Symbol: SymbolT.Model
             Wires: Map<ConnectionId, Wire>
+            ComponentsConnection: Map<ComponentId, (ConnectionId * ConnectionId)>
             CopiedWires: Map<ConnectionId, Wire> 
             SelectedSegment: SegmentId option
             LastMousePos: XYPos

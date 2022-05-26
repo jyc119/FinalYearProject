@@ -198,11 +198,13 @@ let private viewAnalogInputs (state : (Component list * Connection list)) dispat
         splittedLine (str <| makeIOLabel inputLabel 1) valueHandle
     div [] <| List.map makeInputLine componentLabellist
 
-let private viewVoltages (conn : Connection list) model dispatch = 
+let private viewVoltages model (conn : Connection list) dispatch = 
+
+    let symbolModel = model.Sheet.Wire.Symbol
         
     let getDiagonalVoltage (connection : Connection) : float = 
         let symbol1 , symbol2 = 
-            getSymbol model connection.Port1.Id , getSymbol model connection.Port2.Id
+            getSymbol symbolModel connection.Port1.Id , getSymbol symbolModel connection.Port2.Id
         let portType1 , portType2 = 
             symbol1.Component.Type , symbol2.Component.Type
 
@@ -211,14 +213,14 @@ let private viewVoltages (conn : Connection list) model dispatch =
         | Resistor x , _ | _ , Resistor x -> 1.0/x
         |  _ -> 0
 
-    let voltages = 
+    let diagonalVoltages = 
         conn
         |> List.map getDiagonalVoltage
         |> List.map (fun x -> Some x)
         
 
     //let matrixElement = testingMatrix newVoltageList
-    let voltageLabellist = makeVoltageLabelList conn voltages
+    let voltageLabellist = makeVoltageLabelList conn diagonalVoltages
 
     let makeInputLine(inputLabel : string, voltage: float) = 
         (*

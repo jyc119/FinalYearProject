@@ -14,6 +14,7 @@ let init () =
     let symbols,_ = Symbol.init()
     {   
         Wires = Map.empty;
+        ComponentsConnection = Map.empty;
         Symbol = symbols; 
         CopiedWires = Map.empty; 
         SelectedSegment = None; 

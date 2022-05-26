@@ -192,7 +192,7 @@ let insertDiagonals (nodeNumber : int) (voltageList : float option list) : Dense
 
     matrix
 
-let insertNonDiagonals (matrix : DenseMatrix<float>) = 
+//let insertNonDiagonals (matrix : DenseMatrix<float>) = 
     
 
 (*
@@ -202,3 +202,14 @@ let LinearSimulation (model: DrawModelType.Model) (voltageList : float list) =
     let matrix = buildMatrix nodeNumber
     topLeftElement matrix
 *)
+
+//------Connection Helper functions--------
+
+/// Lookup the width of a connection in the connectionsWidth map or fail.
+let getConnectionWidth
+        (connectionsWidth : ConnectionsWidth)
+        (connId : ConnectionId)
+        : int option =
+    match connectionsWidth.TryFind connId with
+    | None -> failwithf "what? getConnectionWidth received inexistent connectionId: %A" connId
+    | Some width -> width

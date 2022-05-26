@@ -271,3 +271,15 @@ let reduceStringFloatList (stringlist : string list) (floatlist : float option l
 let combineVoltageIndexList (list1:string list) (list2: float list) = 
     list1 
     |> List.mapi (fun i x -> (x, list2[i]))
+
+/// Takes a voltage label and outputs the number
+let numberString (input:string) : int option = 
+
+    let character = 
+        match input with
+        | "" -> None
+        | _ -> Some input[1]
+
+    match character with
+    | None -> None
+    | Some x -> Some ((int x) - 48)
