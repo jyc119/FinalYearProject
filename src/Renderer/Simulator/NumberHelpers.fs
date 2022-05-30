@@ -7,6 +7,7 @@
 
 module NumberHelpers
 open Helpers
+
 open SimulatorTypes
 
 /// Convert an hex string into a binary string.
@@ -226,16 +227,22 @@ let strToIntCheckWidth (width : int) (str : string)  : Result<int64, string> =
         )
 
 //Converts float option to float value
-let convertSome x = 
+let convertIntSome x = 
     match x with 
     | Some x -> x
+    | None -> 0
+
+let convertFloatSome x = 
+    match x with
+    | Some x -> x
+    | None -> 0.0
 
 ///Converts the string list and float list to not include the nodes connected to ground
 let reduceStringFloatList (stringlist : string list) (floatlist : float option list) = 
 
     let floats = 
         floatlist
-        |> List.map convertSome
+        |> List.map convertFloatSome
 
     let indexList = 
         let ooga = []
@@ -272,6 +279,11 @@ let combineVoltageIndexList (list1:string list) (list2: float list) =
     list1 
     |> List.mapi (fun i x -> (x, list2[i]))
 
+let getPrefixOfLabel (str : string) = 
+    match str with 
+    | "" -> 'C'
+    | _ -> str[0]
+
 /// Takes a voltage label and outputs the number
 let numberString (input:string) : int option = 
 
@@ -283,3 +295,12 @@ let numberString (input:string) : int option =
     match character with
     | None -> None
     | Some x -> Some ((int x) - 48)
+
+
+/// Add the reciprocal of two float options
+let addOption (option1 : float option) (option2 : float option) = 
+    match option1, option2 with
+    | Some x , Some y -> Some (1.0/x + 1.0/y)
+    | Some x , _ -> Some (1.0/x)
+    | _ , Some y -> Some (1.0/y)
+    | _,_ -> None

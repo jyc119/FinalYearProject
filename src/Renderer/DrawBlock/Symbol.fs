@@ -8,6 +8,7 @@ open Fable.React.Props
 open Elmish
 
 open CommonTypes
+open NumberHelpers
 open DrawHelpers
 open DrawModelType.SymbolT
 
@@ -897,3 +898,15 @@ let getPortLocations (model: Model) (symbolIds: ComponentId list) =
        
     getOutputPortMap 
  
+let symbolToResistance (symbol1 : Symbol) (symbol2 : Symbol) = 
+
+    let resistance sym = 
+        match sym.Component.Type with
+        | Resistor x -> Some x 
+        | _ -> None
+
+    let symbol1Resistance = resistance symbol1
+    let symbol2Resistance = resistance symbol2
+
+    addOption symbol1Resistance symbol2Resistance
+        

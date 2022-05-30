@@ -167,8 +167,10 @@ let makeVoltageLabelList (conn : Connection list) (voltageList : float option li
 
     combineVoltageIndexList newLabelList newVoltageList
 
-//----Matrix helper functions---------
+//---Canvas Map Helper functions------
 
+//----Matrix helper functions---------
+(*
 /// Builds a nxn matrix with zero indexes
 let buildMatrix (nodeNumber : int) : DenseMatrix<float> = 
     Matrix.Create(nodeNumber, nodeNumber)
@@ -176,6 +178,9 @@ let buildMatrix (nodeNumber : int) : DenseMatrix<float> =
 /// Obtain the top left element in the matrix
 let topLeftElement (matrix : DenseMatrix<float>) : float = 
     matrix.[0,0]    
+
+let matrixInverse (matrix : DenseMatrix<float>) : Matrix<float> = 
+    matrix.GetInverse()
 
 /// Takes the voltage list and input it at position [n,n]
 let insertDiagonals (nodeNumber : int) (voltageList : float option list) : DenseMatrix<float> = 
@@ -192,16 +197,18 @@ let insertDiagonals (nodeNumber : int) (voltageList : float option list) : Dense
 
     matrix
 
-//let insertNonDiagonals (matrix : DenseMatrix<float>) = 
-    
-
-(*
-/// From the number of nodes, build an nxn matrix
-let LinearSimulation (model: DrawModelType.Model) (voltageList : float list) =
-    let nodeNumber = List.length voltageList
-    let matrix = buildMatrix nodeNumber
-    topLeftElement matrix
+let insertNonDiagonals (matrix : DenseMatrix<float>) (list : ((int*int) * float) list ) = 
+    (matrix , list)
+    ||> List.fold (fun mat lst -> let index = fst lst
+                                  let value = snd lst
+                                  let firstindex = fst index
+                                  let secondindex = snd index
+                                  mat.[(firstindex-1),(secondindex-1)] <- value
+                                  mat.[(secondindex-1),(firstindex-1)] <- value
+                                  mat
+                          )
 *)
+//let insertNonDiagonals (matrix : DenseMatrix<float>) = 
 
 //------Connection Helper functions--------
 

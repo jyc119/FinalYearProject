@@ -339,6 +339,99 @@ let private viewSimulationData (state: (Component list * Connection list)) model
             viewStatefulComponents step stateful simData.NumberBase model dispatch
         ]
     *)
+    //-------Diagonal elements---------------
+    let symbolModel = model.Sheet.Wire.Symbol
+
+    let  mapConnToSymbols
+        (connections : Connection list)
+        : Map<string,(SymbolT.Symbol * SymbolT.Symbol)> =
+        (Map.empty, connections)
+        ||> List.fold (fun mapRes conn ->
+                let symbol1 = getSymbol symbolModel conn.Port1.Id
+                let symbol2 = getSymbol symbolModel conn.Port2.Id
+                let connLabel = conn.Label
+                match mapRes.TryFind connLabel with
+                | None -> mapRes.Add (connLabel, (symbol1 , symbol2))
+                | Some otherConnId -> mapRes
+            )
+
+    let mapNodeToSymbols =
+        (Map.empty, mapConnToSymbols (snd state))
+        ||> Map.fold (fun mapRes label (symb1,symb2) -> let position = 
+                                                            match label with 
+                                                            | "" -> None
+                                                            | _ ->  numberString label
+                                                        
+                                                        match position with 
+                                                        | None -> mapRes
+                                                        | Some x -> Map.add (position,position) (symb1,symb2) mapRes)
+
+        
+
+    /// For each node(n) in the circuit, convert it into (n*n)*float list
+    let DiagElements (map : Map<(int option * int option), (SymbolT.Symbol * SymbolT.Symbol)>) = 
+        let mapping = 
+            (Map.empty, map)
+            ||> Map.fold(fun mapRes (pos1,pos2) (symbol1,symbol2) -> let coord1 = convertIntSome pos1
+                                                                     let coord2 = convertIntSome pos2
+                                                                     let resistance = symbolToResistance symbol1 symbol2
+                                                                     let NonOption = convertFloatSome resistance
+                                                                     Map.add (coord1,coord2) NonOption mapRes)
+
+        mapping
+        |> Map.toList
+    
+
+    //------Non-diagonal elements------------
+
+    // map each componentid to the connectionIDs
+
+    let compIDSymbolMap = model.Sheet.Wire.Symbol.Symbols
+    let connIDToWire = model.Sheet.Wire.Wires
+
+    let resistorOnlyMap = 
+        let symbolConnectionMap = 
+            model.Sheet.Wire.ComponentsConnection
+        
+        (Map.empty, symbolConnectionMap)
+        ||> Map.fold(fun mapRes compId (conn1id,conn2id) -> match compIDSymbolMap[compId].Component.Type with
+                                                            | Resistor _ -> Map.add compId (conn1id,conn2id) mapRes
+                                                            | _ -> mapRes)
+
+    let resistorBetweenNodes = 
+        (Map.empty, resistorOnlyMap)
+        ||> Map.fold(fun mapRes compId (conn1id, conn2id) -> match getPrefixOfLabel connIDToWire[conn1id].Label,getPrefixOfLabel connIDToWire[conn2id].Label with
+                                                             |  'V','V' -> Map.add compId (conn1id, conn2id) mapRes
+                                                             | _ -> mapRes
+                                                             )
+
+    let nonDiagElements = 
+        let mapping = 
+            (Map.empty, resistorBetweenNodes)
+            ||> Map.fold(fun mapRes compID (conn1Id,conn2Id) -> let resistance = match compIDSymbolMap[compID].Component.Type with
+                                                                                 | Resistor x -> x
+                                                                let reciprocal = 1.0/resistance
+                                                   
+                                                                let conn1 = numberString connIDToWire[conn1Id].Label
+                                                                            |> convertIntSome
+                                                                let conn2 = numberString connIDToWire[conn2Id].Label
+                                                                            |> convertIntSome 
+                                                                        
+                                                                Map.add (conn1,conn2) reciprocal mapRes)
+
+        mapping
+        |> Map.toList
+
+    let canvasList = (DiagElements mapNodeToSymbols) @ nonDiagElements
+
+    //----Matrix Section-----
+    (*
+    1) Create blank matrix
+    2) Insert diagonal elements
+    3) Insert non-diagonal elements
+    *)
+    //insertNonDiagonal function here. 
+
     let questionIcon = str "\u003F"
 
     let tip tipTxt txt =
