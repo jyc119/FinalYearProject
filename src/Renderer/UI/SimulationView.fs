@@ -326,19 +326,8 @@ let testingValueHandle =
         Input.Props [simulationNumberStyle]
     ]
 
-let private viewSimulationData (state: (Component list * Connection list)) model dispatch =
-    (*      
-    let maybeStatefulComponents() =
-        let stateful = 
-            FastRun.extractStatefulComponents simData.ClockTickNumber simData.FastSim
-            |> Array.toList
-        match List.isEmpty stateful with
-        | true -> div [] []
-        | false -> div [] [
-            Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Stateful components" ]
-            viewStatefulComponents step stateful simData.NumberBase model dispatch
-        ]
-    *)
+let diagonalConductance (state: (Component list * Connection list)) model = 
+    
     //-------Diagonal elements---------------
     let symbolModel = model.Sheet.Wire.Symbol
 
@@ -381,9 +370,9 @@ let private viewSimulationData (state: (Component list * Connection list)) model
         mapping
         |> Map.toList
     
+    (DiagElements mapNodeToSymbols)
 
-    //------Non-diagonal elements------------
-
+let nonDiagonalConductance (state: (Component list * Connection list)) model = 
     // map each componentid to the connectionIDs
 
     let compIDSymbolMap = model.Sheet.Wire.Symbol.Symbols
@@ -401,28 +390,84 @@ let private viewSimulationData (state: (Component list * Connection list)) model
     let resistorBetweenNodes = 
         (Map.empty, resistorOnlyMap)
         ||> Map.fold(fun mapRes compId (conn1id, conn2id) -> match getPrefixOfLabel connIDToWire[conn1id].Label,getPrefixOfLabel connIDToWire[conn2id].Label with
-                                                             |  'V','V' -> Map.add compId (conn1id, conn2id) mapRes
+                                                             |  'N','N' -> Map.add compId (conn1id, conn2id) mapRes
                                                              | _ -> mapRes
                                                              )
 
-    let nonDiagElements = 
-        let mapping = 
-            (Map.empty, resistorBetweenNodes)
-            ||> Map.fold(fun mapRes compID (conn1Id,conn2Id) -> let resistance = match compIDSymbolMap[compID].Component.Type with
-                                                                                 | Resistor x -> x
-                                                                let reciprocal = 1.0/resistance
+    let mapping = 
+        (Map.empty, resistorBetweenNodes)
+        ||> Map.fold(fun mapRes compID (conn1Id,conn2Id) -> let resistance = match compIDSymbolMap[compID].Component.Type with
+                                                                                | Resistor x -> x
+                                                            let reciprocal = 1.0/resistance
                                                    
-                                                                let conn1 = numberString connIDToWire[conn1Id].Label
-                                                                            |> convertIntSome
-                                                                let conn2 = numberString connIDToWire[conn2Id].Label
-                                                                            |> convertIntSome 
+                                                            let conn1 = numberString connIDToWire[conn1Id].Label
+                                                                        |> convertIntSome
+                                                            let conn2 = numberString connIDToWire[conn2Id].Label
+                                                                        |> convertIntSome 
                                                                         
-                                                                Map.add (conn1,conn2) reciprocal mapRes)
+                                                            Map.add (conn1,conn2) reciprocal mapRes)
 
-        mapping
-        |> Map.toList
+    mapping
+    |> Map.toList
 
-    let canvasList = (DiagElements mapNodeToSymbols) @ nonDiagElements
+let linearSimulation (state: (Component list * Connection list)) model = 
+    //-------Diagonal elements---------------
+    let diagonalElements = diagonalConductance state model
+    let nonDiagElements = nonDiagonalConductance state model
+
+    diagonalElements @ nonDiagElements
+(* 
+let diodePosition (state: (Component list * Connection list)) model  = 
+    
+    let compIDSymbolMap = model.Sheet.Wire.Symbol.Symbols
+    let connIDToWire = model.Sheet.Wire.Wires
+
+    let DiodeOnlyMap = 
+        let symbolConnectionMap = 
+            model.Sheet.Wire.ComponentsConnection
+        
+        (Map.empty, symbolConnectionMap)
+        ||> Map.fold(fun mapRes compId (conn1id,conn2id) -> match compIDSymbolMap[compId].Component.Type with
+                                                            | Diode -> Map.add compId (conn1id,conn2id) mapRes
+                                                            | _ -> mapRes)
+    
+    let (lst:int * int list) = []
+    
+    let (tupleIndex : int*int list) = 
+        (lst, DiodeOnlyMap)
+        ||> Map.fold(fun lstRes compId (conn1id, conn2id) -> match getPrefixOfLabel connIDToWire[conn1id].Label,getPrefixOfLabel connIDToWire[conn2id].Label with
+                                                             |  'N','N' -> List.append lst (2,1)
+                                                             | 'N' , _ -> List.append lst (1,0)
+                                                             | _ , 'N' -> List.append lst (2,0)
+                                                             | _ -> lstRes
+                                                             )
+    
+    let extractLabelOrientation (mapping: Map<ComponentId,(ConnectionId*ConnectionId)>) =
+        
+
+    tupleIndex
+
+let nonLinearSimulation (state: (Component list * Connection list)) model = 
+    
+    let diagonalElements = diagonalConductance state model
+    let nonDiagElements = nonDiagonalConductance state model
+
+    let conductanceMat = diagonalElements @ nonDiagElements
+*)
+
+let private viewSimulationData (state: (Component list * Connection list)) model dispatch =
+    (*      
+    let maybeStatefulComponents() =
+        let stateful = 
+            FastRun.extractStatefulComponents simData.ClockTickNumber simData.FastSim
+            |> Array.toList
+        match List.isEmpty stateful with
+        | true -> div [] []
+        | false -> div [] [
+            Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Stateful components" ]
+            viewStatefulComponents step stateful simData.NumberBase model dispatch
+        ]
+    *)
 
     //----Matrix Section-----
     (*

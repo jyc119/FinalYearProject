@@ -137,6 +137,8 @@ let getPrefix compType =
     | Ground -> "Ground"
     | Diode -> "Diode"
     | VoltageSource _ -> "V"
+    | Inductor -> "Inductor"
+    | Capacitor -> "Capacitor"
     | Custom c ->
         c.Name.ToUpper() + (if c.Name |> Seq.last |> System.Char.IsDigit then "." else "")
     | Constant1 _ -> "C"
@@ -353,7 +355,7 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         | ComponentType.IOLabel  ->(  1 , 1, gS ,  2*gS) 
         | Constant1 (a, b,_)  -> (  0 , 1, gS ,  2*gS) 
         | Resistor _ -> (1 , 2 , 2*gS , 3*gS)
-        | CurrentSource _ | VoltageSource _ | Ground | Diode -> (1 , 2 , 2*gS , 2*gS)
+        | CurrentSource _ | VoltageSource _ | Ground | Capacitor | Inductor | Diode -> (1 , 2 , 2*gS , 2*gS)
         | Custom cct -> getCustomCompArgs cct label
                 
     makeComponent' args label
@@ -622,6 +624,13 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
                 [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=0.5*H}|]
             | Diode ->
                 [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=0.5*H};{X=W;Y=H};{X=W;Y=0};{X=W;Y=0.5*H}|]
+            (*
+            | Inductor -> 
+                [|{X=0;Y=0};{X=0.2*W;Y=0};{X=0.2*W;Y=0.35*H};{X=0.25*W;Y=0.5*H};{X=0.3*W;Y=0.5*H};{X=0.35*W;Y=0.35*H};{X=0.35*W;Y=0};
+                {X=0.35*W;Y=0.35*H};{X=0.4*W;Y=0.5*H};{X=0.45*W;Y=0.5*H};{X=0.5*W;Y=0.35*H};{X=0.5*W;Y=0};{X=0.5*W;Y=0.35*H};
+                {X=0.55*W;Y=0.5*H};{X=0.6*W;Y=0.5*H};{X=0.65*W;Y=0.35*H};{X=0.65*W;Y=0};{X=0.65*W;Y=0.35*H};{X=0.7*W;Y=0.5*H};{X=0.75*W;Y=0.5*H};
+                {X=0.8*W;Y=0.35*H};{X=0.8*W;Y=0};{X=1.0*W;Y=0}|]
+            *)
             | _ -> 
                 [|{X=0;Y=0};{X=0;Y=H};{X=W;Y=H};{X=W;Y=0}|]
         rotatePoints originalPoints {X=W/2.;Y=H/2.} transform
@@ -672,6 +681,10 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
             | Degree90 -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 22.5 45 37.5 45 defaultLine; makeLine 30 35 30 55 defaultLine; makeLine 20 15 40 15 defaultLine ]
             | Degree180 -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 45 40 45 20 defaultLine; makeLine 15 40 15 20 defaultLine; makeLine 5 30 25 30 defaultLine]
             | Degree270 -> [makeCircle 30 30 {defaultCircle with R=30.0} ; makeLine 20 50 40 50 defaultLine; makeLine 20 15 40 15 defaultLine; makeLine 30 25 30 5 defaultLine]
+        | Capacitor ->
+            match transform.Rotation with
+            | Degree0 | Degree180 -> [makeLine 0 30 25 30 defaultLine; makeLine 25 0 25 60 defaultLine;makeLine 35 0 35 60 defaultLine;makeLine 35 30 60 30 defaultLine]
+            | Degree90 | Degree270 -> [makeLine 30 60 30 35 defaultLine; makeLine 0 35 60 35 defaultLine; makeLine 0 25 60 25 defaultLine; makeLine 30 25 30 0 defaultLine]
         | _ -> createBiColorPolygon points colour outlineColour opacity strokeWidth
    
     // Put everything together 

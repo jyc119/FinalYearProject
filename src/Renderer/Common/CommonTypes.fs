@@ -314,6 +314,8 @@ module CommonTypes
         | Custom of CustomComponentType // schematic sheet used as component
         | Ground
         | Diode
+        | Capacitor
+        | Inductor
 
     /// get memory component type constructor
     /// NB only works with new-style memory components
@@ -534,6 +536,14 @@ module CommonTypes
     /// Inputs and Outputs are both numberd from 0 up.
     [<Erase>]
     type OutputPortNumber = | OutputPortNumber of int
+
+    (*------------Type for Non-Linear Simulation-----------------------*)
+    type NonLinearData = {
+        Vd : int
+        ConductanceList : ((int * int) * float) list
+        SumList : float list
+    }
+        
 
     (*---------------------------Types for wave Simulation----------------------------------------*)
 

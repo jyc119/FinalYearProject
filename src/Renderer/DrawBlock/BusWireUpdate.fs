@@ -48,7 +48,7 @@ let generateWireLabel (model: Model) (sym1 : Symbol) (sym2 : Symbol) : string =
     let listWires = List.map snd (Map.toList model.Wires) 
     if (sym1.Component.Type = Ground || sym2.Component.Type = Ground)
     then ""
-    else "V" + (generateWireLabelNumber listWires)
+    else "N" + (generateWireLabelNumber listWires)
 
 //-------------------------segmentIntersectsBoundingBox---------------------------------//
 

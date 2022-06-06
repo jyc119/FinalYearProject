@@ -139,6 +139,14 @@ type SimulationError = {
     ConnectionsAffected : ConnectionId list
 }
 
+type DiodeData = {
+    Conductance : ((int * int) * float) list
+    IndexConductance : (int * int) list
+    Sum : float list
+    IndexSum : int list
+    Vd : (int * int)
+}
+
 /// Wrapper for Javascript (Diagram) component. Why here?
 
 [<Erase>]

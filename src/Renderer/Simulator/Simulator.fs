@@ -210,6 +210,14 @@ let insertNonDiagonals (matrix : DenseMatrix<float>) (list : ((int*int) * float)
 *)
 //let insertNonDiagonals (matrix : DenseMatrix<float>) = 
 
+//--------Non-Linear Circuit Implementation------------------
+
+let saturationCurrent = 1e-15
+let vt = 0.025875
+//let vd = initialVoltageSolution[0,1]
+//let diodeCurrent = saturationCurrent * (exp(vd/vt) - 1.0)
+let expeirnec = exp 1.0
+
 //------Connection Helper functions--------
 
 /// Lookup the width of a connection in the connectionsWidth map or fail.
