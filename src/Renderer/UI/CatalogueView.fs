@@ -276,10 +276,12 @@ let viewCatalogue model dispatch =
                     [ react ]
             Menu.menu [Props [Class "py-1"; Style styles]]  [
                 // TODO
+                    (*
                     makeMenuGroup
                         "Input / Output"
                         [ catTip1 "Input"  (fun _ -> createIOPopup true "input" Input model dispatch) "Input connection to current sheet: one or more bits"
                           catTip1 "Output" (fun _ -> createIOPopup true "output" Output model dispatch) "Output connection from current sheet: one or more bits"]
+                    *)
                     makeMenuGroup
                         "Linear Components"
                         [ catTip1 "Resistor"  (fun _ -> createAnalogComponentPopup true "Resistor" Resistor model dispatch) "Resistor"
@@ -291,11 +293,13 @@ let viewCatalogue model dispatch =
                     makeMenuGroup
                         "Non-Linear components"
                         [ catTip1 "Diode"  (fun _ -> createCompStdLabel Diode model dispatch) "Diode"]
+                    (*
                     makeMenuGroupWithTip styles
                         "This project"
                         "Every design sheet is available for use in other sheets as a custom component: \
                         it can be added any number of times, each instance replicating the sheet logic"
                         (makeCustomList styles model dispatch)
+                    *)
                 ]
 
         (viewCatOfModel) model 

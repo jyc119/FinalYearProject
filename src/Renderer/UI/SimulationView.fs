@@ -187,7 +187,7 @@ let private viewAnalogInputs (state : (Component list * Connection list)) dispat
     let makeInputLine (inputLabel : string, component: ComponentType) =
         let value = 
             match component with
-            | Resistor x | CurrentSource x | VoltageSource x -> x
+            | Resistor x | CurrentSource x | VoltageSource x -> 0.5
             | _ -> 4.8
         let valueHandle =
             Input.number [
@@ -503,7 +503,7 @@ let private viewSimulationData (state: (Component list * Connection list)) model
                ]
     div [] [
 
-        Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Inputs" ]
+        Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Current" ]
         viewAnalogInputs
             state
             dispatch
@@ -512,8 +512,10 @@ let private viewSimulationData (state: (Component list * Connection list)) model
             model
             (snd state)
             dispatch
+        (*
         Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Testing" ]
         splittedLine (str <| makeIOLabel "Testing" 1) testingValueHandle
+        *)
         //maybeStatefulComponents()
     ]
 
