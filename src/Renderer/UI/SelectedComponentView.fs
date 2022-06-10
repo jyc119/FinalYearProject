@@ -280,8 +280,8 @@ let private makeDescription (comp:Component) model dispatch =
     | Diode -> div [] [ str "Diode" ]
     | CurrentSource _ -> div [] [ str "Current Source" ]
     | VoltageSource _ -> div [] [ str "Voltage Source" ]
-    | Capacitor -> div [] [str "Capacitor"]
-    | Inductor -> div [] [str "Inductor"]
+    | Capacitor _ -> div [] [str "Capacitor"]
+    | Inductor _ -> div [] [str "Inductor"]
     | Custom custom ->
         let styledSpan styles txt = span [Style styles] [str <| txt]
         let boldSpan txt = styledSpan [FontWeight "bold"] txt

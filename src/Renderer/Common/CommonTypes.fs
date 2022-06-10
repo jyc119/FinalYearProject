@@ -314,8 +314,7 @@ module CommonTypes
         | Custom of CustomComponentType // schematic sheet used as component
         | Ground
         | Diode
-        | Capacitor
-        | Inductor
+        | Capacitor of float | Inductor of float
 
     /// get memory component type constructor
     /// NB only works with new-style memory components
