@@ -6,6 +6,11 @@
 
 module Simulator
 
+open Fulma
+open Fulma.Extensions.Wikiki
+open Fable.React
+open Fable.React.Props
+
 open CommonTypes
 open NumberHelpers
 open SimulatorTypes
@@ -228,3 +233,5 @@ let getConnectionWidth
     match connectionsWidth.TryFind connId with
     | None -> failwithf "what? getConnectionWidth received inexistent connectionId: %A" connId
     | Some width -> width
+
+//--------COmmunication---------------

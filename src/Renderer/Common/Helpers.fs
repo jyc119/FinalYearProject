@@ -65,6 +65,22 @@ open CommonTypes
                             printfn "Error in Json parse of %s : %s" jsonString str
                             Error str)
 
+        let floatToJsonString (floatVal: float) : string = 
+            try
+                Json.serialize<float> floatVal
+            with 
+            | e ->
+                printfn "HELP: exception in SimpleJson.stringify %A" e
+                "Error in stringify"
+
+        let jsonStringToFloat (jsonString : string) = 
+            Json.tryParseAs<float> jsonString
+            |> (function
+                    | Ok float -> Ok float
+                    | Error str ->
+                            printfn "Error in Json parse of %s : %s" jsonString str
+                            Error str)
+
 
 
 (*-----------------------------------General helpers-----------------------------------------*)

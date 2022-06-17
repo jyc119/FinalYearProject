@@ -27,7 +27,9 @@ open Simulator
 open Symbol
 open Sheet.SheetInterface
 open DrawModelType
+open FilesIO
 
+open Node
 open Extreme.Mathematics
 open Extreme.Mathematics.LinearAlgebra
 //open MathNet.Numerics.LinearAlgebra
@@ -299,30 +301,12 @@ let doBatchOfMsgsAsynch (msgs: seq<Msg>) =
     |> ExecCmdAsynch
     |> Elmish.Cmd.ofMsg
 
-//let oogabooga (nodeNumber : int) : DenseMatrix<float> = 
- //   Matrix.Create(nodeNumber,nodeNumber) 
-(*
-let siu (matrix : DenseMatrix<float>) : float = 
-    matrix.[0,0]
-*)
-let monka (voltageList : float list) : float =
-    let nodeNumber = List.length voltageList
-    float(nodeNumber)
-(*
-let really = 
-    let aLU : DenseMatrix<float> = 
-        Matrix.Create(2,2)
-    aLU.[0,0]
-*)
 //ooga
-let testingValueHandle = 
+let testingValueHandle (value:float)= 
 
-    //let wrong = Simulator.value
-    let something = monka [2.34;4.1]
-    let ooga = 2
     Input.number [
         Input.IsReadOnly true
-        Input.DefaultValue <| sprintf "%f" something
+        Input.DefaultValue <| sprintf "%f" value
         Input.Props [simulationNumberStyle]
     ]
 
@@ -478,6 +462,21 @@ let private viewSimulationData (state: (Component list * Connection list)) model
     //insertNonDiagonal function here. 
 
     let questionIcon = str "\u003F"
+    let folderPath = "D:\FYP\CommunicationValue"
+    let fileName = "ff"
+    let fileNameExt = "ff.dgm"
+    let combine = "D:\FYP\CommunicationValue\ff"
+    
+    saveFloatToFile folderPath fileName 6.9 |> ignore
+    removeFileWithExtn ".dgmauto" folderPath fileName
+    
+    let filePath = path.join [| folderPath; fileNameExt |]
+    let resultFloat =  filePath |> tryLoadFloatFromPathCheck
+    //
+    let floatFromPath = 
+        match resultFloat with 
+        | Ok x -> x
+        | Error str -> 1.1
 
     let tip tipTxt txt =
         span [
@@ -512,10 +511,10 @@ let private viewSimulationData (state: (Component list * Connection list)) model
             model
             (snd state)
             dispatch
-        (*
+        
         Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Testing" ]
-        splittedLine (str <| makeIOLabel "Testing" 1) testingValueHandle
-        *)
+        splittedLine (str <| makeIOLabel "Testing" 1) (testingValueHandle floatFromPath)
+        
         //maybeStatefulComponents()
     ]
 

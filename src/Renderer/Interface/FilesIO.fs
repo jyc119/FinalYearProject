@@ -154,6 +154,20 @@ let private tryLoadStateFromPath (filePath: string) =
             | Error msg  -> Result.Error <| sprintf "could not convert file '%s' to a valid issie design sheet. Details: %s" filePath msg
             | Ok res -> Ok res)
 
+let private tryLoadFloatFromPath (filePath: string) = 
+    if not (fs.existsSync (U2.Case1 filePath)) then
+        Result.Error <| sprintf "Can't read file from %s because it does not seem to exist!" filePath      
+    else
+        try
+            Ok (fs.readFileSync(filePath, "utf8"))
+        with
+            | e -> Result.Error $"Error {e.Message} reading file '{filePath}'"
+
+        |> Result.map jsonStringToFloat
+        |> ( function
+            | Error msg  -> Result.Error <| sprintf "could not convert file '%s' to a valid issie design sheet. Details: %s" filePath msg
+            | Ok res -> Ok res)
+
 let makeData aWidth dWidth makeFun =
     let truncate n =
         match dWidth with
@@ -463,6 +477,18 @@ let magnifySheet magnification (comp: LegacyCanvas.LegacyComponent) =
         W = -1 // as above
     }
 
+//---------------Testing write float to file-------------------
+
+/// Save state to normal file. Automatically add the .dgm suffix.
+let saveFloatToFile folderPath baseName float = // TODO: catch error?
+    let path = pathJoin [| folderPath; baseName + ".dgm" |]
+    let data = floatToJsonString float
+    writeFile path data
+
+/// Create new empty diagram file. Automatically add the .dgm suffix.
+let createEmptyDgmFloatFile folderPath baseName =
+    saveFloatToFile folderPath baseName 0.0
+
 
 /// Update from old component types to new
 /// In addition do some sanity checks
@@ -551,7 +577,14 @@ let tryLoadComponentFromPath filePath : Result<LoadedComponent, string> =
         |> fst // ignore ram change info, they will always be loaded
         |> Result.Ok
 
-
+let tryLoadFloatFromPathCheck filePath : Result<float, string> = 
+    match tryLoadFloatFromPath filePath with
+    | Result.Error msg  
+    | Ok (Result.Error msg) ->
+        Error <| sprintf "Can't load component %s because of Error: %s" (getBaseNameNoExtension filePath)  msg
+    | Ok (Ok flt) ->
+        flt
+        |> Result.Ok
 
 type LoadStatus =
     | Resolve  of LoadedComponent * LoadedComponent
