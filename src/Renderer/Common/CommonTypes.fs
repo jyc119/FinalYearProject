@@ -313,7 +313,7 @@ module CommonTypes
         | Resistor of float | CurrentSource of float | VoltageSource of float
         | Custom of CustomComponentType // schematic sheet used as component
         | Ground
-        | Diode
+        | Diode | Transistor
         | Capacitor of float | Inductor of float
 
     /// get memory component type constructor

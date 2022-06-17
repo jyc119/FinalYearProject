@@ -136,6 +136,7 @@ let getPrefix compType =
     | CurrentSource _ -> "CurrentSource"
     | Ground -> "Ground"
     | Diode -> "Diode"
+    | Transistor -> "Transistor"
     | VoltageSource _ -> "V"
     | Inductor _ -> "Inductor"
     | Capacitor _ -> "Capacitor"
@@ -154,7 +155,7 @@ let getComponentLegend (componentType:ComponentType) =
 // Input and Output names of the ports depending on their ComponentType
 let portNames (componentType:ComponentType)  = //(input port names, output port names)
     match componentType with
-    | Resistor _ | CurrentSource _ | Ground | Diode -> ([]@[])
+    | Resistor _ | CurrentSource _ | Ground | Diode | Transistor -> ([]@[])
     | Custom x -> (List.map fst x.InputLabels)@ (List.map fst x.OutputLabels)
     | _ -> ([]@[])
    // |Demux8 -> (["IN"; "SEL"],["0"; "1"; "2" ; "3" ; "4" ; "5" ; "6" ; "7"])
@@ -356,6 +357,7 @@ let makeComponent (pos: XYPos) (comptype: ComponentType) (id:string) (label:stri
         | Constant1 (a, b,_)  -> (  0 , 1, gS ,  2*gS) 
         | Resistor _ -> (1 , 2 , 2*gS , 3*gS)
         | CurrentSource _ | VoltageSource _ | Ground | Capacitor _ | Inductor _ | Diode -> (1 , 2 , 2*gS , 2*gS)
+        | Transistor -> (1 , 3 , 2*gS , 2*gS)
         | Custom cct -> getCustomCompArgs cct label
                 
     makeComponent' args label
@@ -435,19 +437,32 @@ let getPortPos (sym: Symbol) (port: Port) : XYPos =
     let gap = getPortPosEdgeGap sym.Component.Type 
     let baseOffset = getPortBaseOffset sym side  //offset of the side component is on
     let h,w = getRotatedHAndW sym
+    let offset = match sym.Component.Type with 
+                  | Transistor -> match List.length ports with
+                                  | _ -> match side with
+                                         | Left -> (float(h))* (( index + gap )/( float( ports.Length ) + 2.0*gap - 1.0))
+                                         | Right -> (float(h))* (1.0 * index)
+                                         | Bottom -> (float(w))* ((index + gap)/(float (ports.Length) + 2.0*gap - 1.0))
+                                         | Top -> (float(w))* (( float( ports.Length ) - index - 1.0 + gap)/(float (ports.Length) + 2.0*gap - 1.0))
+
+                  | _ -> match side with
+                         | Left -> (float(h))* (( index + gap )/( float( ports.Length ) + 2.0*gap - 1.0))
+                         | Right -> (float(h))* (( float( ports.Length ) - index - 1.0 + gap )/( float( ports.Length ) + 2.0*gap - 1.0))
+                         | Bottom -> (float(w))* ((index + gap)/(float (ports.Length) + 2.0*gap - 1.0))
+                         | Top -> (float(w))* (( float( ports.Length ) - index - 1.0 + gap)/(float (ports.Length) + 2.0*gap - 1.0))
     match side with
     | Left ->
-        let yOffset = (float(h))* (( index + gap )/( float( ports.Length ) + 2.0*gap - 1.0))
-        baseOffset + {X = 0.0; Y = yOffset }
+        //let yOffset = (float(h))* (( index + gap )/( float( ports.Length ) + 2.0*gap - 1.0))
+        baseOffset + {X = 0.0; Y = offset }
     | Right -> 
-        let yOffset = (float(h))* (( float( ports.Length ) - index - 1.0 + gap )/( float( ports.Length ) + 2.0*gap - 1.0))
-        baseOffset + {X = 0.0; Y = yOffset }
+        //let yOffset = (float(h))* (( float( ports.Length ) - index - 1.0 + gap )/( float( ports.Length ) + 2.0*gap - 1.0))
+        baseOffset + {X = 0.0; Y = offset }
     | Bottom -> 
-        let xOffset = (float(w))* ((index + gap)/(float (ports.Length) + 2.0*gap - 1.0))
-        baseOffset + {X = xOffset; Y = 0.0 }
+        //let xOffset = (float(w))* ((index + gap)/(float (ports.Length) + 2.0*gap - 1.0))
+        baseOffset + {X = offset; Y = 0.0 }
     | Top ->
-        let xOffset = (float(w))* (( float( ports.Length ) - index - 1.0 + gap)/(float (ports.Length) + 2.0*gap - 1.0))
-        baseOffset + {X = xOffset; Y = 0.0 }
+        //let xOffset = (float(w))* (( float( ports.Length ) - index - 1.0 + gap)/(float (ports.Length) + 2.0*gap - 1.0))
+        baseOffset + {X = offset; Y = 0.0 }
 
 /// Gives the port positions to the render function, it gives the moving port pos where the mouse is, if there is a moving port
 let inline getPortPosToRender (sym: Symbol) (port: Port) : XYPos =
@@ -685,6 +700,10 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
             match transform.Rotation with
             | Degree0 | Degree180 -> [makeLine 0 30 25 30 defaultLine; makeLine 25 0 25 60 defaultLine;makeLine 35 0 35 60 defaultLine;makeLine 35 30 60 30 defaultLine]
             | Degree90 | Degree270 -> [makeLine 30 60 30 35 defaultLine; makeLine 0 35 60 35 defaultLine; makeLine 0 25 60 25 defaultLine; makeLine 30 25 30 0 defaultLine]
+        | Transistor ->
+            match transform.Rotation with
+            | Degree0 -> [makeLine 0 30 38 30 defaultLine; makeLine 38 10 38 50 defaultLine; makeLine 38 36 60 45 defaultLine; makeLine 38 24 60 15 defaultLine; 
+                          makeLine 60 45 60 60 defaultLine; makeLine 60 15 60 0 defaultLine; makeLine 47 30 55 42.75 defaultLine; makeLine 42 50 55 42.75 defaultLine]
         | _ -> createBiColorPolygon points colour outlineColour opacity strokeWidth
    
     // Put everything together 

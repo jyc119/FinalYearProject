@@ -294,7 +294,8 @@ let viewCatalogue model dispatch =
                           catTip1 "Inductor" (fun _ -> createAnalogComponentPopup true "Inductor" Capacitor model dispatch) "Create an inductor"]
                     makeMenuGroup
                         "Non-Linear components"
-                        [ catTip1 "Diode"  (fun _ -> createCompStdLabel Diode model dispatch) "Diode"]
+                        [ catTip1 "Diode"  (fun _ -> createCompStdLabel Diode model dispatch) "Diode"
+                          catTip1 "Transistor"  (fun _ -> createCompStdLabel Transistor model dispatch) "Transistor"]
                     (*
                     makeMenuGroupWithTip styles
                         "This project"

@@ -278,6 +278,7 @@ let private makeDescription (comp:Component) model dispatch =
         ]
     | Resistor _ -> div [] [ str "Resistor" ]
     | Diode -> div [] [ str "Diode" ]
+    | Transistor -> div [] [ str "Transistor" ]
     | CurrentSource _ -> div [] [ str "Current Source" ]
     | VoltageSource _ -> div [] [ str "Voltage Source" ]
     | Capacitor _ -> div [] [str "Capacitor"]
