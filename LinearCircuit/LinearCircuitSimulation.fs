@@ -4,7 +4,7 @@ open System
 open System.IO
 open Extreme.Mathematics
 open Extreme.Mathematics.LinearAlgebra
-open Helper
+open LinearCircuitSimulationHelper
 
 //----------Linear Simulation------------
 
