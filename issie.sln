@@ -34,6 +34,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LinearCircuit", "LinearCirc
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiodeSimulation", "DiodeSimulation\DiodeSimulation.fsproj", "{C04BE400-E64F-4067-B865-BFCFC1F5B38B}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TransistorSimulation", "TransistorSimulation\TransistorSimulation.fsproj", "{CD26AE1D-D190-4B1F-95F0-5534E53E5CF7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,6 +66,10 @@ Global
 		{C04BE400-E64F-4067-B865-BFCFC1F5B38B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C04BE400-E64F-4067-B865-BFCFC1F5B38B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C04BE400-E64F-4067-B865-BFCFC1F5B38B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD26AE1D-D190-4B1F-95F0-5534E53E5CF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD26AE1D-D190-4B1F-95F0-5534E53E5CF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD26AE1D-D190-4B1F-95F0-5534E53E5CF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD26AE1D-D190-4B1F-95F0-5534E53E5CF7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,12 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="DiodeHelper.fs" />
-    <Compile Include="DiodeSim.fs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Extreme.Numerics" Version="8.1.7" />
+    <Compile Include="Program.fs" />
   </ItemGroup>
 
 </Project>
