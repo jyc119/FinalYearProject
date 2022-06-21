@@ -147,6 +147,12 @@ type DiodeData = {
     Vd : (int * int)
 }
 
+type RCFilter = {
+    Resistance: float
+    Capacitance: float
+    Voltage: float
+}
+
 /// Wrapper for Javascript (Diagram) component. Why here?
 
 [<Erase>]

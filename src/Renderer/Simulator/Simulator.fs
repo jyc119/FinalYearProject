@@ -10,6 +10,8 @@ open Fulma
 open Fulma.Extensions.Wikiki
 open Fable.React
 open Fable.React.Props
+open Fable.Core
+open Node.ChildProcess
 
 open CommonTypes
 open NumberHelpers
@@ -234,4 +236,65 @@ let getConnectionWidth
     | None -> failwithf "what? getConnectionWidth received inexistent connectionId: %A" connId
     | Some width -> width
 
-//--------COmmunication---------------
+//--- RUn Executable-----
+(*
+let export = new IExports
+let executablePath = "C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe"
+let child = export.execFile(executablePath, )
+
+let executablePath = "C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe"
+*)
+
+//-----AC function--------
+
+let checkIfVoltage (comp:Component) : bool = 
+    match comp.Type with
+    | VoltageSource x -> true
+    | _ -> false
+
+let checkIfCapacitor (comp:Component) : bool = 
+    match comp.Type with
+    | Capacitor x -> true
+    | _ -> false
+
+let checkIfResistor (comp:Component) : bool = 
+    match comp.Type with
+    | Resistor x -> true
+    | _ -> false
+
+let getValFromComp (comp: Component) = 
+    match comp.Type with
+    | VoltageSource x -> x
+    | Resistor x -> x
+    | Capacitor x -> x
+
+
+let getRCFilter (canvas: CanvasState) = 
+    let componentList = fst canvas
+    
+    let voltage = 
+        let voltageSource = 
+            componentList
+            |> List.filter checkIfVoltage
+
+        getValFromComp voltageSource[0]
+
+    let resistor = 
+        let resistance = 
+            componentList
+            |> List.filter checkIfResistor
+
+        getValFromComp resistance[0]
+
+    let capacitance = 
+        let cap = 
+            componentList
+            |> List.filter checkIfCapacitor
+
+        getValFromComp cap[0]
+
+    {
+        Resistance = resistor
+        Capacitance = capacitance
+        Voltage = voltage
+    }

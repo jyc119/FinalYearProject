@@ -680,7 +680,6 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
             {style with DominantBaseline="hanging"} 
             (box.TopLeft - symbol.Pos + {X=margin;Y=margin}) 
             comp.Label ::  [] //corners uncomment this to display lavel bounding box corners.
-
                 
     let createSymbol = 
         match comp.Type with
@@ -704,6 +703,16 @@ let drawSymbol (symbol:Symbol) (colour:string) (showInputPorts:bool) (showOutput
             match transform.Rotation with
             | Degree0 -> [makeLine 0 30 38 30 defaultLine; makeLine 38 10 38 50 defaultLine; makeLine 38 36 60 45 defaultLine; makeLine 38 24 60 15 defaultLine; 
                           makeLine 60 45 60 60 defaultLine; makeLine 60 15 60 0 defaultLine; makeLine 47 30 55 42.75 defaultLine; makeLine 42 50 55 42.75 defaultLine]
+        | Inductor _ -> 
+            let arcs = [makePartArcAttr 10 10 10 10 10;makePartArcAttr 10 10 10 10 10;makePartArcAttr 10 10 10 10 10]
+            let startingPoint = {X=0;Y=30}
+
+            let renderedSegmentList : ReactElement List = 
+                arcs
+                |> String.concat " "
+                |> (fun attr -> [makeAnyPath startingPoint attr defaultPath])
+            renderedSegmentList
+
         | _ -> createBiColorPolygon points colour outlineColour opacity strokeWidth
    
     // Put everything together 

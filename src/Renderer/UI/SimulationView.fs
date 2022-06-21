@@ -374,7 +374,7 @@ let nonDiagonalConductance (state: (Component list * Connection list)) model =
     let resistorBetweenNodes = 
         (Map.empty, resistorOnlyMap)
         ||> Map.fold(fun mapRes compId (conn1id, conn2id) -> match getPrefixOfLabel connIDToWire[conn1id].Label,getPrefixOfLabel connIDToWire[conn2id].Label with
-                                                             |  'N','N' -> Map.add compId (conn1id, conn2id) mapRes
+                                                             | 'N','N' -> Map.add compId (conn1id, conn2id) mapRes
                                                              | _ -> mapRes
                                                              )
 
@@ -439,6 +439,38 @@ let nonLinearSimulation (state: (Component list * Connection list)) model =
     let conductanceMat = diagonalElements @ nonDiagElements
 *)
 
+//------Extract Transistor Data------------------
+(*
+let private transistorData (state: (Component list * Connection list)) model = 
+    
+    let symbolModel = model.Sheet.Wire.Symbol
+
+    let  mapConnToSymbols
+        (connections : Connection list)
+        : Map<string,(SymbolT.Symbol * SymbolT.Symbol)> =
+            (Map.empty, connections)
+            ||> List.fold (fun mapRes conn ->
+                    let symbol1 = getSymbol symbolModel conn.Port1.Id
+                    let symbol2 = getSymbol symbolModel conn.Port2.Id
+                    let connLabel = conn.Label
+                    match mapRes.TryFind connLabel with
+                    | None -> mapRes.Add (connLabel, (symbol1 , symbol2))
+                    | Some otherConnId -> mapRes
+                )
+
+    let compIDSymbolMap = model.Sheet.Wire.Symbol.Symbols
+    let connIDToWire = model.Sheet.Wire.Wires
+
+    let resistorOnlyMap = 
+        let symbolConnectionMap = 
+            model.Sheet.Wire.ComponentsConnection
+        
+        (Map.empty, symbolConnectionMap)
+        ||> Map.fold(fun mapRes compId (conn1id,conn2id) -> match compIDSymbolMap[compId].Component.Type with
+                                                            | Resistor _ -> Map.add compId (conn1id,conn2id) mapRes
+                                                            | _ -> mapRes)
+        
+*)
 let private viewSimulationData (state: (Component list * Connection list)) model dispatch =
     (*      
     let maybeStatefulComponents() =
