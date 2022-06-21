@@ -6,7 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Program.fs" />
+    <Compile Include="LinearCircuitSimulationHelper.fs" />
+    <Compile Include="LinearCircuitSimulation.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Extreme.Numerics" Version="8.1.7" />
   </ItemGroup>
 
 </Project>

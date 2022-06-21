@@ -6,12 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Helper.fs" />
-    <Compile Include="Program.fs" />
+    <Compile Include="ACHelper.fs" />
+    <Compile Include="ACSimulation.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Extreme.Numerics" Version="8.1.7" />
+    <PackageReference Include="Plotly.NET" Version="3.0.0" />
   </ItemGroup>
 
 </Project>
