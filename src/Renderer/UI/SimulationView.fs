@@ -34,86 +34,6 @@ open Extreme.Mathematics
 open Extreme.Mathematics.LinearAlgebra
 //open MathNet.Numerics.LinearAlgebra
 
-//----------------------------View level simulation helpers------------------------------------//
-(*
-type SimCache = {
-    Name: string
-    StoredState: CanvasState
-    StoredResult: Result<SimulationData, SimulationError>
-    }
-
-
-
-let simCacheInit name = {
-    Name = name; 
-    StoredState = ([],[]) // reduced canvas state from extractReducedState
-    StoredResult = Ok {
-        FastSim = FastCreate.emptyFastSimulation()
-        Graph = Map.empty 
-        Component = []
-        IsSynchronous=false
-        NumberBase = NumberBase.Hex
-        ClockTickNumber = 0
-        }
-    }
-
-/// Used to store last canvas state and its simulation
-let mutable simCache: SimCache = simCacheInit ""
-
-/// Start up a simulation, doing all necessary checks and generating simulation errors
-/// if necesary. The code to do this is quite long so results are memoized. this is complicated because
-/// we want the comparison (in the case nothing has chnaged) to be fast.
-/// 1. If the current sheet changes we redo the simulation. 
-/// 2. While current sheet does not change we assume the other sheets
-/// ( and so subsheet content) cannot change. 
-/// 3. Therefore we need only compare current sheet canvasState with its
-/// initial value. This is compared using extractReducedState to make a copy that has geometry info removed 
-/// from components and connections.
-
-
-let rec prepareSimulationMemoized
-        (diagramName : string)
-        (canvasState : CanvasState)
-        (loadedDependencies : LoadedComponent list)
-        : Result<SimulationData, SimulationError> * CanvasState =
-    let rState = extractReducedState canvasState
-    if diagramName <> simCache.Name then
-        simCache <- simCacheInit diagramName
-        // recursive call having initialised the cache state on sheet change
-        prepareSimulationMemoized diagramName canvasState loadedDependencies
-    else
-        let isSame = rState = simCache.StoredState
-        if  isSame then
-            simCache.StoredResult, rState
-        else
-            printfn "New simulation"
-            let simResult = prepareSimulation diagramName rState loadedDependencies
-            simCache <- {
-                Name = diagramName
-                StoredState = rState
-                StoredResult = simResult
-                }
-            simResult, rState
- 
-
- 
-/// Start simulating the current Diagram.
-/// Return SimulationData that can be used to extend the simulation
-/// as needed, or error if simulation fails.
-/// Note that simulation is only redone if current canvas changes.
-let makeSimData model =
-    let start = TimeHelpers.getTimeMs()
-    match model.Sheet.GetCanvasState(), model.CurrentProj with
-    | _, None -> None
-    | canvasState, Some project ->
-        let otherComponents = 
-            project.LoadedComponents 
-            |> List.filter (fun comp -> comp.Name <> project.OpenFileName)
-        (canvasState, otherComponents)
-        ||> prepareSimulationMemoized project.OpenFileName
-        |> Some
-        |> TimeHelpers.instrumentInterval "MakeSimData" start
-*)
 let changeBase dispatch numBase = numBase |> SetSimulationBase |> dispatch
 
 /// A line that can be used for an input, an output, or a state.
@@ -285,12 +205,7 @@ let private simulationClockChangePopup (simData: SimulationData) (dispatch: Msg 
             ]
 
         ]
-(*
-let simulateWithTime steps simData =
-    let startTime = getTimeMs()
-    FastRun.runFastSimulation (steps + simData.ClockTickNumber) simData.FastSim 
-    getTimeMs() - startTime
-*)
+
 let cmd block =
     Elmish.Cmd.OfAsyncWith.perform block
 
