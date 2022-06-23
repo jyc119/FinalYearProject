@@ -461,11 +461,11 @@ let analyseState
         (ldComps: LoadedComponent list)
         : SimulationError option =
     [
-        checkPortTypesAreConsistent state
+        //checkPortTypesAreConsistent state
         checkPortsAreConnectedProperly state
-        checkIOLabels state
-        checkCustomComponentsOk state ldComps
-        checkComponentNamesAreOk state
+        //checkIOLabels state
+        //checkCustomComponentsOk state ldComps
+        //checkComponentNamesAreOk state
     ]
     |> List.tryFind Option.isSome
     |> Option.flatten

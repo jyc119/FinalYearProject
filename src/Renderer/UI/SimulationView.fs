@@ -361,38 +361,41 @@ let nonDiagonalConductance (state: (Component list * Connection list)) model =
 
     let compIDSymbolMap = model.Sheet.Wire.Symbol.Symbols
     let connIDToWire = model.Sheet.Wire.Wires
+    let symbolModel = model.Sheet.Wire.Symbol
 
-    let resistorOnlyMap = 
-        let symbolConnectionMap = 
-            model.Sheet.Wire.ComponentsConnection
-        
-        (Map.empty, symbolConnectionMap)
-        ||> Map.fold(fun mapRes compId (conn1id,conn2id) -> match compIDSymbolMap[compId].Component.Type with
-                                                            | Resistor _ -> Map.add compId (conn1id,conn2id) mapRes
-                                                            | _ -> mapRes)
+    let  mapConnToSymbols
+        (connections : Connection list)
+        : Map<string,(SymbolT.Symbol * SymbolT.Symbol)> =
+            (Map.empty, connections)
+            ||> List.fold (fun mapRes conn ->
+                    let symbol1 = getSymbol symbolModel conn.Port1.Id
+                    let symbol2 = getSymbol symbolModel conn.Port2.Id
+                    let connLabel = conn.Label
+                    match mapRes.TryFind connLabel with
+                    | None -> mapRes.Add (connLabel, (symbol1 , symbol2))
+                    | Some otherConnId -> mapRes
+                )
+    
+    let node1ToSymbols =
+        (List.Empty, mapConnToSymbols (snd state))
+        ||> Map.fold (fun lisRes label (symb1,symb2) -> let position = 
+                                                            match label with 
+                                                            | "N1" -> Some 1
+                                                            | _ ->  None
+                                                    
+                                                        match position with 
+                                                        | None -> lisRes
+                                                        | Some x -> List.append lisRes [x,(symb1,symb2)])
+    
+    let getResistance = 
+        let node = node1ToSymbols[0]
+        let symb1 = fst (snd node)
+        let symb2 = snd (snd node)
+        match symb1.Component.Type, symb2.Component.Type with
+        | Resistor x , _ -> -1.0/x
+        | _ , Resistor x -> -1.0/x
 
-    let resistorBetweenNodes = 
-        (Map.empty, resistorOnlyMap)
-        ||> Map.fold(fun mapRes compId (conn1id, conn2id) -> match getPrefixOfLabel connIDToWire[conn1id].Label,getPrefixOfLabel connIDToWire[conn2id].Label with
-                                                             | 'N','N' -> Map.add compId (conn1id, conn2id) mapRes
-                                                             | _ -> mapRes
-                                                             )
-
-    let mapping = 
-        (Map.empty, resistorBetweenNodes)
-        ||> Map.fold(fun mapRes compID (conn1Id,conn2Id) -> let resistance = match compIDSymbolMap[compID].Component.Type with
-                                                                                | Resistor x -> x
-                                                            let reciprocal = 1.0/resistance
-                                                   
-                                                            let conn1 = numberString connIDToWire[conn1Id].Label
-                                                                        |> convertIntSome
-                                                            let conn2 = numberString connIDToWire[conn2Id].Label
-                                                                        |> convertIntSome 
-                                                                        
-                                                            Map.add (conn1,conn2) reciprocal mapRes)
-
-    mapping
-    |> Map.toList
+    [(1,2) , getResistance]
 
 let linearSimulation (state: (Component list * Connection list)) model = 
     //-------Diagonal elements---------------
@@ -400,49 +403,9 @@ let linearSimulation (state: (Component list * Connection list)) model =
     let nonDiagElements = nonDiagonalConductance state model
 
     diagonalElements @ nonDiagElements
-(* 
-let diodePosition (state: (Component list * Connection list)) model  = 
-    
-    let compIDSymbolMap = model.Sheet.Wire.Symbol.Symbols
-    let connIDToWire = model.Sheet.Wire.Wires
 
-    let DiodeOnlyMap = 
-        let symbolConnectionMap = 
-            model.Sheet.Wire.ComponentsConnection
-        
-        (Map.empty, symbolConnectionMap)
-        ||> Map.fold(fun mapRes compId (conn1id,conn2id) -> match compIDSymbolMap[compId].Component.Type with
-                                                            | Diode -> Map.add compId (conn1id,conn2id) mapRes
-                                                            | _ -> mapRes)
-    
-    let (lst:int * int list) = []
-    
-    let (tupleIndex : int*int list) = 
-        (lst, DiodeOnlyMap)
-        ||> Map.fold(fun lstRes compId (conn1id, conn2id) -> match getPrefixOfLabel connIDToWire[conn1id].Label,getPrefixOfLabel connIDToWire[conn2id].Label with
-                                                             |  'N','N' -> List.append lst (2,1)
-                                                             | 'N' , _ -> List.append lst (1,0)
-                                                             | _ , 'N' -> List.append lst (2,0)
-                                                             | _ -> lstRes
-                                                             )
-    
-    let extractLabelOrientation (mapping: Map<ComponentId,(ConnectionId*ConnectionId)>) =
-        
+let transistorSimulation (state: (Component list * Connection list)) model = 
 
-    tupleIndex
-
-let nonLinearSimulation (state: (Component list * Connection list)) model = 
-    
-    let diagonalElements = diagonalConductance state model
-    let nonDiagElements = nonDiagonalConductance state model
-
-    let conductanceMat = diagonalElements @ nonDiagElements
-*)
-
-//------Extract Transistor Data------------------
-(*
-let private transistorData (state: (Component list * Connection list)) model = 
-    
     let symbolModel = model.Sheet.Wire.Symbol
 
     let  mapConnToSymbols
@@ -458,19 +421,103 @@ let private transistorData (state: (Component list * Connection list)) model =
                     | Some otherConnId -> mapRes
                 )
 
-    let compIDSymbolMap = model.Sheet.Wire.Symbol.Symbols
-    let connIDToWire = model.Sheet.Wire.Wires
+    let node1ToSymbols =
+        (List.Empty, mapConnToSymbols (snd state))
+        ||> Map.fold (fun lisRes label (symb1,symb2) -> let position = 
+                                                            match label with 
+                                                            | "N1" -> Some 1
+                                                            | _ ->  None
+                                                    
+                                                        match position with 
+                                                        | None -> lisRes
+                                                        | Some x -> List.append lisRes [x,(symb1,symb2)])
 
-    let resistorOnlyMap = 
-        let symbolConnectionMap = 
-            model.Sheet.Wire.ComponentsConnection
-        
-        (Map.empty, symbolConnectionMap)
-        ||> Map.fold(fun mapRes compId (conn1id,conn2id) -> match compIDSymbolMap[compId].Component.Type with
-                                                            | Resistor _ -> Map.add compId (conn1id,conn2id) mapRes
-                                                            | _ -> mapRes)
-        
-*)
+    let node2ToSymbols =
+        (List.Empty, mapConnToSymbols (snd state))
+        ||> Map.fold (fun lisRes label (symb1,symb2) -> let position = 
+                                                            match label with 
+                                                            | "N2" -> Some 2
+                                                            | _ ->  None
+                                                    
+                                                        match position with 
+                                                        | None -> lisRes
+                                                        | Some x -> List.append lisRes [x,(symb1,symb2)])
+
+    let getResistance (nodetosymbol : (int * (SymbolT.Symbol * SymbolT.Symbol)) list) = 
+        let node = nodetosymbol[0]
+        let symb1 = fst (snd node)
+        let symb2 = snd (snd node)
+        match symb1.Component.Type, symb2.Component.Type with
+        | Resistor x , _ -> x
+        | _ , Resistor x -> x
+
+    let getVdd (connections : Connection list) = 
+         (List.empty, connections)
+         ||> List.fold(fun lisRes conn -> let symbol1 = getSymbol symbolModel conn.Port1.Id
+                                          let symbol2 = getSymbol symbolModel conn.Port2.Id
+                                          
+                                          match symbol1.Component.Type , symbol2.Component.Type with
+                                          | VoltageSource x , Resistor y 
+                                          | Resistor y , VoltageSource x -> List.append lisRes [x]
+                                          | _ -> lisRes)
+
+    let getVoltageSource (connections : Connection list) = 
+        (List.empty, connections)
+        ||> List.fold(fun lisRes conn -> let symbol1 = getSymbol symbolModel conn.Port1.Id
+                                         let symbol2 = getSymbol symbolModel conn.Port2.Id
+                                         
+                                         match symbol1.Component.Type , symbol2.Component.Type with
+                                         | VoltageSource x , Transistor
+                                         | Transistor , VoltageSource x -> List.append lisRes [x]
+                                         | _ -> lisRes)
+
+    let vdd = (getVdd (snd state))[0]
+    let voltagesource = (getVoltageSource (snd state))[0]
+    let collector = getResistance node2ToSymbols
+    let emitter = getResistance node1ToSymbols
+
+    {
+    Vdd = vdd
+    Voltage = voltagesource
+    ResistorCollector = collector
+    ResistorEmitter = emitter
+    }
+
+let extractACSimulation (state: (Component list * Connection list)) = 
+
+    let extractValue (comp:Component) = 
+        match comp.Type with
+        | Resistor x -> x
+        | Capacitor x -> x
+        | VoltageSource x -> x
+
+    let resistance = 
+        (fst state) 
+        |> List.find (fun x -> match x.Type with
+                               | Resistor x -> true
+                               | _ -> false)
+        |> extractValue                         
+
+    let capacitance = 
+        (fst state) 
+        |> List.find (fun x -> match x.Type with
+                               | Capacitor x -> true
+                               | _ -> false) 
+        |> extractValue
+
+    let voltage = 
+        (fst state) 
+        |> List.find (fun x -> match x.Type with
+                               | VoltageSource x -> true
+                               | _ -> false) 
+        |> extractValue
+
+    {
+        Voltage = voltage
+        Capacitance = capacitance
+        Resistance = resistance
+    }
+
 let private viewSimulationData (state: (Component list * Connection list)) model dispatch =
     (*      
     let maybeStatefulComponents() =
@@ -483,32 +530,7 @@ let private viewSimulationData (state: (Component list * Connection list)) model
             Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Stateful components" ]
             viewStatefulComponents step stateful simData.NumberBase model dispatch
         ]
-    *)
-
-    //----Matrix Section-----
-    (*
-    1) Create blank matrix
-    2) Insert diagonal elements
-    3) Insert non-diagonal elements
-    *)
-    //insertNonDiagonal function here. 
-
-    let questionIcon = str "\u003F"
-    let folderPath = "D:\FYP\CommunicationValue"
-    let fileName = "ff"
-    let fileNameExt = "ff.dgm"
-    let combine = "D:\FYP\CommunicationValue\ff"
-    
-    saveFloatToFile folderPath fileName 6.9 |> ignore
-    removeFileWithExtn ".dgmauto" folderPath fileName
-    
-    let filePath = path.join [| folderPath; fileNameExt |]
-    let resultFloat =  filePath |> tryLoadFloatFromPathCheck
-    //
-    let floatFromPath = 
-        match resultFloat with 
-        | Ok x -> x
-        | Error str -> 1.1
+    *) 
 
     let tip tipTxt txt =
         span [
@@ -545,7 +567,9 @@ let private viewSimulationData (state: (Component list * Connection list)) model
             dispatch
         
         Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Testing" ]
-        splittedLine (str <| makeIOLabel "Testing" 1) (testingValueHandle floatFromPath)
+        splittedLine (str <| makeIOLabel "first index" 1) (testingValueHandle 0.05)
+        //splittedLine (str <| makeIOLabel "second index" 1) (testingValueHandle secondindex)
+        //splittedLine (str <| makeIOLabel "float val" 1) (testingValueHandle floatval)
         
         //maybeStatefulComponents()
     ]
@@ -598,26 +622,30 @@ let viewSimulation model dispatch =
     let test = model.CurrentStepSimulationStep
     match model.CurrentStepSimulationStep with
     | false ->
-        //let simRes = makeSimData model
-        //let isSync = match simRes with | Some( Ok {IsSynchronous=true},_) | _ -> false
-        let buttonColor, buttonText = 
-            //match simRes with
-            //| None -> IColor.IsWhite, ""
-            //| Some (Ok _, _) -> 
-            IsSuccess, "Start Simulation"
-            //| Some (Error _, _) -> IsWarning, "See Problems"
-        div [] [
-            str "Simulate simple logic using this tab."
-            br []
-            //str (if isSync then "You can also use the Waveforms >> button to view waveforms" else "")
-            br []; br []
-            Button.button
-                [ 
-                    Button.Color buttonColor; 
-                    Button.OnClick (fun _ -> startSimulation()) ; 
-                ]
-                [ str buttonText ]
-        ]
+
+        let mainSim = 
+
+            //let simRes = makeSimData model
+            //let isSync = match simRes with | Some( Ok {IsSynchronous=true},_) | _ -> false
+            let buttonColor, buttonText = 
+                //match simRes with
+                //| None -> IColor.IsWhite, ""
+                //| Some (Ok _, _) -> 
+                IsSuccess, "Start Simulation"
+                //| Some (Error _, _) -> IsWarning, "See Problems"
+            div [] [
+                str "Simulate simple logic using this tab."
+                br []
+                //str (if isSync then "You can also use the Waveforms >> button to view waveforms" else "")
+                br []; br []
+                Button.button
+                    [ 
+                        Button.Color buttonColor; 
+                        Button.OnClick (fun _ -> startSimulation()) ; 
+                    ]
+                    [ str buttonText ]
+            ]
+        mainSim
     
     | true ->
         let body = (*

@@ -46,9 +46,14 @@ let generateWireLabelNumber listWires =
 /// Generates the label for a component type
 let generateWireLabel (model: Model) (sym1 : Symbol) (sym2 : Symbol) : string =
     let listWires = List.map snd (Map.toList model.Wires) 
-    if (sym1.Component.Type = Ground || sym2.Component.Type = Ground)
-    then ""
-    else "N" + (generateWireLabelNumber listWires)
+    let sym1type = sym1.Component.Type
+    let sym2type = sym2.Component.Type
+    match sym1type, sym2type with   
+    | Ground , _
+    | _ , Ground -> ""
+    | VoltageSource x , _ 
+    | _ , VoltageSource x ->  ""
+    | _ -> "N" + (generateWireLabelNumber listWires)
 
 //-------------------------segmentIntersectsBoundingBox---------------------------------//
 

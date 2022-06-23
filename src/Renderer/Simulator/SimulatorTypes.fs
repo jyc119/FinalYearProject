@@ -141,9 +141,9 @@ type SimulationError = {
 
 type DiodeData = {
     Conductance : ((int * int) * float) list
-    IndexConductance : (int * int) list
-    Sum : float list
-    IndexSum : int list
+    ConductanceDerivative : (int * int) list
+    Current : float list
+    CurrentDiodeElement : int list
     Vd : (int * int)
 }
 
@@ -151,6 +151,13 @@ type RCFilter = {
     Resistance: float
     Capacitance: float
     Voltage: float
+}
+
+type TransistorData = {
+    Vdd : float
+    Voltage : float
+    ResistorCollector : float
+    ResistorEmitter : float
 }
 
 /// Wrapper for Javascript (Diagram) component. Why here?
