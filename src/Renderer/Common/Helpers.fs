@@ -81,8 +81,73 @@ open CommonTypes
                             printfn "Error in Json parse of %s : %s" jsonString str
                             Error str)
 
+        let conductanceToJsonString (conductance: ConductanceData) : string = 
+            try
+                Json.serialize<ConductanceData> conductance
+            with 
+            | e ->
+                printfn "HELP: exception in SimpleJson.stringify %A" e
+                "Error in stringify"
 
+        let jsonStringToConductance (jsonString : string) = 
+            Json.tryParseAs<ConductanceData> jsonString
+            |> (function
+                    | Ok cond -> Ok cond
+                    | Error str ->
+                            printfn "Error in Json parse of %s : %s" jsonString str
+                            Error str)
 
+        let diodeToJsonString (diodeData: DiodeData) : string = 
+            try
+                Json.serialize<DiodeData> diodeData
+            with 
+            | e ->
+                printfn "HELP: exception in SimpleJson.stringify %A" e
+                "Error in stringify"
+
+        let jsonStringToDiode (jsonString : string) = 
+            Json.tryParseAs<DiodeData> jsonString
+            |> (function
+                    | Ok cond -> Ok cond
+                    | Error str ->
+                            printfn "Error in Json parse of %s : %s" jsonString str
+                            Error str)
+
+        //------- Transistor data ----------//
+
+        let transToJsonString (trans: TransistorData) : string = 
+            try
+                Json.serialize<TransistorData> trans
+            with 
+            | e ->
+                printfn "HELP: exception in SimpleJson.stringify %A" e
+                "Error in stringify"
+
+        let jsonStringToTransistor (jsonString : string) = 
+            Json.tryParseAs<TransistorData> jsonString
+            |> (function
+                    | Ok cond -> Ok cond
+                    | Error str ->
+                            printfn "Error in Json parse of %s : %s" jsonString str
+                            Error str)
+
+        //-------- AC Simulation -----------//
+
+        let ACToJsonString (trans: RCFilter) : string = 
+            try
+                Json.serialize<RCFilter> trans
+            with 
+            | e ->
+                printfn "HELP: exception in SimpleJson.stringify %A" e
+                "Error in stringify"
+
+        let jsonStringToAC (jsonString : string) = 
+            Json.tryParseAs<RCFilter> jsonString
+            |> (function
+                    | Ok cond -> Ok cond
+                    | Error str ->
+                            printfn "Error in Json parse of %s : %s" jsonString str
+                            Error str)
 (*-----------------------------------General helpers-----------------------------------------*)
 
 /// Return a memoized version of funcToMemoize where.

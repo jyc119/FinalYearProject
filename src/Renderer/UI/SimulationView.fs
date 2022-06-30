@@ -100,6 +100,26 @@ let extractFastSimulationIOs
             //printfn $"Extrcating: {io} --- {wd}"
             io, wd)
 
+let private viewConductance (lst: ((int*int)*float) list) dispatch = 
+
+    let list = 
+        lst
+        |> List.map (fun x -> let index = fst x
+                              let firstindex = string(fst index)
+                              let secondindex = string(snd index)
+                              let str = firstindex + "," + secondindex
+                              str , snd x)
+
+    let makeInputLine (inputLabel : string, floatval: float) =
+        let valueHandle =
+            Input.number [
+                Input.IsReadOnly true
+                Input.DefaultValue <| sprintf "%f" floatval
+                Input.Props [simulationNumberStyle]
+            ]
+        splittedLine (str <| makeIOLabel inputLabel 1) valueHandle
+    div [] <| List.map makeInputLine list
+
 let private viewAnalogInputs (state : (Component list * Connection list)) dispatch = 
     let componentList = (fst state)
                         |> List.map (fun x -> x.Type)
@@ -138,7 +158,7 @@ let private viewVoltages model (conn : Connection list) dispatch =
     let diagonalVoltages = 
         conn
         |> List.map getDiagonalVoltage
-        |> List.map (fun x -> Some x)
+        |> List.map (fun x -> Some 0.0)
         
 
     //let matrixElement = testingMatrix newVoltageList
@@ -290,6 +310,78 @@ let nonDiagonalConductance (state: (Component list * Connection list)) model =
                     | None -> mapRes.Add (connLabel, (symbol1 , symbol2))
                     | Some otherConnId -> mapRes
                 )
+
+    let mapNodeToSymbols =
+        (Map.empty, mapConnToSymbols (snd state))
+        ||> Map.fold (fun mapRes label (symb1,symb2) -> let position = 
+                                                            match label with 
+                                                            | "" -> None
+                                                            | _ ->  numberString label
+                                                        
+                                                        match position with 
+                                                        | None -> mapRes
+                                                        | Some x -> Map.add (convertIntSome position) (symb1,symb2) mapRes)
+
+    let tupleToList (lst : (SymbolT.Symbol*SymbolT.Symbol) list) = 
+        lst
+        |> List.collect(fun x -> [fst x; snd x])
+
+    let isResistor (comp:SymbolT.Symbol) = 
+        match comp.Component.Type with
+        | Resistor x -> true
+        | _ -> false
+    
+    let rec getIndex (lst : SymbolT.Symbol list) = 
+        let rec tDup inL outL indexL = 
+            match inL with
+            | [] -> outL
+            | el :: lst -> match isResistor el with
+                           | true -> 
+                                   let index = lst
+                                               |> List.tryFindIndex (fun x -> el = x)
+                                   match index with
+                                   | Some x -> let res = (indexL, x+1+indexL),el
+                                               tDup lst (res::outL) (indexL+1)
+                                   | None -> tDup lst outL (indexL+1)
+                           | false -> tDup lst outL (indexL+1)
+    
+        tDup lst [] 0
+                          
+    let listToTuple (lst:((int*int)*SymbolT.Symbol) list )= 
+        lst
+        |> List.map(fun x -> let a , b = fst x 
+                             let newa = a/2
+                             let newb = b/2
+                             let resistance = match (snd x).Component.Type with
+                                              | Resistor x -> -1.0/x
+                             (newa, newb),resistance)
+    
+    let mergeTuple (keyListi : int list) (indexList: ((int*int)*float) list) = 
+        indexList
+        |> List.map(fun x -> let tup = fst x
+                             let inte = snd x
+                             
+                             (keyListi[fst tup] , keyListi[snd tup]) , inte)
+    
+    let res (testMap: Map<int,(SymbolT.Symbol*SymbolT.Symbol)>) = 
+    
+        let keysOfMap = testMap.Keys
+                        |> Seq.toList
+    
+        let valsOfMap = testMap.Values
+                        |> Seq.toList
+    
+        valsOfMap
+        |> tupleToList
+        |> getIndex
+        |> listToTuple
+        |> mergeTuple keysOfMap
+
+    res mapNodeToSymbols 
+
+    
+        
+    (*
     
     let node1ToSymbols =
         (List.Empty, mapConnToSymbols (snd state))
@@ -311,13 +403,205 @@ let nonDiagonalConductance (state: (Component list * Connection list)) model =
         | _ , Resistor x -> -1.0/x
 
     [(1,2) , getResistance]
+    *)
+
+let makeCurrentVec (state: (Component list * Connection list)) model = 
+
+    let symbolModel = model.Sheet.Wire.Symbol
+
+    let  mapConnToSymbols
+        (connections : Connection list)
+        : Map<string,(SymbolT.Symbol * SymbolT.Symbol)> =
+            (Map.empty, connections)
+            ||> List.fold (fun mapRes conn ->
+                    let symbol1 = getSymbol symbolModel conn.Port1.Id
+                    let symbol2 = getSymbol symbolModel conn.Port2.Id
+                    let connLabel = conn.Label
+                    match mapRes.TryFind connLabel with
+                    | None -> mapRes.Add (connLabel, (symbol1 , symbol2))
+                    | Some otherConnId -> mapRes
+                )
+                                                              
+    let mapNodeToSymbols =
+        (Map.empty, mapConnToSymbols (snd state))
+        ||> Map.fold (fun mapRes label (symb1,symb2) -> let position = 
+                                                            match label with 
+                                                            | "" -> None
+                                                            | _ ->  numberString label
+                                                        
+                                                        match position with 
+                                                        | None -> mapRes
+                                                        | Some x -> Map.add (convertIntSome position) (symb1,symb2) mapRes)
+
+    let getList = 
+        (List.empty, mapNodeToSymbols)
+        ||> Map.fold(fun lisRes nodeNum (sym1,sym2) -> match sym1.Component.Type , sym2.Component.Type with
+                                                        | CurrentSource x , _ -> List.append [nodeNum, x] lisRes
+                                                        | _ , CurrentSource x -> List.append [nodeNum, x] lisRes
+                                                        | _ -> lisRes)
+
+    let vecsize = 
+        mapNodeToSymbols
+        |> Map.toList
+        |> List.length
+ 
+    let index = fst getList[0]
+    let floatval = snd getList[0]
+    [for i in 0..(vecsize-1) -> if i = (index-1) then floatval else 0.0]
+
+let getConductanceDerivative (state: (Component list * Connection list)) model = 
+    
+    let symbolModel = model.Sheet.Wire.Symbol
+
+    let  mapConnToSymbols
+        (connections : Connection list)
+        : Map<string,(SymbolT.Symbol * SymbolT.Symbol)> =
+            (Map.empty, connections)
+            ||> List.fold (fun mapRes conn ->
+                    let symbol1 = getSymbol symbolModel conn.Port1.Id
+                    let symbol2 = getSymbol symbolModel conn.Port2.Id
+                    let connLabel = conn.Label
+                    match mapRes.TryFind connLabel with
+                    | None -> mapRes.Add (connLabel, (symbol1 , symbol2))
+                    | Some otherConnId -> mapRes
+                )
+                                                              
+    let mapNodeToSymbols =
+        (Map.empty, mapConnToSymbols (snd state))
+        ||> Map.fold (fun mapRes label (symb1,symb2) -> let position = 
+                                                            match label with 
+                                                            | "" -> None
+                                                            | _ ->  numberString label
+                                                        
+                                                        match position with 
+                                                        | None -> mapRes
+                                                        | Some x -> Map.add (convertIntSome position) (symb1,symb2) mapRes)
+
+    let listOfDiode = 
+        (List.empty, mapNodeToSymbols)
+        ||> Map.fold (fun lisRes nodeNum (symb1, symb2) -> match symb1.Component.Type , symb2.Component.Type with
+                                                           | Diode , _ | _ , Diode -> List.append [nodeNum] lisRes
+                                                           | _ -> lisRes)
+
+    match List.length listOfDiode with
+    | 1 -> [(listOfDiode[0],listOfDiode[0])]
+    | 2 -> [(listOfDiode[0],listOfDiode[0]) ; (listOfDiode[0],listOfDiode[1]); (listOfDiode[1],listOfDiode[0]);(listOfDiode[1],listOfDiode[1])]
+
+let getVd (state: (Component list * Connection list)) model = 
+    let symbolModel = model.Sheet.Wire.Symbol
+    
+    let  mapConnToSymbols
+        (connections : Connection list)
+        : Map<string,(SymbolT.Symbol * SymbolT.Symbol)> =
+            (Map.empty, connections)
+            ||> List.fold (fun mapRes conn ->
+                    let symbol1 = getSymbol symbolModel conn.Port1.Id
+                    let symbol2 = getSymbol symbolModel conn.Port2.Id
+                    let connLabel = conn.Label
+                    match mapRes.TryFind connLabel with
+                    | None -> mapRes.Add (connLabel, (symbol1 , symbol2))
+                    | Some otherConnId -> mapRes
+                )
+                                                                  
+    let mapNodeToSymbols =
+        (Map.empty, mapConnToSymbols (snd state))
+        ||> Map.fold (fun mapRes label (symb1,symb2) -> let position = 
+                                                            match label with 
+                                                            | "" -> None
+                                                            | _ ->  numberString label
+                                                            
+                                                        match position with 
+                                                        | None -> mapRes
+                                                        | Some x -> Map.add (convertIntSome position) (symb1,symb2) mapRes)
+
+    let listOfDiode = 
+        (List.empty, mapNodeToSymbols)
+        ||> Map.fold (fun lisRes nodeNum (symb1, symb2) -> match symb1.Component.Type , symb2.Component.Type with
+                                                           | Diode , _ | _ , Diode -> List.append [nodeNum] lisRes
+                                                           | _ -> lisRes)
+                                                           
+    match List.length listOfDiode with
+    | 1 -> (0,listOfDiode[0])
+    | 2 -> (2,1)
+                         
+let getCurDiodeEl (state: (Component list * Connection list)) model = 
+    let symbolModel = model.Sheet.Wire.Symbol
+    
+    let  mapConnToSymbols
+        (connections : Connection list)
+        : Map<string,(SymbolT.Symbol * SymbolT.Symbol)> =
+            (Map.empty, connections)
+            ||> List.fold (fun mapRes conn ->
+                    let symbol1 = getSymbol symbolModel conn.Port1.Id
+                    let symbol2 = getSymbol symbolModel conn.Port2.Id
+                    let connLabel = conn.Label
+                    match mapRes.TryFind connLabel with
+                    | None -> mapRes.Add (connLabel, (symbol1 , symbol2))
+                    | Some otherConnId -> mapRes
+                )
+                                                                  
+    let mapNodeToSymbols =
+        (Map.empty, mapConnToSymbols (snd state))
+        ||> Map.fold (fun mapRes label (symb1,symb2) -> let position = 
+                                                            match label with 
+                                                            | "" -> None
+                                                            | _ ->  numberString label
+                                                            
+                                                        match position with 
+                                                        | None -> mapRes
+                                                        | Some x -> Map.add (convertIntSome position) (symb1,symb2) mapRes)
+
+    let listOfDiode = 
+        (List.empty, mapNodeToSymbols)
+        ||> Map.fold (fun lisRes nodeNum (symb1, symb2) -> match symb1.Component.Type , symb2.Component.Type with
+                                                           | Diode , CurrentSource x | CurrentSource x , Diode -> List.append [-nodeNum] lisRes
+                                                           | Diode , Resistor x | Resistor x , Diode -> List.append [nodeNum] lisRes
+                                                           | _ -> lisRes)
+
+    match List.length listOfDiode with
+    | 1 -> listOfDiode
+           |> List.map (fun x -> -x)
+    | 2 -> listOfDiode
+    
 
 let linearSimulation (state: (Component list * Connection list)) model = 
     //-------Diagonal elements---------------
     let diagonalElements = diagonalConductance state model
     let nonDiagElements = nonDiagonalConductance state model
 
-    diagonalElements @ nonDiagElements
+    let currentS = (fst state)
+                  |> List.find (fun x -> match x.Type with
+                                         | CurrentSource x -> true
+                                         | _ -> false)
+
+    let current =                                         
+        match currentS.Type with
+        | CurrentSource x -> x
+        | _ -> 0.0
+
+    {
+    Conductance = diagonalElements @ nonDiagElements
+    Current = current
+    }
+
+let diodeSimulation (state: (Component list * Connection list)) model = 
+    let diagonalElements = diagonalConductance state model
+    let nonDiagElements = nonDiagonalConductance state model
+
+    let conductance = diagonalElements @ nonDiagElements
+    let vd = getVd state model
+    let currentdiodeel = getCurDiodeEl state model
+    let conductancederi = getConductanceDerivative state model
+    let current = makeCurrentVec state model
+
+    {
+    Conductance = conductance
+    ConductanceDerivative = conductancederi
+    Current = current
+    CurrentDiodeElement = currentdiodeel
+    Vd = vd
+    }
+    
 
 let transistorSimulation (state: (Component list * Connection list)) model = 
 
@@ -433,6 +717,86 @@ let extractACSimulation (state: (Component list * Connection list)) =
         Resistance = resistance
     }
 
+let private writeToAndReadConductanceFile folderPath fileName fileNameExt data = 
+    saveConductanceToFile folderPath fileName data |> ignore
+    removeFileWithExtn ".dgmauto" folderPath fileName
+    
+    let filePath = path.join [| folderPath; fileNameExt |]
+    let resultFloat =  filePath |> tryLoadConductanceFromPathCheck
+    //
+    match resultFloat with 
+    | Ok x -> 10
+    | Error str -> 0
+
+
+let private writeToAndReadDiodeFile folderPath fileName fileNameExt data = 
+
+    saveDiodeDataToFile folderPath fileName data |> ignore
+    removeFileWithExtn ".dgmauto" folderPath fileName
+
+    let filePath = path.join [| folderPath; fileNameExt |]
+    let resultFloat =  filePath |> tryLoadDiodeFromPathCheck
+    //
+    match resultFloat with 
+    | Ok x -> 10
+    | Error str -> 0
+
+let private writeToAndReadTransFile folderPath fileName fileNameExt data = 
+
+    saveTransDataToFile folderPath fileName data |> ignore
+    removeFileWithExtn ".dgmauto" folderPath fileName
+
+    let filePath = path.join [| folderPath; fileNameExt |]
+    let resultFloat =  filePath |> tryLoadTransFromPathCheck
+    //
+    match resultFloat with 
+    | Ok x -> 10
+    | Error str -> 0
+    
+let private writeToAndReadACFile folderPath fileName fileNameExt data = 
+
+    saveACDataToFile folderPath fileName data |> ignore
+    removeFileWithExtn ".dgmauto" folderPath fileName
+
+    let filePath = path.join [| folderPath; fileNameExt |]
+    let resultFloat =  filePath |> tryLoadACFromPathCheck
+    //
+    match resultFloat with 
+    | Ok x -> 10
+    | Error str -> 0
+
+let private whichSimulation (state: (Component list * Connection list)) = 
+
+    let isAC = 
+        (fst state)
+        |> List.map (fun x -> match x.Type with
+                              | Capacitor y -> true
+                              | _ -> false)
+        |> List.contains true
+
+    let isTrans = 
+        (fst state)
+        |> List.map (fun x -> match x.Type with
+                              | Transistor -> true
+                              | _ -> false)
+        |> List.contains true
+
+    let isDiode = 
+        (fst state)
+        |> List.map (fun x -> match x.Type with
+                              | Diode -> true
+                              | _ -> false)
+        |> List.contains true 
+        
+    match isAC with
+    | true -> "AC"
+    | false -> match isTrans with
+               | true -> "Trans"
+               | false -> match isDiode with
+                          | true -> "Diode"
+                          | false -> "Conductance"
+
+
 let private viewSimulationData (state: (Component list * Connection list)) model dispatch =
     (*      
     let maybeStatefulComponents() =
@@ -446,6 +810,85 @@ let private viewSimulationData (state: (Component list * Connection list)) model
             viewStatefulComponents step stateful simData.NumberBase model dispatch
         ]
     *) 
+
+    let simMode = whichSimulation state
+
+    let simData = 
+        match simMode with
+        | "Conductance" -> let folderPath = "D:\FYP\CommunicationValue"
+                           let fileName = "LinearSimulationData"
+                           let fileNameExt = "LinearSimulationData.dgm"
+
+                           let data = linearSimulation state model 
+                           writeToAndReadConductanceFile folderPath fileName fileNameExt data
+
+        | "Diode" -> let folderPath = "D:\FYP\CommunicationValue"
+                     let fileName = "DiodeSimulationData"
+                     let fileNameExt = "DiodeSimulationData.dgm"
+
+                     let data = diodeSimulation state model 
+                     writeToAndReadDiodeFile folderPath fileName fileNameExt data
+
+        | "Trans" -> let folderPath = "D:\FYP\CommunicationValue"
+                     let fileName = "TransistorSimulationData"
+                     let fileNameExt = "TransistorSimulationData.dgm"
+
+                     let data = transistorSimulation state model 
+                     writeToAndReadTransFile folderPath fileName fileNameExt data
+
+        | "AC" -> let folderPath = "D:\FYP\CommunicationValue"
+                  let fileName = "ACSimulationData"
+                  let fileNameExt = "ACSimulationData.dgm"
+
+                  let data = extractACSimulation state  
+                  writeToAndReadACFile folderPath fileName fileNameExt data
+    
+    (*
+    let questionIcon = str "\u003F"
+    let folderPath = "D:\FYP\CommunicationValue"
+    let fileName = "diodedata"
+    let fileNameExt = "diodedata.dgm"
+    let combine = "D:\FYP\CommunicationValue\ff"
+    let testDiode = {
+        Conductance = [(1,1),0.1;(2,2),0.1;(1,2),-0.1]
+        ConductanceDerivative = [(2,2)]
+        Current = [0.1;0.0]
+        CurrentDiodeElement = [-2]
+        Vd = (0,2)
+    }
+    *)
+    (*
+    //---- Linear simulation -----
+    saveConductanceToFile folderPath fileName lst |> ignore
+    removeFileWithExtn ".dgmauto" folderPath fileName
+    
+    let filePath = path.join [| folderPath; fileNameExt |]
+    let resultFloat =  filePath |> tryLoadConductanceFromPathCheck
+    //
+    let floatFromPath = 
+        match resultFloat with 
+        | Ok x -> x
+        | Error str -> [(10,10),12]
+    *)
+
+    (*
+    //----- Diode simulation ------
+    saveDiodeDataToFile folderPath fileName testDiode |> ignore
+    removeFileWithExtn ".dgmauto" folderPath fileName
+
+    let filePath = path.join [| folderPath; fileNameExt |]
+    let resultFloat =  filePath |> tryLoadDiodeFromPathCheck
+    //
+    let floatFromPath = 
+        match resultFloat with 
+        | Ok x -> Some x
+        | Error str -> None
+    *)
+
+
+    //let listofnondiag = nonDiagonalConductance state model
+    //let simulationResults = linearSimulation state model
+
 
     let tip tipTxt txt =
         span [
@@ -471,21 +914,29 @@ let private viewSimulationData (state: (Component list * Connection list)) model
                ]
     div [] [
 
+        (*
         Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Current" ]
         viewAnalogInputs
             state
             dispatch
+        *)
         Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Voltages" ]
         viewVoltages
             model
             (snd state)
             dispatch
-        
+        (*
         Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Testing" ]
-        splittedLine (str <| makeIOLabel "first index" 1) (testingValueHandle 0.05)
-        //splittedLine (str <| makeIOLabel "second index" 1) (testingValueHandle secondindex)
-        //splittedLine (str <| makeIOLabel "float val" 1) (testingValueHandle floatval)
-        
+        viewConductance
+            simulationResults
+            dispatch
+        *)
+        (*
+        Heading.h5 [ Heading.Props [ Style [ MarginTop "15px" ] ] ] [ str "Testing" ]
+        splittedLine (str <| makeIOLabel simMode 1) (testingValueHandle 2.1)
+        *)
+        //splittedLine (str <| makeIOLabel "fstindex" 1) (testingValueHandle sndindex)
+        // splittedLine (str <| makeIOLabel "Comms value" 1) (testingValueHandle floatFromPath)
         //maybeStatefulComponents()
     ]
 

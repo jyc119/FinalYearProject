@@ -411,6 +411,32 @@ module CommonTypes
         Voltage: float option
     }
 
+    type ConductanceData = {
+        Conductance : ((int * int) * float) list
+        Current: float
+    }
+
+    type DiodeData = {
+        Conductance : ((int * int) * float) list
+        ConductanceDerivative : (int * int) list
+        Current : float list
+        CurrentDiodeElement : int list
+        Vd : (int * int)
+    }
+    
+    type RCFilter = {
+        Resistance: float
+        Capacitance: float
+        Voltage: float
+    }
+    
+    type TransistorData = {
+        Vdd : float
+        Voltage : float
+        ResistorCollector : float
+        ResistorEmitter : float
+    }
+
     /// F# data describing the contents of a single schematic sheet.
     type CanvasState = Component list * Connection list
 

@@ -168,6 +168,62 @@ let private tryLoadFloatFromPath (filePath: string) =
             | Error msg  -> Result.Error <| sprintf "could not convert file '%s' to a valid issie design sheet. Details: %s" filePath msg
             | Ok res -> Ok res)
 
+let private tryLoadCondFromPath (filePath: string) = 
+    if not (fs.existsSync (U2.Case1 filePath)) then
+        Result.Error <| sprintf "Can't read file from %s because it does not seem to exist!" filePath      
+    else
+        try
+            Ok (fs.readFileSync(filePath, "utf8"))
+        with
+            | e -> Result.Error $"Error {e.Message} reading file '{filePath}'"
+
+        |> Result.map jsonStringToConductance
+        |> ( function
+            | Error msg  -> Result.Error <| sprintf "could not convert file '%s' to a valid issie design sheet. Details: %s" filePath msg
+            | Ok res -> Ok res)
+
+let private tryLoadDiodeFromPath (filePath: string) = 
+    if not (fs.existsSync (U2.Case1 filePath)) then
+        Result.Error <| sprintf "Can't read file from %s because it does not seem to exist!" filePath      
+    else
+        try
+            Ok (fs.readFileSync(filePath, "utf8"))
+        with
+            | e -> Result.Error $"Error {e.Message} reading file '{filePath}'"
+
+        |> Result.map jsonStringToDiode
+        |> ( function
+            | Error msg  -> Result.Error <| sprintf "could not convert file '%s' to a valid issie design sheet. Details: %s" filePath msg
+            | Ok res -> Ok res)
+
+let private tryLoadTransFromPath (filePath: string) = 
+    if not (fs.existsSync (U2.Case1 filePath)) then
+        Result.Error <| sprintf "Can't read file from %s because it does not seem to exist!" filePath      
+    else
+        try
+            Ok (fs.readFileSync(filePath, "utf8"))
+        with
+            | e -> Result.Error $"Error {e.Message} reading file '{filePath}'"
+
+        |> Result.map jsonStringToTransistor
+        |> ( function
+            | Error msg  -> Result.Error <| sprintf "could not convert file '%s' to a valid issie design sheet. Details: %s" filePath msg
+            | Ok res -> Ok res)
+
+let private tryLoadACFromPath (filePath: string) = 
+    if not (fs.existsSync (U2.Case1 filePath)) then
+        Result.Error <| sprintf "Can't read file from %s because it does not seem to exist!" filePath      
+    else
+        try
+            Ok (fs.readFileSync(filePath, "utf8"))
+        with
+            | e -> Result.Error $"Error {e.Message} reading file '{filePath}'"
+
+        |> Result.map jsonStringToAC
+        |> ( function
+            | Error msg  -> Result.Error <| sprintf "could not convert file '%s' to a valid issie design sheet. Details: %s" filePath msg
+            | Ok res -> Ok res)
+
 let makeData aWidth dWidth makeFun =
     let truncate n =
         match dWidth with
@@ -485,6 +541,26 @@ let saveFloatToFile folderPath baseName float = // TODO: catch error?
     let data = floatToJsonString float
     writeFile path data
 
+let saveConductanceToFile folderPath baseName cond = 
+    let path = pathJoin [| folderPath; baseName + ".dgm" |]
+    let data = conductanceToJsonString cond
+    writeFile path data
+
+let saveDiodeDataToFile folderPath baseName cond = 
+    let path = pathJoin [| folderPath; baseName + ".dgm" |]
+    let data = diodeToJsonString cond
+    writeFile path data
+
+let saveTransDataToFile folderPath baseName cond = 
+    let path = pathJoin [| folderPath; baseName + ".dgm" |]
+    let data = transToJsonString cond
+    writeFile path data
+
+let saveACDataToFile folderPath baseName cond = 
+    let path = pathJoin [| folderPath; baseName + ".dgm" |]
+    let data = ACToJsonString cond
+    writeFile path data
+
 /// Create new empty diagram file. Automatically add the .dgm suffix.
 let createEmptyDgmFloatFile folderPath baseName =
     saveFloatToFile folderPath baseName 0.0
@@ -579,6 +655,42 @@ let tryLoadComponentFromPath filePath : Result<LoadedComponent, string> =
 
 let tryLoadFloatFromPathCheck filePath : Result<float, string> = 
     match tryLoadFloatFromPath filePath with
+    | Result.Error msg  
+    | Ok (Result.Error msg) ->
+        Error <| sprintf "Can't load component %s because of Error: %s" (getBaseNameNoExtension filePath)  msg
+    | Ok (Ok flt) ->
+        flt
+        |> Result.Ok
+
+let tryLoadConductanceFromPathCheck filePath : Result<ConductanceData, string> = 
+    match tryLoadCondFromPath filePath with
+    | Result.Error msg  
+    | Ok (Result.Error msg) ->
+        Error <| sprintf "Can't load component %s because of Error: %s" (getBaseNameNoExtension filePath)  msg
+    | Ok (Ok flt) ->
+        flt
+        |> Result.Ok
+
+let tryLoadDiodeFromPathCheck filePath : Result<DiodeData, string> = 
+    match tryLoadDiodeFromPath filePath with
+    | Result.Error msg  
+    | Ok (Result.Error msg) ->
+        Error <| sprintf "Can't load component %s because of Error: %s" (getBaseNameNoExtension filePath)  msg
+    | Ok (Ok flt) ->
+        flt
+        |> Result.Ok
+
+let tryLoadTransFromPathCheck filePath : Result<TransistorData, string> = 
+    match tryLoadTransFromPath filePath with
+    | Result.Error msg  
+    | Ok (Result.Error msg) ->
+        Error <| sprintf "Can't load component %s because of Error: %s" (getBaseNameNoExtension filePath)  msg
+    | Ok (Ok flt) ->
+        flt
+        |> Result.Ok
+
+let tryLoadACFromPathCheck filePath : Result<RCFilter, string> = 
+    match tryLoadACFromPath filePath with
     | Result.Error msg  
     | Ok (Result.Error msg) ->
         Error <| sprintf "Can't load component %s because of Error: %s" (getBaseNameNoExtension filePath)  msg
